@@ -1,0 +1,936 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GUI Agent RL 论文地图</title>
+  <meta name="description" content="GUI Agent with Reinforcement Learning 论文梳理、环境技术栈与训练路线。">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#papers">跳到论文列表</a>
+  <header class="site-header">
+    <nav class="nav-shell" aria-label="站点导航">
+      <a class="brand" href="#top">GUI Agent RL</a>
+      <div class="nav-links">
+        <a href="#map">路线</a>
+        <a href="#papers">论文</a>
+        <a href="#env">环境</a>
+        <a href="#practice">做法</a>
+        <a href="#refs">参考</a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow">arXiv:2604.27955 阅读笔记</p>
+        <h1 id="hero-title">GUI Agent RL 论文地图</h1>
+        <p class="lead">这篇综述的核心观点很明确：GUI agent 不再只是 SFT 后做推理，而是在向闭环 RL 训练迁移。原因有三类：第一，GUI 任务天然是长时序、稀疏终止奖励、局部可观测；第二，真实界面会变化，静态示范会产生 covariate shift；第三，GUI 成功与否常能用环境状态、DOM、数据库、文件状态或坐标命中来验证，因此很适合 RLVR。</p>
+        <div class="hero-actions">
+          <a class="primary-action" href="#papers">浏览 41 篇论文</a>
+          <a class="secondary-action" href="https://arxiv.org/abs/2604.27955" target="_blank" rel="noreferrer">打开综述原文</a>
+        </div>
+      </div>
+      <aside class="signal-panel" aria-label="报告范围">
+        <dl>
+          <div><dt>论文</dt><dd>41</dd></div>
+          <div><dt>路线</dt><dd>3</dd></div>
+          <div><dt>环境</dt><dd>Web / OS / Mobile</dd></div>
+        </dl>
+      </aside>
+    </section>
+
+    <section class="section-block" id="map" aria-labelledby="map-title">
+      <div class="section-heading">
+        <p class="eyebrow">Taxonomy</p>
+        <h2 id="map-title">三条主线</h2>
+      </div>
+      <div class="route-grid"><div class="route"><strong>1. Offline RFT / Offline RL</strong><span>用静态轨迹、偏好对或可验证标签做 DPO/GRPO/IQL/CQL，解决安全和成本问题。代表是 Digi-Q、UI-R1、GUI-R1、Agent Q、ARPO/UI-TARS。</span></div>
+<div class="route"><strong>2. Online RL</strong><span>在真实或半真实环境里采样，用课程学习、ORM/VLM judge、GRPO/AWR 等做多轮优化。代表是 DigiRL、WebRL、MobileRL、WebAgent-R1、ZeroGUI、DART-GUI、ComputerRL。</span></div>
+<div class="route"><strong>3. Hybrid / Model-Based / Self-Evolution</strong><span>先用离线数据冷启动，再用在线交互、世界模型、层级规划、API-GUI 混合动作或自迭代奖励把能力放大。代表是 UI-S1、Hi-Agent、DynaWeb、UltraCUA、Co-EPG、WebWorld、Code2World、ClawGUI。</span></div></div>
+    </section>
+
+    <section class="section-block" id="papers" aria-labelledby="papers-title">
+      <div class="section-heading wide">
+        <div>
+          <p class="eyebrow">Paper Notes</p>
+          <h2 id="papers-title">逐篇论文细读</h2>
+        </div>
+        <div class="toolbar" role="search">
+          <input id="paper-search" type="search" placeholder="搜索论文、路线或环境" aria-label="搜索论文">
+          <select id="paper-filter" aria-label="按类别筛选">
+            <option value="all">全部类别</option>
+            <option>Online RL</option>
+            <option>Offline RL</option>
+            <option>Grounding</option>
+            <option>Hybrid</option>
+            <option>World Model</option>
+            <option>Reward</option>
+            <option>Web</option>
+            <option>Mobile</option>
+            <option>OS/Desktop</option>
+          </select>
+        </div>
+      </div>
+      <p class="result-line"><span id="paper-count">41</span> 篇论文显示中</p>
+      <div class="paper-list">
+    <article class="paper-card" id="paper-1" data-tags="Online RL Mobile" data-primary="Online RL" data-search="digirl: training in-the-wild device-control agents with autonomous reinforcement learning online rl mobile">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-1">01</a>
+        <div>
+          <h3>DigiRL: Training In-The-Wild Device-Control Agents with Autonomous Reinforcement Learning</h3>
+          <div class="tag-row"><span class="tag">Online RL</span><span class="tag">Mobile</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2406.11896" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>移动设备控制的数据很难只靠静态人类示范解决，因为真实 App 有随机性、状态漂移、异步反馈和任务参数变化。纯 SFT 在 Android-in-the-Wild 这类任务上会受限。</p></section>
+        <section><h4>方案</h4><p>DigiRL 是一个典型 offline-to-online RL 框架。先在 AitW 轨迹上用离线 RL/行为先验初始化，再搭建可并行 Android 学习环境，用 VLM-based evaluator 判断任务完成，结合 advantage-weighted RL、考虑随机性的 advantage estimator 和自动 curriculum 做在线微调。</p></section>
+        <section><h4>实验</h4><p>在 AitW 上，1.3B VLM 从 SFT 的 17.7% 提升到 67.2% 成功率，超过 AppAgent+GPT-4V 的 8.3%、CogAgent-17B 的 38.5% 和过滤 BC 的 57.8%。它是后续很多 GUI RL 工作的基线范式：离线冷启动 + 在线反馈。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-2" data-tags="Offline RL Mobile" data-primary="Offline RL" data-search="digi-q: learning q-value functions for training device-control agents offline rl mobile">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-2">02</a>
+        <div>
+          <h3>Digi-Q: Learning Q-Value Functions for Training Device-Control Agents</h3>
+          <div class="tag-row"><span class="tag">Offline RL</span><span class="tag">Mobile</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2502.15760" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>真实移动端在线交互成本高，不适合频繁 rollout；但只做 BC 又无法判断哪个候选动作长期收益更好。</p></section>
+        <section><h4>方案</h4><p>Digi-Q 在冻结的 VLM 中间层特征上训练轻量 Q-value head，用 offline TD learning 学动作价值。先做一次 representation fine-tuning，让 VLM 特征覆盖可操作信息；推理时从当前策略采样多个动作，用 Q 函数 Best-of-N 重排，等价于用推理时计算替代在线环境交互。</p></section>
+        <section><h4>实验</h4><p>在 Android-in-the-Wild 用户级设备控制任务上比此前最佳离线方法提升 21.2%，部分场景接近需要真实交互的 RL 方法。它说明 offline value model 对 GUI agent 很有价值，尤其适合不允许真实试错的场景。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-3" data-tags="Offline RL Web" data-primary="Offline RL" data-search="agent q: advanced reasoning and learning for autonomous ai agents offline rl web">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-3">03</a>
+        <div>
+          <h3>Agent Q: Advanced Reasoning and Learning for Autonomous AI Agents</h3>
+          <div class="tag-row"><span class="tag">Offline RL</span><span class="tag">Web</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2408.07199" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>Web agent 需要多步决策，单靠专家示范 SFT 容易 compounding error，且探索数据有限。</p></section>
+        <section><h4>方案</h4><p>Agent Q 结合 guided MCTS、自我 critique 和 off-policy DPO。MCTS 在网页交互状态树中搜索，用 value model 剪枝；成功路径作为偏好正例，失败路径作为负例，让策略从好坏轨迹对中学习。</p></section>
+        <section><h4>实验</h4><p>在 WebShop 中超过 BC 和 RFT baseline；在真实网页预订场景中，Llama-3-70B 零样本成功率从 18.6% 提升到 81.7%，加入在线搜索后到 95.4%。它代表“search is data”：用搜索合成高质量偏好轨迹。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-4" data-tags="Online RL Web" data-primary="Online RL" data-search="webrl: training llm web agents via self-evolving online curriculum rl online rl web">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-4">04</a>
+        <div>
+          <h3>WebRL: Training LLM Web Agents via Self-Evolving Online Curriculum RL</h3>
+          <div class="tag-row"><span class="tag">Online RL</span><span class="tag">Web</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2411.02337" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>开放 LLM 作为 Web agent 时，决策能力弱、任务少、反馈稀疏，且在线学习中策略容易漂移。</p></section>
+        <section><h4>方案</h4><p>WebRL 做 self-evolving online curriculum：从失败样本生成更适合当前能力区间的新任务；训练 Outcome-Supervised Reward Model 判断最终状态；用 adaptive RL 和 replay/filtering 控制策略漂移。</p></section>
+        <section><h4>实验</h4><p>在 WebArena-Lite 上，Llama-3.1-8B 从 4.8% 到 42.4%，GLM-4-9B 从 6.1% 到 43.0%，超过 GPT-4-Turbo 17.6%、GPT-4o 13.9% 和 AutoWebGLM 18.2%。这是 online curriculum 在 Web GUI 上最有代表性的结果之一。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-5" data-tags="Offline RL" data-primary="Offline RL" data-search="ui-tars / arpo: end-to-end policy optimization for gui agents with experience replay offline rl">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-5">05</a>
+        <div>
+          <h3>UI-TARS / ARPO: End-to-End Policy Optimization for GUI Agents with Experience Replay</h3>
+          <div class="tag-row"><span class="tag">Offline RL</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2501.12326" target="_blank" rel="noreferrer">论文链接</a><a class="paper-link" href="https://arxiv.org/abs/2505.16282" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>跨平台 GUI agent 任务是长时序稀疏奖励，直接 GRPO/策略优化容易整批失败、没有梯度信号。</p></section>
+        <section><h4>方案</h4><p>UI-TARS 采用 native screenshot 端到端 GUI interaction，并在后续 ARPO 中把 GRPO 和 experience replay 结合。成功轨迹缓存在 replay buffer 中，当当前 batch 奖励全零时可复用成功经验；同时用 task selection 过滤 baseline 已经太简单或完全不可能的任务。</p></section>
+        <section><h4>实验</h4><p>综述记录 ARPO 变体在 OSWorld 达到 20.4%，高于 SFT baseline 15.6%。ARPO 论文摘要也报告其在 OSWorld 上建立了 GUI agent RL 训练的新基线。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-6" data-tags="Offline RL" data-primary="Offline RL" data-search="ui-tars-2: advancing gui agent with multi-turn reinforcement learning offline rl">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-6">06</a>
+        <div>
+          <h3>UI-TARS-2: Advancing GUI Agent with Multi-Turn Reinforcement Learning</h3>
+          <div class="tag-row"><span class="tag">Offline RL</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2509.02544" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>第一代 GUI agent 常只优化单步定位或静态轨迹，对真实多轮任务中的错误恢复、状态变化和长期 credit assignment 不够。</p></section>
+        <section><h4>方案</h4><p>技术报告强调 multi-turn RL、thought-before-action、跨平台视觉输入和大规模模型族。它把 GUI 任务统一为多轮视觉-语言-动作序列，在训练中强化决策链而不仅是单个点击。</p></section>
+        <section><h4>实验</h4><p>综述把 UI-TARS-1.5/2 列为 SFT+RL 的代表开源模型，覆盖 Desktop/Mobile/Web，并记录其作为后续 MAI-UI、Step-GUI、MobileRL 等比较对象。摘要级公开信息给出的是技术路线，具体分项数值需读论文表格。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-7" data-tags="Offline RL" data-primary="Offline RL" data-search="gui-r1: a generalist r1-style vision-language action model for gui agents offline rl">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-7">07</a>
+        <div>
+          <h3>GUI-R1: A Generalist R1-Style Vision-Language Action Model for GUI Agents</h3>
+          <div class="tag-row"><span class="tag">Offline RL</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2504.10458" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>大多数 GUI agent 靠 SFT，需要大量数据，而且对未见界面泛化差。DeepSeek-R1 式 RLVR 启发作者用规则奖励提升 GUI action model。</p></section>
+        <section><h4>方案</h4><p>统一 action space，把 click、swipe、type 等动作编码为可规则验证的格式；用少量高质量跨平台数据做 GRPO，奖励包括动作格式、动作类型和坐标是否落在目标框内。</p></section>
+        <section><h4>实验</h4><p>只用 3K 样本，即 OS-Atlas 13M 数据的 0.02%，在 mobile/desktop/web 三个平台的 8 个 benchmark 上达到或超过 SOTA。综述特别强调其出现了未显式监督的“先观察布局、再定位元素”的 System-2 风格内省。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-8" data-tags="Offline RL" data-primary="Offline RL" data-search="ui-r1: enhancing efficient action prediction of gui agents by rl offline rl">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-8">08</a>
+        <div>
+          <h3>UI-R1: Enhancing Efficient Action Prediction of GUI Agents by RL</h3>
+          <div class="tag-row"><span class="tag">Offline RL</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2503.21620" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>规则奖励 RL 在文本推理中有效，但多模态 GUI action prediction 尚缺系统验证。GUI 动作需要同时满足语义、动作类型和坐标精度。</p></section>
+        <section><h4>方案</h4><p>UI-R1 设计 rule-based action reward，用 GRPO 等 policy optimization 训练 MLLM；数据只有 136 个挑战任务，覆盖手机端五类常见动作。后续 UI-R1-E 优化 grounding 效率与准确率。</p></section>
+        <section><h4>实验</h4><p>UI-R1-3B 相比 Qwen2.5-VL-3B，在 ScreenSpot 平均 +22.1%，ScreenSpot-Pro +6.0%，AndroidControl +12.7%；并能和 OS-Atlas-7B 这类用 76K SFT 样本训练的大模型竞争。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-9" data-tags="Grounding Reward" data-primary="Grounding" data-search="gui-g2: gaussian reward modeling for gui grounding grounding reward">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-9">09</a>
+        <div>
+          <h3>GUI-G2: Gaussian Reward Modeling for GUI Grounding</h3>
+          <div class="tag-row"><span class="tag">Grounding</span><span class="tag">Reward</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2507.15846" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>传统坐标奖励把 GUI 元素当作 hit-or-miss 二值目标，导致奖励稀疏，并且“差 1 像素也失败”不符合真实点击行为。</p></section>
+        <section><h4>方案</h4><p>把目标 UI 元素建模为界面平面上的高斯分布。点奖励按距元素中心的指数衰减给分；coverage reward 衡量预测分布与目标区域重叠；方差根据元素尺寸自适应。</p></section>
+        <section><h4>实验</h4><p>在 ScreenSpot、ScreenSpot-v2、ScreenSpot-Pro 上超过 UI-TARS-72B，ScreenSpot-Pro 最大提升 24.7%。这类连续奖励成为后续 grounding RL 的常用思路。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-10" data-tags="Grounding" data-primary="Grounding" data-search="se-gui: enhancing visual grounding via self-evolutionary rl grounding">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-10">10</a>
+        <div>
+          <h3>SE-GUI: Enhancing Visual Grounding via Self-Evolutionary RL</h3>
+          <div class="tag-row"><span class="tag">Grounding</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2505.12370" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>高分辨率、专业软件界面中，GUI grounding 很难靠大量 SFT 泛化；需要更数据高效的 RL 方式。</p></section>
+        <section><h4>方案</h4><p>三部分：高质量 seed data curation；dense policy gradient，按预测精度给连续反馈；self-evolutionary RFT，用注意力图迭代提炼模型的伪监督和定位能力。</p></section>
+        <section><h4>实验</h4><p>只用 3K 样本，7B 模型在三个 grounding benchmark 达同尺寸 SOTA；ScreenSpot-Pro 47.3%，比 UI-TARS-72B 高 24.2%。这说明 attention map 可作为中间监督信号。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-11" data-tags="Grounding" data-primary="Grounding" data-search="infigui-g1: adaptive exploration policy optimization for gui grounding grounding">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-11">11</a>
+        <div>
+          <h3>InfiGUI-G1: Adaptive Exploration Policy Optimization for GUI Grounding</h3>
+          <div class="tag-row"><span class="tag">Grounding</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2508.05731" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>RLVR 能改善空间对齐，但对语义对齐不足，尤其是多个相似 UI 元素中要选功能正确的元素时，探索效率成为瓶颈。</p></section>
+        <section><h4>方案</h4><p>提出 AEPO。通过多答案生成扩大探索，再用 Adaptive Exploration Reward 从效率 eta=U/C 出发引导探索，把有用且成本低的探索分配更高权重。它还强调 grounding 中强制 CoT 可能伤害坐标精度。</p></section>
+        <section><h4>实验</h4><p>InfiGUI-G1-3B/7B 在多项 GUI grounding benchmark 上达到新 SOTA，相比 naive RLVR 在考查泛化和语义理解的 benchmark 上最高相对提升 9.0%，并被 AAAI 2026 接收为 Oral。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-12" data-tags="Grounding" data-primary="Grounding" data-search="ui-agile: effective rl and precise inference-time grounding grounding">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-12">12</a>
+        <div>
+          <h3>UI-AGILE: Effective RL and Precise Inference-Time Grounding</h3>
+          <div class="tag-row"><span class="tag">Grounding</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2507.22025" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>GUI agent 在训练侧有 reward 稀疏、推理侧有高分辨率视觉噪声和 reasoning 设计冲突。</p></section>
+        <section><h4>方案</h4><p>训练上引入连续奖励、Simple Thinking reward、cropping-based resampling；推理上把高分辨率图像分块，做 decomposed grounding with selection，降低小元素定位难度。</p></section>
+        <section><h4>实验</h4><p>ScreenSpot-Pro 与 ScreenSpot-v2 上达 grounding SOTA；训练和推理增强共同使用时，ScreenSpot-Pro 相比最佳 baseline 提升 23%。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-13" data-tags="Offline RL Grounding" data-primary="Offline RL" data-search="infigui-r1: reactive actors to deliberative reasoners offline rl grounding">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-13">13</a>
+        <div>
+          <h3>InfiGUI-R1: Reactive Actors to Deliberative Reasoners</h3>
+          <div class="tag-row"><span class="tag">Offline RL</span><span class="tag">Grounding</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2504.14239" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>很多 GUI agent 是 reactive actor，只隐式推理，面对长任务、错误恢复和复杂空间关系时不够稳；手工 reasoning template 又不自适应。</p></section>
+        <section><h4>方案</h4><p>Actor2Reasoner 两阶段训练。第一阶段 Reasoning Injection，用空间推理蒸馏把 teacher 的跨模态空间推理迁移给 MLLM；第二阶段 Deliberation Enhancement，用 RL 强化中间 sub-goal 和错误恢复场景。</p></section>
+        <section><h4>实验</h4><p>摘要报告在 GUI grounding 与 trajectory tasks 上取得强表现；综述把它归为 reasoning-enhanced RL 架构，核心价值是把“先能操作”再“内化推理”的训练顺序系统化。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-14" data-tags="Hybrid" data-primary="Hybrid" data-search="backtrackagent: error detection and backtracking mechanism hybrid">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-14">14</a>
+        <div>
+          <h3>BacktrackAgent: Error Detection and Backtracking Mechanism</h3>
+          <div class="tag-row"><span class="tag">Hybrid</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2505.20660" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>现有 GUI agent 过度关注单步动作准确率，缺少发现错误、回退和恢复的机制，导致长任务中一次误点就失败。</p></section>
+        <section><h4>方案</h4><p>BacktrackAgent 加入 verifier、judger、reflector 模块：检测动作后状态是否偏离目标，判断是否需要回退，并反思生成修正动作。训练数据专门覆盖 action execution 后的 outcome pages，并加入 judgment reward。</p></section>
+        <section><h4>实验</h4><p>在 Mobile3M 和 Auto-UI 上提升任务成功率和 step accuracy。它代表“错误恢复作为可训练能力”而不是只做后处理。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-15" data-tags="Hybrid" data-primary="Hybrid" data-search="vsc-rl: variational subgoal-conditioned rl hybrid">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-15">15</a>
+        <div>
+          <h3>VSC-RL: Variational Subgoal-Conditioned RL</h3>
+          <div class="tag-row"><span class="tag">Hybrid</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2502.07949" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>视觉-语言 agent 的真实任务稀疏奖励、长时序依赖强，普通在线 RL 学习效率低。</p></section>
+        <section><h4>方案</h4><p>把任务重写为 variational goal-conditioned RL，优化 SubGoal Evidence Lower Bound。目标包括最大化 subgoal-conditioned return，以及约束与参考 goal-conditioned policy 的差异。VLM 自动把大目标分解成可行 subgoal。</p></section>
+        <section><h4>实验</h4><p>在多类 benchmark，包括移动设备控制和 Web 控制任务上超过 SOTA，并提升学习效率。综述将它列为移动/网页长任务的 subgoal-conditioned RL 代表。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-16" data-tags="Data Web" data-primary="Data" data-search="explorer: scaling exploration-driven web trajectory synthesis data web">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-16">16</a>
+        <div>
+          <h3>Explorer: Scaling Exploration-Driven Web Trajectory Synthesis</h3>
+          <div class="tag-row"><span class="tag">Data</span><span class="tag">Web</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2502.11357" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>真实 online web agent 的轨迹数据昂贵，开源 LMM agent 在更真实的 online benchmark 上仍远低于人类水平。</p></section>
+        <section><h4>方案</h4><p>用大规模网页探索合成轨迹。Explorer 随机/策略化探索网页，发现新状态和任务意图；annotator 反推出自然语言指令并筛选成功轨迹，形成多模态网页轨迹数据。</p></section>
+        <section><h4>实验</h4><p>生成 94K+ 成功多模态 web trajectories，覆盖 49K unique URLs、720K screenshots、33M web elements，平均每条成功轨迹 0.28 美元。训练后的 Explorer 在 Mind2Web-Live、Multimodal-Mind2Web、MiniWoB++ 等离线和在线 benchmark 上表现强，并显示数据规模是关键驱动。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-17" data-tags="Hybrid" data-primary="Hybrid" data-search="ui-s1: semi-online reinforcement learning hybrid">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-17">17</a>
+        <div>
+          <h3>UI-S1: Semi-online Reinforcement Learning</h3>
+          <div class="tag-row"><span class="tag">Hybrid</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2509.11543" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>离线 RL 有稳定和便宜的优点，但缺 trajectory-level 真实反馈；在线 RL 有反馈但代价高、奖励稀疏。需要在静态轨迹上模拟在线偏移和修正。</p></section>
+        <section><h4>方案</h4><p>Semi-online RL 在离线 trajectory 中 rollout 当前模型输出，并用 Patch Module 修复模型动作偏离专家轨迹导致的 OOD 状态；奖励上同时用 discounted future return、step-level advantage 和 episode-level advantage；提出 SOP 作为 semi-online 性能代理指标。</p></section>
+        <section><h4>实验</h4><p>7B 模型在四个动态 benchmark 达 SOTA；相比 base model，AndroidWorld +12.0%，AITW +23.8%。这是“用离线吞吐模拟在线训练”的代表。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-18" data-tags="Hybrid Mobile" data-primary="Hybrid" data-search="hi-agent: hierarchical vision-language agents for mobile device control hybrid mobile">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-18">18</a>
+        <div>
+          <h3>Hi-Agent: Hierarchical Vision-Language Agents for Mobile Device Control</h3>
+          <div class="tag-row"><span class="tag">Hybrid</span><span class="tag">Mobile</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2510.14388" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>移动端任务天然有层级结构：高层需要规划“先打开哪个 app、进入哪个页面、完成哪个子目标”，低层需要精确执行点击、输入和滑动。单一模型直接从指令到动作，容易在长任务中丢失全局目标，也难以同时兼顾语义推理和坐标/控件级执行。</p></section>
+        <section><h4>方案</h4><p>Hi-Agent 把移动 GUI agent 拆成高层 reasoning model 与低层 action model，并联合优化。高层负责分解任务、生成中间目标和上下文决策；低层根据当前屏幕和子目标执行具体 GUI 动作。训练上属于 hybrid/层级路线：用示范冷启动，再用 RL 强化高低层协同，缓解长时序 credit assignment。</p></section>
+        <section><h4>实验</h4><p>论文摘要报告 Hi-Agent 在 AITW 达 87.9%，AndroidWorld 达 21.0%，并在 AndroidControl-Low/High、AMEX、AndroidLab 等基准上展示跨任务泛化。综述把它作为“System-1 执行 + System-2 规划”式认知分层的代表。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-19" data-tags="Online RL Mobile" data-primary="Online RL" data-search="mobilerl: online agentic rl for mobile gui agents online rl mobile">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-19">19</a>
+        <div>
+          <h3>MobileRL: Online Agentic RL for Mobile GUI Agents</h3>
+          <div class="tag-row"><span class="tag">Online RL</span><span class="tag">Mobile</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2509.18119" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>移动 GUI 任务难度分布重尾，大量简单任务主导梯度，困难任务又长期零奖励；大规模 Android 环境采样效率低。</p></section>
+        <section><h4>方案</h4><p>核心是 Difficulty-Adaptive GRPO。按历史成功率调节任务权重；对困难任务使用 positive replay；对持续失败任务使用 failure curriculum filtering；Shortest-Path Reward Adjustment 惩罚冗余操作，减少 reward hacking。</p></section>
+        <section><h4>实验</h4><p>在 Qwen2.5-VL-7B-Instruct 和 GLM-4.1V-9B-Base 上训练。MobileRL-9B 在 AndroidWorld 达 80.2%，AndroidLab 达 53.6%，为当时 SOTA。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-20" data-tags="Online RL Web" data-primary="Online RL" data-search="webagent-r1: end-to-end multi-turn rl for web agents online rl web">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-20">20</a>
+        <div>
+          <h3>WebAgent-R1: End-to-End Multi-Turn RL for Web Agents</h3>
+          <div class="tag-row"><span class="tag">Online RL</span><span class="tag">Web</span></div>
+        </div>
+        <div class="paper-actions"><span class="paper-note">综述引用为 EMNLP 2025，标题为 WebAgent-R1: Training Web Agents via End-to-End Multi-Turn Reinforcement Learning</span></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>Web agent 的 reward 往往只在终局出现，单步优化容易学不到“先走看似无收益的步骤再完成任务”的 delayed gratification。</p></section>
+        <section><h4>方案</h4><p>提出 Multi-Turn GRPO，把整条 interaction trajectory 当作优化样本，而不是单步动作。另有 dynamic context compression，让 agent 每步输出 observation summary，缓解长上下文膨胀；parallel trajectory rollout 增加训练多样性。</p></section>
+        <section><h4>实验</h4><p>综述报告它使用 WebArena 的合成成功轨迹，证明 self-generated trajectories 可超过人类示范，并把它列为多轮 RL 与记忆压缩的代表。摘要级数字不在综述可读文本中给出。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-21" data-tags="Online RL OS/Desktop" data-primary="Online RL" data-search="dart-gui: decoupled training and adaptive data curation online rl os/desktop">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-21">21</a>
+        <div>
+          <h3>DART-GUI: Decoupled Training and Adaptive Data Curation</h3>
+          <div class="tag-row"><span class="tag">Online RL</span><span class="tag">OS/Desktop</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2509.23866" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>GUI RL 的主要瓶颈不是 GPU，而是多轮 GUI 环境 rollout 慢、有效交互数据少。</p></section>
+        <section><h4>方案</h4><p>DART 把训练系统解耦成四个异步模块：environment cluster、rollout service、data manager、trainer。引入 rollout-wise sampling、worker 级模型同步、按任务难度动态调整 rollout 数和长度、预收集困难任务成功轨迹、高熵 step 优先训练、truncated importance sampling 缓解 policy mismatch。</p></section>
+        <section><h4>实验</h4><p>系统效率上 rollout GPU utilization 提升 1.6 倍、训练 throughput 提升 1.9 倍、环境利用率提升 5.5 倍。OSWorld 上 DART-GUI-7B 成功率 42.13%，比 base +14.61%，比开源 SOTA +7.34%。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-22" data-tags="Hybrid" data-primary="Hybrid" data-search="mano technical report hybrid">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-22">22</a>
+        <div>
+          <h3>Mano Technical Report</h3>
+          <div class="tag-row"><span class="tag">Hybrid</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2509.17336" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>VLM GUI agent 面临分辨率限制、领域错配和序列决策不足；真实 GUI 部署需要高保真数据、闭环训练和错误恢复。</p></section>
+        <section><h4>方案</h4><p>Mano 构建在多模态 foundation model 上，使用高保真模拟环境生成数据，并采用三阶段训练：SFT -&gt; offline RL -&gt; online RL；同时加入 verification module 做错误恢复和 holistic reward。</p></section>
+        <section><h4>实验</h4><p>摘要报告在 Mind2Web、OSWorld 等多个 GUI benchmark 上达 SOTA 或显著提升。综述把 Mano 作为 GRPO、composite reward 和三阶段 hybrid pipeline 的代表。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-23" data-tags="Data Mobile" data-primary="Data" data-search="gelab-zero / gui exploration lab data mobile">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-23">23</a>
+        <div>
+          <h3>GELab-Zero / GUI Exploration Lab</h3>
+          <div class="tag-row"><span class="tag">Data</span><span class="tag">Mobile</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2512.02423" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>真实 PC 软件和移动 App 多为闭源，难以获得完整环境信息，导致 GUI 导航训练和评测不系统。</p></section>
+        <section><h4>方案</h4><p>构建 GUI Exploration Lab，一个 GUI 导航模拟环境引擎，可灵活定义 screen、icon、navigation graph，并提供完整环境信息。训练上比较 SFT、single-turn RL 和 multi-turn RL 的作用。</p></section>
+        <section><h4>实验</h4><p>作者发现 SFT 记忆基础知识，single-turn RL 增强未见场景泛化，multi-turn RL 通过交互试错学习探索策略。静态和交互 benchmark 均验证 RL 对 GUI navigation 有收益，并可泛化到真实场景。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-24" data-tags="Data Reward" data-primary="Data" data-search="step-gui technical report data reward">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-24">24</a>
+        <div>
+          <h3>Step-GUI Technical Report</h3>
+          <div class="tag-row"><span class="tag">Data</span><span class="tag">Reward</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2512.15431" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>GUI 训练数据既要高质量又要低成本；同时实际部署需要跨设备标准接口并保护隐私。</p></section>
+        <section><h4>方案</h4><p>提出 self-evolving training pipeline 和 Calibrated Step Reward System，把模型生成轨迹转成可靠 step-level training signals；同时提出 GUI-MCP，把 GUI 自动化拆为低层原子操作和本地 specialist model 高层任务委派。</p></section>
+        <section><h4>实验</h4><p>Step-GUI 4B/8B 中，8B 报告 AndroidWorld 80.2%、OSWorld 48.5%、ScreenShot-Pro 62.6%；step reward 标注准确率超过 90%，成本降低 10-100 倍。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-25" data-tags="Data Mobile" data-primary="Data" data-search="mai-ui technical report data mobile">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-25">25</a>
+        <div>
+          <h3>MAI-UI Technical Report</h3>
+          <div class="tag-row"><span class="tag">Data</span><span class="tag">Mobile</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2512.22047" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>真实部署中的 GUI agent 需要用户交互、UI+工具混合、设备-云协同和动态环境鲁棒性；单纯 UI-only 操作不够。</p></section>
+        <section><h4>方案</h4><p>MAI-UI 包含 2B/8B/32B/235B-A22B 模型族，自演化数据管线把导航数据扩展到用户交互和 MCP tool calls；device-cloud collaboration 根据任务状态路由执行；online RL 支持更多并行环境和长上下文。</p></section>
+        <section><h4>实验</h4><p>ScreenSpot-Pro 73.5%、MMBench GUI L2 91.3%、OSWorld-G 70.9%、UI-Vision 49.2%；AndroidWorld 76.7%；MobileWorld 41.7%。在线 RL ablation 显示并行环境从 32 到 512 带来 +5.2 分，step budget 15 到 50 带来 +4.3 分；设备-云系统让端侧性能 +33%、云调用减少 40%+。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-26" data-tags="Grounding" data-primary="Grounding" data-search="gui-eyes: tool-augmented perception for visual grounding grounding">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-26">26</a>
+        <div>
+          <h3>GUI-Eyes: Tool-Augmented Perception for Visual Grounding</h3>
+          <div class="tag-row"><span class="tag">Grounding</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2601.09770" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>多数 GUI grounding 方法只看一次静态全屏，缺少主动决定“是否放大、裁剪、重看”的能力。</p></section>
+        <section><h4>方案</h4><p>用 GRPO 学习主动视觉工具调用。两阶段推理：coarse exploration 判断要不要 crop/zoom，fine-grained grounding 输出坐标；奖励用连续空间函数，结合位置接近度和区域重叠。</p></section>
+        <section><h4>实验</h4><p>GUI-Eyes-3B 只用 3K labeled samples，在 ScreenSpot-Pro 达 44.8% grounding accuracy，显著超过 SFT 和 RL baseline。它是“感知动作也可 RL 学习”的代表。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-27" data-tags="World Model Web" data-primary="World Model" data-search="dynaweb: model-based rl of web agents world model web">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-27">27</a>
+        <div>
+          <h3>DynaWeb: Model-Based RL of Web Agents</h3>
+          <div class="tag-row"><span class="tag">World Model</span><span class="tag">Web</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2601.22149" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>真实互联网交互低效、昂贵且有风险；online RL 受 I/O wall 限制。</p></section>
+        <section><h4>方案</h4><p>训练 Web World Model，给定 agent action 预测自然网页表示，用作 synthetic web environment。agent 在世界模型中 dream 大量 rollout；训练时把真实专家轨迹和 on-policy dream rollout 随机交织，提升稳定性与 sample efficiency。</p></section>
+        <section><h4>实验</h4><p>在 WebArena 和 WebVoyager 上，DynaWeb 稳定显著提升开源 web agent 模型。它把 model-based RL 从游戏/机器人迁移到 Web agent。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-28" data-tags="Hybrid OS/Desktop" data-primary="Hybrid" data-search="ultracua: foundation model for computer use agents with hybrid action hybrid os/desktop">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-28">28</a>
+        <div>
+          <h3>UltraCUA: Foundation Model for Computer Use Agents with Hybrid Action</h3>
+          <div class="tag-row"><span class="tag">Hybrid</span><span class="tag">OS/Desktop</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2510.17790" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>纯 GUI 原子动作会形成脆弱长链，一次误点就级联失败；API agent 执行稳定但覆盖面不如 GUI。</p></section>
+        <section><h4>方案</h4><p>Hybrid action：统一低层 GUI primitive 和高层工具/API 调用。自动从软件文档和代码仓库抽取工具能力；用 synthetic engine 生成 17K+ 可验证任务；收集混合动作轨迹；SFT + online RL 学会在 GUI 和 API 间路由。</p></section>
+        <section><h4>实验</h4><p>UltraCUA-7B/32B 在 OSWorld 平均相对提升 22%，执行快 11%；WindowsAgentArena 达 21.7%，超过 Windows-trained baseline。结论是 hybrid action 能减少误差传播和轨迹长度。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-29" data-tags="Online RL OS/Desktop" data-primary="Online RL" data-search="computerrl: scaling end-to-end online rl for computer use agents online rl os/desktop">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-29">29</a>
+        <div>
+          <h3>ComputerRL: Scaling End-to-End Online RL for Computer Use Agents</h3>
+          <div class="tag-row"><span class="tag">Online RL</span><span class="tag">OS/Desktop</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2508.14040" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>桌面 CUA 需要跨文件、Office、浏览器等复杂工作区；在线 RL 必须扩展到大量虚拟桌面，但环境慢且不稳定。</p></section>
+        <section><h4>方案</h4><p>提出 API-GUI paradigm，把程序化 API 和直接 GUI 交互统一；构建分布式 RL 基础设施，调度数千个 parallel virtual desktop environments；提出 Entropulse，在长期训练中交替 RL 与 SFT，缓解 entropy collapse。</p></section>
+        <section><h4>实验</h4><p>在 GLM-4-9B-0414 和 GLM-4.1V-9B-Thinking 上训练，AutoGLM-OS-9B 在 OSWorld 达 48.9%，为桌面自动化新 SOTA；还发布 OfficeWorld benchmark。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-30" data-tags="Online RL Reward" data-primary="Online RL" data-search="zerogui: online gui learning at zero human cost online rl reward">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-30">30</a>
+        <div>
+          <h3>ZeroGUI: Online GUI Learning at Zero Human Cost</h3>
+          <div class="tag-row"><span class="tag">Online RL</span><span class="tag">Reward</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2505.23762" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>离线 GUI agent 依赖人工标注，不适应动态交互环境。</p></section>
+        <section><h4>方案</h4><p>零人工成本在线学习：VLM 自动从当前环境状态生成任务；VLM 自动 reward estimation 判断成功；两阶段 online RL 持续与 GUI 环境交互学习。</p></section>
+        <section><h4>实验</h4><p>在 UI-TARS 和 Aguvis 两个高级 GUI agent 上验证，显著提升 OSWorld 和 AndroidLab 表现。它代表“VLM 同时当任务生成器和评测器”的自举路线。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-31" data-tags="Reward" data-primary="Reward" data-search="progrm: build better gui agents with progress rewards reward">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-31">31</a>
+        <div>
+          <h3>ProgRM: Build Better GUI Agents with Progress Rewards</h3>
+          <div class="tag-row"><span class="tag">Reward</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2505.18121" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>Outcome Reward Model 只给终局反馈，对最终失败但中间有价值的步骤会过度惩罚，无法解决长任务稀疏奖励。</p></section>
+        <section><h4>方案</h4><p>Progress Reward Model 为每一步预测任务完成进度，给 dense intermediate reward。为避免人工标注进度，用 LCS 自标注算法从轨迹中发现关键步骤并分配 progress label。</p></section>
+        <section><h4>实验</h4><p>ProgRM 训练的 actor 超过领先 proprietary LLM 和 ORM-trained actor。它是 process/progress reward 在 GUI RL 中的代表。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-32" data-tags="Hybrid" data-primary="Hybrid" data-search="co-epg: co-evolution of planning and grounding hybrid">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-32">32</a>
+        <div>
+          <h3>Co-EPG: Co-Evolution of Planning and Grounding</h3>
+          <div class="tag-row"><span class="tag">Hybrid</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2511.10705" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>GUI agent 既要 planner 会制定策略，也要 grounder 会低层定位；现有方法常孤立优化两者，且 synthetic data 没被充分利用。</p></section>
+        <section><h4>方案</h4><p>Planner-Grounder 自迭代正反馈。Grounder 给 planner GRPO reward，planner 生成更好的多样数据反过来训练 grounder；更新后的 grounder 再给更准奖励，循环三轮。</p></section>
+        <section><h4>实验</h4><p>在 Multimodal-Mind2Web 和 AndroidControl 上，三轮后超过现有 SOTA，不需要外部数据，并表现出每轮稳定自增强。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-33" data-tags="Offline RL" data-primary="Offline RL" data-search="aebpo: agentic entropy-balanced policy optimization offline rl">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-33">33</a>
+        <div>
+          <h3>AEBPO: Agentic Entropy-Balanced Policy Optimization</h3>
+          <div class="tag-row"><span class="tag">Offline RL</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2510.14545" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>Web agent 的长时序工具调用需要探索，但过度依赖 entropy 会导致 rollout 分支失控和训练崩塌。</p></section>
+        <section><h4>方案</h4><p>两部分：dynamic entropy-balanced rollout，预监测 entropy 后分配全局/分支采样预算，并对连续高熵 tool-call step 施加 branch penalty；Entropy-Balanced Policy Optimization，在高熵 clipping 项加入 stop-gradient，并用 entropy-aware advantage 重点学习高不确定 token。</p></section>
+        <section><h4>实验</h4><p>14 个挑战数据集上超过 7 个主流 RL 算法。仅 1K RL samples，Qwen3-14B + AEBPO 在 GAIA pass@1 47.6%、HLE 11.2%、WebWalker 43.0%；pass@5 分别 65.0%、26.0%、70.0%。它虽不只限 GUI，但被综述用于解释 web/GUI agent rollout entropy collapse。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-34" data-tags="Data Web" data-primary="Data" data-search="nested browser-use learning / nestbrowse data web">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-34">34</a>
+        <div>
+          <h3>Nested Browser-Use Learning / NestBrowse</h3>
+          <div class="tag-row"><span class="tag">Data</span><span class="tag">Web</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2512.23647" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>信息检索 agent 多依赖 API snippet 和 URL fetch，缺少真实浏览带来的深层信息；直接 full browser use 又让 ReAct 式函数调用复杂度暴增。</p></section>
+        <section><h4>方案</h4><p>Nested browser-use，把外层工具整合/任务推理和内层页面探索分开，定义 minimal and complete browser action framework，降低浏览控制和页面探索的耦合。</p></section>
+        <section><h4>实验</h4><p>在 deep information-seeking benchmark 上显示明显收益；综述把它归为结构化探索，比纯扩大合成轨迹更数据高效。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-35" data-tags="World Model Web" data-primary="World Model" data-search="websynthesis: world-model-guided mcts for webui trajectory synthesis world model web">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-35">35</a>
+        <div>
+          <h3>WebSynthesis: World-Model-Guided MCTS for WebUI Trajectory Synthesis</h3>
+          <div class="tag-row"><span class="tag">World Model</span><span class="tag">Web</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2507.04370" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>真实或沙盒网页环境状态不可控、反馈不稳定，且一条轨迹可能需要数百次 API 调用，成本高。</p></section>
+        <section><h4>方案</h4><p>训练 learned world model 模拟虚拟网页环境；policy agent 在其中做可逆的 tree-based planning / MCTS，大规模生成高质量轨迹，再用于策略微调。</p></section>
+        <section><h4>实验</h4><p>小规模 synthetic dataset 训练的 agent 可达到或超过大规模真实数据训练模型。该论文支撑“世界模型绕过 GUI I/O wall”的方向。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-36" data-tags="World Model Web" data-primary="World Model" data-search="webworld: large-scale world model for web agent training world model web">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-36">36</a>
+        <div>
+          <h3>WebWorld: Large-Scale World Model for Web Agent Training</h3>
+          <div class="tag-row"><span class="tag">World Model</span><span class="tag">Web</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2602.14721" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>Web agent 需要海量轨迹，但真实网页训练受网络延迟、rate limit 和安全风险限制。</p></section>
+        <section><h4>方案</h4><p>WebWorld 系列是开放网页模拟器，训练于 1M+ open-web interactions，支持 reasoning、多格式数据和 30+ 步长时序模拟；引入 WebWorld-Bench 做 intrinsic world model 评估。</p></section>
+        <section><h4>实验</h4><p>WebWorld 模拟能力接近 Gemini-3-Pro；用 WebWorld 合成轨迹训练 Qwen3-14B，在 WebArena +9.2%，接近 GPT-4o；还可作为 inference-time search world model 超过 GPT-5。它代表大规模世界模型基础设施路线。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-37" data-tags="World Model" data-primary="World Model" data-search="code2world: gui world model via renderable code generation world model">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-37">37</a>
+        <div>
+          <h3>Code2World: GUI World Model via Renderable Code Generation</h3>
+          <div class="tag-row"><span class="tag">World Model</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2602.09856" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>GUI 世界模型需要既有高视觉保真，又有结构可控。纯文本或纯像素预测往往不能同时满足。</p></section>
+        <section><h4>方案</h4><p>把 next visual state 预测转成 renderable code generation。构造 AndroidCode，把 GUI 轨迹翻译成高保真 HTML，并用视觉反馈 revision；训练先 SFT 冷启动格式与布局，再用 Render-Aware RL，以渲染结果的视觉语义一致性和动作一致性为 reward。</p></section>
+        <section><h4>实验</h4><p>AndroidCode 超 80K 高质量 screen-action pairs；Code2World-8B 在 next UI prediction 上表现顶级，接近 GPT-5 和 Gemini-3-Pro-Image；作为下游导航辅助，使 Gemini-2.5-Flash 在 AndroidWorld navigation +9.5%。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-38" data-tags="Online RL" data-primary="Online RL" data-search="agentcpm-explore online rl">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-38">38</a>
+        <div>
+          <h3>AgentCPM-Explore</h3>
+          <div class="tag-row"><span class="tag">Online RL</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2602.06485" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>小模型/边缘模型的 agentic 能力被低估，但训练中有灾难遗忘、奖励噪声敏感和长上下文冗余导致推理退化。</p></section>
+        <section><h4>方案</h4><p>4B edge-scale agent 训练框架：parameter-space model fusion 缓解 SFT 遗忘，reward signal denoising 提升 RL 稳定性，contextual information refinement 压缩冗余上下文，并通过 deep exploration 提高泛化。</p></section>
+        <section><h4>实验</h4><p>4B 级模型在多项 benchmark 达 SOTA，匹配或超过 8B 级模型，并在五个 benchmark 超过更大模型；GAIA text pass@64 达 97.09%。综述把它作为真实 I/O 噪声下 reward denoising 和 context compression 的基础设施代表。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-39" data-tags="Hybrid" data-primary="Hybrid" data-search="clawgui: unified framework for training, evaluating, and deploying gui agents hybrid">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-39">39</a>
+        <div>
+          <h3>ClawGUI: Unified Framework for Training, Evaluating, and Deploying GUI Agents</h3>
+          <div class="tag-row"><span class="tag">Hybrid</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2604.11784" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>GUI agent 研究缺统一全栈：在线 RL 环境不稳定、评测协议漂移、训练模型难部署到真实用户设备。</p></section>
+        <section><h4>方案</h4><p>ClawGUI-RL 支持并行虚拟环境和真实物理设备，集成 GiGPO 与 Process Reward Model；ClawGUI-Eval 标准化 6 个 benchmark 和 11+ 模型；ClawGUI-Agent 支持 Android、HarmonyOS、iOS、12+ 聊天平台、hybrid CLI-GUI 控制和个性化记忆。</p></section>
+        <section><h4>实验</h4><p>ClawGUI-Eval 对官方 baseline 的复现率 95.8%；端到端训练的 ClawGUI-2B 在 MobileWorld GUI-Only 成功率 17.1%，比同尺寸 MAI-UI-2B 高 6.0%。它是开源 GUI RL 基础设施最直接的代表。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-40" data-tags="Data Web" data-primary="Data" data-search="agenttrek: trajectory synthesis via web tutorials data web">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-40">40</a>
+        <div>
+          <h3>AgentTrek: Trajectory Synthesis via Web Tutorials</h3>
+          <div class="tag-row"><span class="tag">Data</span><span class="tag">Web</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2412.09605" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>高质量 Web agent 轨迹数据昂贵，人工标注不可扩展。</p></section>
+        <section><h4>方案</h4><p>三阶段自动管线：抓取并过滤 tutorial-like 文本；转换为结构化任务和步骤；让 VLM agent 在真实环境中执行，再由 VLM evaluator 验证。生成同时覆盖 HTML/function-call 和 screenshot/pixel-action 两类轨迹，并包含 CoT。</p></section>
+        <section><h4>实验</h4><p>在 WebArena、ScreenSpot Web、Multimodal Mind2Web 等文本/视觉 web benchmark 上带来 SOTA；每条高质量轨迹成本 0.55 美元。它不是 RL 算法本身，但为 offline RL/RFT 和自演化提供关键轨迹来源。</p></section>
+      </div>
+    </article>
+    
+
+    <article class="paper-card" id="paper-41" data-tags="OS/Desktop" data-primary="OS/Desktop" data-search="os-copilot / friday os/desktop">
+      <div class="paper-top">
+        <a class="paper-no" href="#paper-41">41</a>
+        <div>
+          <h3>OS-Copilot / FRIDAY</h3>
+          <div class="tag-row"><span class="tag">OS/Desktop</span></div>
+        </div>
+        <div class="paper-actions"><a class="paper-link" href="https://arxiv.org/abs/2402.07456" target="_blank" rel="noreferrer">论文链接</a></div>
+      </div>
+      <div class="paper-grid">
+        <section><h4>动机</h4><p>大多数 agent 局限于单网站或单软件，无法覆盖真实 OS 中的网页、终端、文件、多媒体和第三方应用。</p></section>
+        <section><h4>方案</h4><p>OS-Copilot 构建 generalist computer agent 框架，FRIDAY 通过积累技能进行 self-improvement。它更偏 agent framework，但被综述用于 GUI/CUA 历史脉络和自改进方向。</p></section>
+        <section><h4>实验</h4><p>在 GAIA 上比此前方法高 35%；在 Excel/PowerPoint 控制上展示少监督自改进。它对 GUI RL 的启示是：长期记忆/技能库和自改进会成为数字居民式 agent 的必要结构。</p></section>
+      </div>
+    </article>
+    </div>
+    </section>
+
+    <section class="section-block" id="env" aria-labelledby="env-title">
+      <div class="section-heading">
+        <p class="eyebrow">Environments</p>
+        <h2 id="env-title">环境、容器与框架</h2>
+      </div>
+      <div class="env-grid"><article class="env-panel" id="env-1"><h3>2.1 Web / Browser 环境</h3><p>常用环境：</p>
+<ul>
+<li>MiniWoB++：早期 HTML5 synthetic micro-task sandbox，奖励稀疏但环境可并行，适合验证基础 RL。</li>
+<li>WebShop：模拟电商，奖励可由商品属性重叠给出，适合语言 agent 与商品搜索。</li>
+<li>Mind2Web / Multimodal-Mind2Web：真实网页快照与 DOM 标注，主要用于离线训练和 grounding/action candidate compression。</li>
+<li>WebArena / VisualWebArena：自托管“模拟互联网”，包含购物、论坛、GitLab、地图等服务，能用后端脚本验证数据库/页面状态。</li>
+<li>BrowserGym：把 WebArena、MiniWoB++、VisualWebArena、WebChoreArena 等统一成 gym-like API，提供 observation/action 标准化。</li>
+</ul>
+<p>容器与框架：</p>
+<ul>
+<li>WebArena/VisualWebArena 一般需要自托管服务，常见部署是 Docker/Docker Compose 起多个 Web service，再由 Playwright/浏览器自动化驱动页面。</li>
+<li>BrowserGym/AgentLab 是 Python + Gymnasium 风格接口，底层常用 Playwright/Chromium，observation 包括目标、URL、DOM、accessibility tree、截图。</li>
+<li>RL 框架侧常把 browser env 当 rollout worker，训练端用 GRPO/PPO/AWR/DPO 等；大规模时用异步队列隔离环境 I/O 和 GPU learner。</li>
+</ul></article>
+<article class="env-panel" id="env-2"><h3>2.2 Desktop / OS 环境</h3><p>常用环境：</p>
+<ul>
+<li>OSWorld：真实 Ubuntu/桌面应用、多 App、多文件状态任务，369 个开放式桌面任务。</li>
+<li>ScreenAgent / WindowsAgentArena / OfficeWorld：更偏桌面纯视觉、Windows 或 Office 场景。</li>
+<li>TheAgentCompany、OmniACT、OSWorld-MCP、MCPWorld：企业任务、桌面+网页、API/GUI 混合评测。</li>
+</ul>
+<p>容器与框架：</p>
+<ul>
+<li>OSWorld 类环境常用 Docker + QEMU/虚拟机 + virtual framebuffer/VNC 截屏。Docker 负责隔离任务和依赖，QEMU/VM 提供真实 OS 环境，VNC/截图通道提供视觉 observation。</li>
+<li>控制动作常通过 PyAutoGUI、xdotool、VNC pointer/keyboard、Accessibility API 或系统 API。ComputerRL/UltraCUA/MAI-UI 开始把 GUI 原子动作和高层 API/MCP tool 合并成 hybrid action space。</li>
+<li>成功奖励不只看文本输出，而是检查文件、数据库、浏览器状态、应用侧 effect。</li>
+</ul></article>
+<article class="env-panel" id="env-3"><h3>2.3 Mobile / Android 环境</h3><p>常用环境：</p>
+<ul>
+<li>AndroidEnv：标准 RL MDP for Android，连续触摸/手势，适合经典 RL，但时序长。</li>
+<li>AndroidWorld：真实 Android App、116 个 programmatic tasks、动态参数化任务，用 ADB/SQLite/文件状态检查 reward。</li>
+<li>AndroidLab、Mobile-Env、UISim、GUI Exploration Lab、MobileWorld：覆盖移动真实 App、模拟 UI 或导航图。</li>
+</ul>
+<p>容器与框架：</p>
+<ul>
+<li>主体是 Android Emulator / AVD + ADB，而不是传统 Docker 容器。Docker 可以包外层服务，但真正的环境隔离来自 emulator snapshot、设备镜像、任务 setup/teardown。</li>
+<li>奖励常用 ADB 查询、SQLite 数据库检查、文件系统检查、Accessibility tree 或后台 evaluator。</li>
+<li>并行训练会启动几十到几百个 emulator，CPU/内存/I/O 是主要瓶颈；GPU 主要给 VLM inference/training。</li>
+</ul></article>
+<article class="env-panel" id="env-4"><h3>2.4 世界模型 / Latent Rollout</h3><p>代表：DynaWeb、WebSynthesis、WebWorld、Code2World、SimURA、UI simulator。</p>
+<p>技术方案：</p>
+<ul>
+<li>学一个 action-conditioned dynamics model：输入当前 UI 表示和动作，预测下一网页/屏幕/DOM/可渲染代码。</li>
+<li>用 world model 做 MCTS、dream rollout 或 synthetic trajectory generation，再周期性回到真实环境校准。</li>
+<li>Code2World 走 renderable code 路线，用 HTML/代码作为可控状态表示；WebWorld/DynaWeb 走网页状态生成路线；WebSynthesis 结合世界模型和 MCTS。</li>
+</ul>
+<p>价值：</p>
+<ul>
+<li>绕过 live GUI 的 I/O wall。综述估算真实 web/desktop/mobile 单环境通常只有 0.2-2 steps/s，而 latent/world-model rollout 可到 10-100+ steps/s，仿真并行可达 10^3-10^4 steps/s 量级。</li>
+<li>主要风险是 sim-to-real gap，所以有效 pipeline 通常是：离线数据预训练 -&gt; 世界模型/模拟环境训练 -&gt; 少量真实在线校准。</li>
+</ul></article>
+<article class="env-panel" id="env-5"><h3>2.5 RL 算法与训练系统</h3><p>主流算法：</p>
+<ul>
+<li>GRPO/RLVR：当前 GUI RL 最常见。优势是不用 critic，适合长视觉序列和大 VLM；代表 GUI-R1、UI-R1、InfiGUI-G1、GUI-Eyes、Mano。</li>
+<li>DPO/Preference：适合从成功/失败轨迹对学习，训练稳定；代表 Agent Q、UI-TARS 部分阶段。</li>
+<li>AWR/IQL/CQL/Q-learning：适合离线轨迹和 value reranking；代表 DigiRL、Digi-Q。</li>
+<li>MCTS/Tree Search：适合轨迹合成和高质量数据搜索；代表 Agent Q、WebSynthesis。</li>
+<li>Process/Progress Reward：解决长任务稀疏奖励；代表 ProgRM、Step-GUI、ClawGUI PRM、AgentPRM。</li>
+</ul>
+<p>训练系统：</p>
+<ul>
+<li>veRL、OpenRLHF、ReaL、AReaL、HybridFlow 是常见 RLHF/RLVR 系统底座。</li>
+<li>vLLM/PagedAttention 用于 rollout inference；训练端常用 PyTorch FSDP、Megatron-LM 或 DeepSpeed；模型权重在 rollout actor 和 trainer 之间异步同步。</li>
+<li>DART-GUI、ComputerRL、MAI-UI、AReaL 类系统都采用 actor-trainer 分离：CPU/浏览器/模拟器 worker 连续采样，GPU learner 从 replay buffer 消费轨迹。</li>
+<li>真正的扩展瓶颈是环境 I/O：截图、渲染、网络、DOM/状态解析、ADB/VM 文件 I/O，而不是单纯 GPU 数量。</li>
+</ul></article></div>
+    </section>
+
+    <section class="section-block split" id="practice" aria-labelledby="practice-title">
+      <div class="section-heading sticky-heading">
+        <p class="eyebrow">Recipe</p>
+        <h2 id="practice-title">现在大家实际怎么做</h2>
+      </div>
+      <div class="prose"><p>一个比较标准的 pipeline 是：</p>
+<ol>
+<li>数据冷启动：用 AitW、AndroidControl、Mind2Web、OmniACT、ScreenSpot、Ferret-UI、Explorer/AgentTrek/OS-Genesis 合成轨迹做 SFT 或 offline RFT。</li>
+<li>统一动作空间：把 action 规范化为 click(x,y)、type(text)、scroll、swipe、back/home、finish，或进一步加入 API/MCP/tool calls。</li>
+<li>奖励设计：低层 grounding 用坐标命中/IoU/高斯连续奖励；中层过程用 progress/process reward；终局用数据库、文件、URL、DOM、ADB 状态或 VLM-as-judge。</li>
+<li>在线采样：Web 用 BrowserGym/WebArena + Playwright + Docker 服务；Desktop 用 OSWorld + Docker/QEMU/VNC；Mobile 用 Android emulator + ADB。</li>
+<li>训练算法：小到中模型多用 GRPO/RLVR；需要偏好稳定时用 DPO；有离线轨迹时训练 value model 或用 AWR；长任务用 curriculum、replay、subgoal、PRM。</li>
+<li>系统扩展：把环境 rollout 和模型训练异步解耦；大量环境 worker 并行；vLLM 做快速采样，FSDP/Megatron 做训练，队列或 replay buffer 管理轨迹。</li>
+<li>真实部署：走 hybrid API-GUI，能调用 API 就调用 API，GUI 作为通用 fallback；加 verifier/backtracking/memory，避免一次错误导致整条任务失败。</li>
+</ol></div>
+    </section>
+
+    <section class="section-block split" id="trends" aria-labelledby="trends-title">
+      <div class="section-heading sticky-heading">
+        <p class="eyebrow">Trends</p>
+        <h2 id="trends-title">关键趋势</h2>
+      </div>
+      <div class="prose"><ul>
+<li>从“模仿人类点击”转向“可验证环境反馈上的自我改进”：GUI 比普通文本生成更适合 RLVR。</li>
+<li>从二值奖励转向连续、过程、多层奖励：GUI-G2/InfiGUI-G1/UI-AGILE/ProgRM/Step-GUI 都在解决 sparse reward。</li>
+<li>从单步 grounding 转向多轮任务和恢复：WebAgent-R1、MobileRL、DART-GUI、BacktrackAgent、Hi-Agent 是这条线。</li>
+<li>从 live rollout 转向 world model 和半在线：DynaWeb、WebWorld、Code2World、UI-S1 都是在绕 I/O wall。</li>
+<li>从纯 GUI 转向 API-GUI/MCP 混合：UltraCUA、ComputerRL、MAI-UI、ClawGUI 说明真实部署不会只靠鼠标键盘。</li>
+<li>从大模型 brute force 转向小模型高效 RL：AgentCPM-Explore、GUI-R1-3K、GUI-Eyes-3K 展示了少数据和小模型的空间。</li>
+</ul></div>
+    </section>
+
+    <section class="section-block" id="refs" aria-labelledby="refs-title">
+      <div class="section-heading">
+        <p class="eyebrow">Sources</p>
+        <h2 id="refs-title">参考链接</h2>
+      </div>
+      <div class="refs-grid"><a href="https://arxiv.org/abs/2604.27955" target="_blank" rel="noreferrer">GUI Agents with Reinforcement Learning: Toward Digital Inhabitants</a>
+<a href="https://zhuyun97.github.io/embodied-ai-learning/" target="_blank" rel="noreferrer">具身智能学习站</a>
+<a href="https://arxiv.org/abs/2406.11896" target="_blank" rel="noreferrer">DigiRL</a>
+<a href="https://arxiv.org/abs/2502.15760" target="_blank" rel="noreferrer">Digi-Q</a>
+<a href="https://arxiv.org/abs/2408.07199" target="_blank" rel="noreferrer">Agent Q</a>
+<a href="https://arxiv.org/abs/2411.02337" target="_blank" rel="noreferrer">WebRL</a>
+<a href="https://arxiv.org/abs/2504.10458" target="_blank" rel="noreferrer">GUI-R1</a>
+<a href="https://arxiv.org/abs/2503.21620" target="_blank" rel="noreferrer">UI-R1</a>
+<a href="https://arxiv.org/abs/2507.15846" target="_blank" rel="noreferrer">GUI-G2</a>
+<a href="https://arxiv.org/abs/2505.12370" target="_blank" rel="noreferrer">SE-GUI</a>
+<a href="https://arxiv.org/abs/2508.05731" target="_blank" rel="noreferrer">InfiGUI-G1</a>
+<a href="https://arxiv.org/abs/2507.22025" target="_blank" rel="noreferrer">UI-AGILE</a>
+<a href="https://arxiv.org/abs/2504.14239" target="_blank" rel="noreferrer">InfiGUI-R1</a>
+<a href="https://arxiv.org/abs/2505.20660" target="_blank" rel="noreferrer">BacktrackAgent</a>
+<a href="https://arxiv.org/abs/2502.07949" target="_blank" rel="noreferrer">VSC-RL</a>
+<a href="https://arxiv.org/abs/2502.11357" target="_blank" rel="noreferrer">Explorer</a>
+<a href="https://arxiv.org/abs/2509.11543" target="_blank" rel="noreferrer">UI-S1</a>
+<a href="https://arxiv.org/abs/2510.14388" target="_blank" rel="noreferrer">Hi-Agent</a>
+<a href="https://arxiv.org/abs/2509.18119" target="_blank" rel="noreferrer">MobileRL</a>
+<a href="https://arxiv.org/abs/2509.23866" target="_blank" rel="noreferrer">DART-GUI</a>
+<a href="https://arxiv.org/abs/2509.17336" target="_blank" rel="noreferrer">Mano</a>
+<a href="https://arxiv.org/abs/2512.02423" target="_blank" rel="noreferrer">GELab-Zero</a>
+<a href="https://arxiv.org/abs/2512.15431" target="_blank" rel="noreferrer">Step-GUI</a>
+<a href="https://arxiv.org/abs/2512.22047" target="_blank" rel="noreferrer">MAI-UI</a>
+<a href="https://arxiv.org/abs/2601.09770" target="_blank" rel="noreferrer">GUI-Eyes</a>
+<a href="https://arxiv.org/abs/2601.22149" target="_blank" rel="noreferrer">DynaWeb</a>
+<a href="https://arxiv.org/abs/2510.17790" target="_blank" rel="noreferrer">UltraCUA</a>
+<a href="https://arxiv.org/abs/2508.14040" target="_blank" rel="noreferrer">ComputerRL</a>
+<a href="https://arxiv.org/abs/2505.23762" target="_blank" rel="noreferrer">ZeroGUI</a>
+<a href="https://arxiv.org/abs/2505.18121" target="_blank" rel="noreferrer">ProgRM</a>
+<a href="https://arxiv.org/abs/2511.10705" target="_blank" rel="noreferrer">Co-EPG</a>
+<a href="https://arxiv.org/abs/2510.14545" target="_blank" rel="noreferrer">AEBPO</a>
+<a href="https://arxiv.org/abs/2512.23647" target="_blank" rel="noreferrer">NestBrowse</a>
+<a href="https://arxiv.org/abs/2507.04370" target="_blank" rel="noreferrer">WebSynthesis</a>
+<a href="https://arxiv.org/abs/2602.14721" target="_blank" rel="noreferrer">WebWorld</a>
+<a href="https://arxiv.org/abs/2602.09856" target="_blank" rel="noreferrer">Code2World</a>
+<a href="https://arxiv.org/abs/2602.06485" target="_blank" rel="noreferrer">AgentCPM-Explore</a>
+<a href="https://arxiv.org/abs/2604.11784" target="_blank" rel="noreferrer">ClawGUI</a>
+<a href="https://arxiv.org/abs/2412.09605" target="_blank" rel="noreferrer">AgentTrek</a>
+<a href="https://arxiv.org/abs/2402.07456" target="_blank" rel="noreferrer">OS-Copilot</a></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>静态站点，由 Markdown 报告自动生成，可直接部署到 GitHub Pages。</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
