@@ -42,6 +42,7 @@
         <a href="#training">训练与奖励</a>
         <a href="#innovation">创新</a>
         <a href="#experiment">实验</a>
+        <a href="#misread">误读</a>
         <a href="#reproduce">复现</a>
         <a href="#limits">局限</a>
       </aside>
@@ -87,14 +88,34 @@
         </section>
         <section id="method">
           <h2>4. 方法与架构怎么跑</h2>
-          <ol><li>UI-TARS-2 强化多轮训练：模型每步先产生 thought 或状态理解，再输出动作，训练目标覆盖整条交互序列。</li>
+          <div class="method-summary"><ol><li>UI-TARS-2 强化多轮训练：模型每步先产生 thought 或状态理解，再输出动作，训练目标覆盖整条交互序列。</li>
 <li>它把错误恢复纳入训练分布：真实多轮任务里前一步动作会改变 UI，模型必须根据新截图重新定位，而不能假设专家轨迹仍然成立。</li>
 <li>跨平台动作空间保持统一，平台差异交给环境 adapter；这使移动、桌面、网页任务可以共享同一个策略接口。</li>
-<li>论文更像系统技术报告，价值在于说明大模型 GUI agent 已经从单步定位走向 multi-turn RL 和长期上下文管理。</li></ol>
+<li>论文更像系统技术报告，价值在于说明大模型 GUI agent 已经从单步定位走向 multi-turn RL 和长期上下文管理。</li></ol></div>
+          <div class="method-block">
+              <h3>4.1 UI-TARS-2 强化多轮训练</h3>
+              <p>UI-TARS-2 强化多轮训练：模型每步先产生 thought 或状态理解，再输出动作，训练目标覆盖整条交互序列。</p>
+              <p>这一层通常对应论文的核心设定：先把原本散乱的 GUI 交互整理成模型可以学习的输入/输出契约。读者需要问清楚：状态从哪里来，动作怎样被编码，哪些输出会被判为非法。</p>
+            </div>
+<div class="method-block">
+              <h3>4.2 它把错误恢复纳入训练分布</h3>
+              <p>它把错误恢复纳入训练分布：真实多轮任务里前一步动作会改变 UI，模型必须根据新截图重新定位，而不能假设专家轨迹仍然成立。</p>
+              <p>这一层对应实际运行路径：策略不是在抽象 benchmark 上打分，而是要进入浏览器、Android emulator、桌面 VM 或世界模型中执行。执行后产生的新状态会决定下一步 observation，也决定 reward 能不能被正确计算。</p>
+            </div>
+<div class="method-block">
+              <h3>4.3 跨平台动作空间保持统一，平台差异交给环境 adapter</h3>
+              <p>跨平台动作空间保持统一，平台差异交给环境 adapter；这使移动、桌面、网页任务可以共享同一个策略接口。</p>
+              <p>这一层是学习信号来源。GUI RL 的难点在于很多任务只有最终成功/失败；论文若能把环境状态、坐标误差、过程进展或候选轨迹质量转成稳定 reward，就能显著改善 credit assignment。</p>
+            </div>
+<div class="method-block">
+              <h3>4.4 关键步骤 4</h3>
+              <p>论文更像系统技术报告，价值在于说明大模型 GUI agent 已经从单步定位走向 multi-turn RL 和长期上下文管理。</p>
+              <p>这一层通常是稳定性或效率设计：课程学习、replay、过滤、重采样、异步 rollout、上下文压缩、工具调用或层级拆分，目的都是减少无效探索和系统等待。</p>
+            </div>
           <p>因此，这篇论文不是简单地“让大模型点屏幕”，而是围绕 observation-action-reward 契约重写训练闭环：先让动作可执行，再让反馈可验证，最后让策略能从成功和失败中更新。</p>
-          <h3>4.1 关键中间变量</h3>
+          <h3>4.5 关键中间变量</h3>
           <p>读方法时要特别盯住中间变量：轨迹是按 step 存、按 episode 存，还是按候选动作组存？奖励是只在终局出现，还是每一步都有 progress？模型更新时用的是整条轨迹的相对优势、单步坐标误差、偏好对，还是 value/Q head？这些细节决定了论文能否处理长任务和稀疏奖励。</p>
-          <h3>4.2 为什么这种设计能解决原问题</h3>
+          <h3>4.6 为什么这种设计能解决原问题</h3>
           <p>核心逻辑是把原本不可微、不可直接监督的 GUI 成功条件拆成更接近训练信号的形式：要么用规则/verifier 把成功自动判出来，要么用 reward model 学过程进展，要么用世界模型/搜索生成更多成功轨迹，要么用层级结构把几十步任务拆成几个短子目标。</p>
         </section>
         <section id="training">
@@ -120,15 +141,20 @@
           <p>这类实验通常需要同时看三组数字：第一是任务成功率或 grounding accuracy；第二是与 SFT、BC、prompting、GPT-4V/闭源模型或开源基线的对比；第三是环境成本，例如 rollout 速度、样本数量、标注成本和并行规模。</p>
           <p>尤其要避免一个常见误读：ScreenSpot/grounding accuracy、WebArena success rate、AndroidWorld task success、OSWorld desktop success、world-model rollout speed 不是同一个指标。本文页面保留原论文或综述的原始口径，不把它们强行换算。</p>
         </section>
+        <section id="misread">
+          <h2>8. 常见误读</h2>
+          <ul><li>不要把离线结果理解成“无需环境即可解决真实交互”；离线训练仍受轨迹覆盖和 OOD 状态限制。</li>
+<li>读 UI-TARS-2: Advancing GUI Agent with Multi-Turn Reinforcement Learning 时，应先确认它报告的是作者自评、技术报告结果还是第三方 benchmark 结果。</li></ul>
+        </section>
         <section id="reproduce">
-          <h2>8. 复现或落地时要准备什么</h2>
+          <h2>9. 复现或落地时要准备什么</h2>
           <ol><li>先固定 action schema，并写一个能把模型输出解析成真实 GUI 操作的 adapter。</li>
 <li>准备 verifier：至少要能判断终局成功；如果是 grounding 论文，还要能计算坐标/区域奖励。</li>
 <li>离线训练要检查轨迹覆盖和负样本质量，避免模型学到只在数据集状态里有效的捷径。</li></ol>
           <p>如果只能先复现一小部分，建议优先复现 action schema、verifier 和一组可重置任务；没有这三件事，后续 RL 指标很难可信。</p>
         </section>
         <section id="limits">
-          <h2>9. 局限与读法</h2>
+          <h2>10. 局限与读法</h2>
           <ul><li>离线轨迹覆盖不到的状态仍是风险；模型一旦偏离专家路径，可能缺少纠正样本。</li></ul>
           <p>它属于安全低成本路线：先尽量从已有轨迹和可验证标签中榨取价值，再决定是否进入在线环境。</p>
           <p>和参考站的可信度规则一致，本页把作者自评、技术报告自报和综述转述都按 ⚠️ 处理；只有基准维护方统一评测或第三方复现才适合当作更强证据。</p>

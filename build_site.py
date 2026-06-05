@@ -729,6 +729,49 @@ def benchmark_table_rows(paper: Paper) -> list[tuple[str, str, str, str]]:
     ]
 
 
+def method_blocks_for(paper: Paper) -> str:
+    blocks = []
+    for idx, note in enumerate(detail_notes_for(paper), start=1):
+        first_clause = re.split(r"[：:。；;]", note, maxsplit=1)[0]
+        title = first_clause if 4 <= len(first_clause) <= 34 else f"关键步骤 {idx}"
+        if idx == 1:
+            extra = "这一层通常对应论文的核心设定：先把原本散乱的 GUI 交互整理成模型可以学习的输入/输出契约。读者需要问清楚：状态从哪里来，动作怎样被编码，哪些输出会被判为非法。"
+        elif idx == 2:
+            extra = "这一层对应实际运行路径：策略不是在抽象 benchmark 上打分，而是要进入浏览器、Android emulator、桌面 VM 或世界模型中执行。执行后产生的新状态会决定下一步 observation，也决定 reward 能不能被正确计算。"
+        elif idx == 3:
+            extra = "这一层是学习信号来源。GUI RL 的难点在于很多任务只有最终成功/失败；论文若能把环境状态、坐标误差、过程进展或候选轨迹质量转成稳定 reward，就能显著改善 credit assignment。"
+        else:
+            extra = "这一层通常是稳定性或效率设计：课程学习、replay、过滤、重采样、异步 rollout、上下文压缩、工具调用或层级拆分，目的都是减少无效探索和系统等待。"
+        blocks.append(
+            f"""<div class="method-block">
+              <h3>4.{idx} {inline_md(title)}</h3>
+              <p>{inline_md(note)}</p>
+              <p>{inline_md(extra)}</p>
+            </div>"""
+        )
+    return "\n".join(blocks)
+
+
+def common_misreadings_for(paper: Paper) -> list[str]:
+    tags = set(paper.tags)
+    title = paper.title
+    items = []
+    if "Grounding" in tags:
+        items.append("不要把 grounding benchmark 的坐标准确率直接等同于完整 GUI 任务成功率；它只说明第一步或单步定位能力。")
+    if "Online RL" in tags:
+        items.append("不要只看最终成功率，还要看 rollout 成本和 verifier 可靠性；在线 RL 的有效性高度依赖环境吞吐。")
+    if "Offline RL" in tags:
+        items.append("不要把离线结果理解成“无需环境即可解决真实交互”；离线训练仍受轨迹覆盖和 OOD 状态限制。")
+    if "World Model" in tags:
+        items.append("不要把世界模型里的成功路径当成真实网页/真实设备必然可执行，必须看真实环境校准。")
+    if "Data" in tags:
+        items.append("不要只看合成轨迹数量；可复现性、去重、验证器误差和任务多样性比原始规模更重要。")
+    if not items:
+        items.append("不要把这篇工作当成单一算法改进；它可能主要贡献在系统、数据、环境或部署接口。")
+    items.append(f"读 {title} 时，应先确认它报告的是作者自评、技术报告结果还是第三方 benchmark 结果。")
+    return items[:4]
+
+
 def limitations_for(paper: Paper) -> list[str]:
     tags = set(paper.tags)
     limits = []
@@ -776,10 +819,12 @@ def detail_page(paper: Paper, prev_paper: Paper | None, next_paper: Paper | None
     )
     pipeline_html = "\n".join(f"<li>{inline_md(step)}</li>" for step in pipeline_for(paper))
     notes_html = "\n".join(f"<li>{inline_md(note)}</li>" for note in notes)
+    method_blocks = method_blocks_for(paper)
     recipe_html = "\n".join(f"<li>{inline_md(item)}</li>" for item in training_recipe_for(paper))
     innovations_html = "\n".join(f"<li>{inline_md(item)}</li>" for item in innovations_for(paper))
     checklist_html = "\n".join(f"<li>{inline_md(item)}</li>" for item in implementation_checklist_for(paper))
     limits_html = "\n".join(f"<li>{inline_md(item)}</li>" for item in limitations_for(paper))
+    misreadings_html = "\n".join(f"<li>{inline_md(item)}</li>" for item in common_misreadings_for(paper))
     benchmark_rows = "\n".join(
         f"<tr><td>{inline_md(a)}</td><td>{inline_md(b)}</td><td>{inline_md(c)}</td><td>{inline_md(d)}</td></tr>"
         for a, b, c, d in benchmark_table_rows(paper)
@@ -842,6 +887,7 @@ def detail_page(paper: Paper, prev_paper: Paper | None, next_paper: Paper | None
         <a href="#training">训练与奖励</a>
         <a href="#innovation">创新</a>
         <a href="#experiment">实验</a>
+        <a href="#misread">误读</a>
         <a href="#reproduce">复现</a>
         <a href="#limits">局限</a>
       </aside>
@@ -877,11 +923,12 @@ def detail_page(paper: Paper, prev_paper: Paper | None, next_paper: Paper | None
         </section>
         <section id="method">
           <h2>4. 方法与架构怎么跑</h2>
-          <ol>{notes_html}</ol>
+          <div class="method-summary"><ol>{notes_html}</ol></div>
+          {method_blocks}
           <p>因此，这篇论文不是简单地“让大模型点屏幕”，而是围绕 observation-action-reward 契约重写训练闭环：先让动作可执行，再让反馈可验证，最后让策略能从成功和失败中更新。</p>
-          <h3>4.1 关键中间变量</h3>
+          <h3>4.{len(notes) + 1} 关键中间变量</h3>
           <p>读方法时要特别盯住中间变量：轨迹是按 step 存、按 episode 存，还是按候选动作组存？奖励是只在终局出现，还是每一步都有 progress？模型更新时用的是整条轨迹的相对优势、单步坐标误差、偏好对，还是 value/Q head？这些细节决定了论文能否处理长任务和稀疏奖励。</p>
-          <h3>4.2 为什么这种设计能解决原问题</h3>
+          <h3>4.{len(notes) + 2} 为什么这种设计能解决原问题</h3>
           <p>核心逻辑是把原本不可微、不可直接监督的 GUI 成功条件拆成更接近训练信号的形式：要么用规则/verifier 把成功自动判出来，要么用 reward model 学过程进展，要么用世界模型/搜索生成更多成功轨迹，要么用层级结构把几十步任务拆成几个短子目标。</p>
         </section>
         <section id="training">
@@ -904,13 +951,17 @@ def detail_page(paper: Paper, prev_paper: Paper | None, next_paper: Paper | None
           <p>这类实验通常需要同时看三组数字：第一是任务成功率或 grounding accuracy；第二是与 SFT、BC、prompting、GPT-4V/闭源模型或开源基线的对比；第三是环境成本，例如 rollout 速度、样本数量、标注成本和并行规模。</p>
           <p>尤其要避免一个常见误读：ScreenSpot/grounding accuracy、WebArena success rate、AndroidWorld task success、OSWorld desktop success、world-model rollout speed 不是同一个指标。本文页面保留原论文或综述的原始口径，不把它们强行换算。</p>
         </section>
+        <section id="misread">
+          <h2>8. 常见误读</h2>
+          <ul>{misreadings_html}</ul>
+        </section>
         <section id="reproduce">
-          <h2>8. 复现或落地时要准备什么</h2>
+          <h2>9. 复现或落地时要准备什么</h2>
           <ol>{checklist_html}</ol>
           <p>如果只能先复现一小部分，建议优先复现 action schema、verifier 和一组可重置任务；没有这三件事，后续 RL 指标很难可信。</p>
         </section>
         <section id="limits">
-          <h2>9. 局限与读法</h2>
+          <h2>10. 局限与读法</h2>
           <ul>{limits_html}</ul>
           <p>{inline_md(relation_for(paper))}</p>
           <p>和参考站的可信度规则一致，本页把作者自评、技术报告自报和综述转述都按 ⚠️ 处理；只有基准维护方统一评测或第三方复现才适合当作更强证据。</p>
@@ -1705,6 +1756,23 @@ input {
 
 .detail-content li + li {
   margin-top: 0.65rem;
+}
+
+.method-summary {
+  margin-bottom: 1rem;
+  padding: 0.8rem 1rem;
+  background: color-mix(in oklch, var(--paper-strong) 70%, transparent);
+  border: 1px solid color-mix(in oklch, var(--rule) 80%, var(--ink));
+}
+
+.method-block {
+  margin: 1rem 0;
+  padding: 1rem 0;
+  border-top: 1px solid color-mix(in oklch, var(--rule) 75%, transparent);
+}
+
+.method-block h3 {
+  color: var(--ink);
 }
 
 .detail-table {
