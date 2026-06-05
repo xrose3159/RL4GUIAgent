@@ -1,0 +1,1488 @@
+{
+  "1": {
+    "title": "DigiRL: Training In-The-Wild Device-Control Agents with Autonomous Reinforcement Learning",
+    "arxiv": "2406.11896",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2406.11896/x11.png",
+        "caption": "Figure 10 : Success rate with different horizon length ( H ∈ { 10 , 20 } 𝐻 10 20 H\\in\\{10,20\\} italic_H ∈ { 10 , 20 } )under different methods on the AiTW Google Search task set.",
+        "score": 25,
+        "width": 831,
+        "height": 571,
+        "local_src": "figures/01.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2406.11896/x16.png",
+        "caption": "Figure 13 : Error recovery cases. In bestbuy.com , we systematically find DigiRL able to recover from its own mistakes, while AutoUI fails to do so.",
+        "score": 23,
+        "width": 789,
+        "height": 572
+      },
+      {
+        "src": "https://arxiv.org/html/2406.11896/x5.png",
+        "caption": "Figure 5 : Algorithm visualization. The two value function are first trained with original distribution of collected trajectories according to Equation 4.5 and Equation 4.6 , then used to filter the trajectories for training the actor. We use the MLE loss (Maximum Likelihood Estimation loss) to train the actor.",
+        "score": 19,
+        "width": 822,
+        "height": 376
+      },
+      {
+        "src": "https://arxiv.org/html/2406.11896/x12.png",
+        "caption": "Figure 11 : Agents’ trajectory on two randomly sampled tasks on the General split of AitW.",
+        "score": 18,
+        "width": 623,
+        "height": 635
+      },
+      {
+        "src": "https://arxiv.org/html/2406.11896/x1.png",
+        "caption": "Figure 1 : DigiRL overview. DigiRL is built upon a VLM that has been pre-trained on extensive web data to develop fundamental skills such as common knowledge, reasoning, and visual grounding. Initially, we employ offline RL to fine-tune the VLM using stale task-specific data, which helps in eliciting goal-oriented behaviors. Subsequently, our agent engages with real-world graphical user interfaces, continuously enhancing its performance through online RL and autonomous performance evaluations.",
+        "score": -46,
+        "width": 747,
+        "height": 383
+      }
+    ]
+  },
+  "2": {
+    "title": "Digi-Q: Learning Q-Value Functions for Training Device-Control Agents",
+    "arxiv": "2502.15760",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2502.15760/x2.png",
+        "caption": "Figure 2 : Overview of Digi-Q. Blue arrows represent forward data flows, while red arrows represent how we get learning targets used for back propagation. Our method first goes through a representation fine-tuning stage to extract actionable features from the VLM. TD-learning is then performed on top of frozen VLM representations to learn a reliable Q value function, followed by Best-of-N policy extraction approach.",
+        "score": 80,
+        "width": 822,
+        "height": 299,
+        "local_src": "figures/02.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2502.15760/x7.png",
+        "caption": "Figure 6 : Q-function architecture. The modules marked orange are trained, otherwise the module is kept fixed.",
+        "score": 57,
+        "width": 822,
+        "height": 285
+      },
+      {
+        "src": "https://arxiv.org/html/2502.15760/x8.png",
+        "caption": "Figure 7 : Environment errors. These errors are systematic and can not be removed by the agent.",
+        "score": 32,
+        "width": 830,
+        "height": 476
+      },
+      {
+        "src": "https://arxiv.org/html/2502.15760/x6.png",
+        "caption": "Figure 5 : Offline critic evaluation accuracy as a function of compute measured in terms of training FLOPS, compared across Digi-Q, end-to-end TD-learning on a VLM, and MC return. Observe that the critic accuracy is much better for our approach over end-to-end TD-learning as the amount of compute increases.",
+        "score": 23,
+        "width": 829,
+        "height": 613
+      },
+      {
+        "src": "https://arxiv.org/html/2502.15760/x10.png",
+        "caption": "Figure 9 : Trajectory examples showing benefits of Q-functions. Our method can combine the best of a successful but lengthy ( A ) trajectory and a failed but short trajectory ( B ), to produce successful and short trajectories ( C ).",
+        "score": 23,
+        "width": 830,
+        "height": 478
+      }
+    ]
+  },
+  "3": {
+    "title": "Agent Q: Advanced Reasoning and Learning for Autonomous AI Agents",
+    "arxiv": "2408.07199",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2408.07199/images/AgentFormat.png",
+        "caption": "Figure 2 : We provide the following input format to the Agent, consisting of the system prompt, execution history, the current observation as a DOM representation, and the user query containing the goal. We divide our Agent output format into an overall step-by-step plan, thought, a command, and a status code.",
+        "score": 37,
+        "width": 598,
+        "height": 346,
+        "local_src": "figures/03.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2408.07199/images/process_supervision.png",
+        "caption": "Figure 4 : The policy proposes K actions at every step during inference time search. The critic, also initialized as the same base LLM model used by the policy, ranks the actions proposed by the policy. This ranking is used to guide node selection after expansion and used to construct preference pairs during policy training.",
+        "score": 37,
+        "width": 568,
+        "height": 183
+      },
+      {
+        "src": "https://arxiv.org/html/2408.07199/images/WebShopPreliminaryResultsPassFinalBold.png",
+        "caption": "Figure 3 : Success rate of different approaches on the WebShop Yao et al. ( 2022 ) task. All models are based on xLAM-v0.1-r Zhang et al. ( 2024c ) . RFT and DPO over xLAM-v0.1-r demonstrate improvements in performance from 28.6% to 31.3% and 37.5% respectively. However, these methods still lag behind average human performance of 50.0%. Our approach, Agent Q + MCTS achieves a significant gain (76.57% relative improvement) over the base model, outperforming average human performance on WebShop with a success rate of 50.5% .",
+        "score": -89,
+        "width": 438,
+        "height": 261
+      },
+      {
+        "src": "https://arxiv.org/html/2408.07199/images/outocme_supervision.png",
+        "caption": "Figure 5 : At the end of a trajectory, a GPT-4-V evaluator is called to provide feedback on the agent’s performance given the final observation and action history to determine the success score. The model is prompted with a condensed execution history of the trajectory and the screenshot of the final state. The success metric is a binary 0/1 value.",
+        "score": -106,
+        "width": 438,
+        "height": 217
+      },
+      {
+        "src": "https://arxiv.org/html/2408.07199/images/AgentTree2.png",
+        "caption": "Figure 1 : We use Monte Carlo Tree Search (MCTS) to guide trajectory collection and iteratively improve model performance using direct preference optimization (DPO). We begin on the left by sampling a user query from the list of tasks in the dataset. We iteratively expand the search tree using UCB1 as a heuristic to balance exploration and exploitation of different actions. We store the accumulated reward obtained for each node in the tree, where in this image darker green indicates higher reward and darker red indicates lower reward. To construct the preference dataset, we compute a weighted score of the MCTS average Q-value and score generated by a feedback language model to construct contrastive pairs for DPO. The policy is optimized and can be iteratively improved.",
+        "score": -220,
+        "width": 476,
+        "height": 223
+      }
+    ]
+  },
+  "4": {
+    "title": "WebRL: Training LLM Web Agents via Self-Evolving Online Curriculum RL",
+    "arxiv": "2411.02337",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2411.02337/x3.png",
+        "caption": "Figure 2: Overview of WebRL . WebRL is a self-evolving online curriculum reinforcement learning framework for LLM-based web agents, yielding consistent continual improvements throughout the iterative self-evolution.",
+        "score": 129,
+        "width": 830,
+        "height": 265,
+        "local_src": "figures/04.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2411.02337/x4.png",
+        "caption": "Figure 3: Distribution analysis of error types for WebRL and baseline methods.",
+        "score": 18,
+        "width": 788,
+        "height": 162
+      },
+      {
+        "src": "https://arxiv.org/html/2411.02337/x7.png",
+        "caption": "Figure 6: Accuracy of WebRL and baselines for tasks with different complexity.",
+        "score": 12,
+        "width": 831,
+        "height": 723
+      },
+      {
+        "src": "https://arxiv.org/html/2411.02337/x21.png",
+        "caption": "Figure 20: Prompts for instruction generation (version 3).",
+        "score": 12,
+        "width": 830,
+        "height": 1007
+      },
+      {
+        "src": "https://arxiv.org/html/2411.02337/x22.png",
+        "caption": "Figure 21: The simple prompt employed in baselines.",
+        "score": 12,
+        "width": 830,
+        "height": 1345
+      }
+    ]
+  },
+  "5": {
+    "title": "UI-TARS / ARPO: End-to-End Policy Optimization for GUI Agents with Experience Replay",
+    "arxiv": "2501.12326",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2501.12326/extracted/6146349/figures/model_arc.png",
+        "caption": "Figure 4: Overview of UI-TARS. We illustrate the architecture of the model and its core capabilities.",
+        "score": 120,
+        "width": 449,
+        "height": 425,
+        "local_src": "figures/05.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2501.12326/extracted/6146349/figures/core.png",
+        "caption": "Figure 3: An overview of core capabilities and evaluation for GUI agents.",
+        "score": 77,
+        "width": 598,
+        "height": 351
+      },
+      {
+        "src": "https://arxiv.org/html/2501.12326/extracted/6146349/figures/online_bootstrap.png",
+        "caption": "Figure 7: Overview of the online bootstrapping process.",
+        "score": 54,
+        "width": 538,
+        "height": 250
+      },
+      {
+        "src": "https://arxiv.org/html/2501.12326/extracted/6146349/figures/5-stage.png",
+        "caption": "Figure 2: The evolution path for GUI agents.",
+        "score": 33,
+        "width": 598,
+        "height": 337
+      },
+      {
+        "src": "https://arxiv.org/html/2501.12326/extracted/6146349/figures/case-1-v8.png",
+        "caption": "Figure 1: A demo case of UI-TARS that helps user to find flights.",
+        "score": 25,
+        "width": 568,
+        "height": 836
+      }
+    ]
+  },
+  "6": {
+    "title": "UI-TARS-2: Advancing GUI Agent with Multi-Turn Reinforcement Learning",
+    "arxiv": "2509.02544",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2509.02544/x2.png",
+        "caption": "Figure 2 : Browser sandbox (container) architecture.",
+        "score": 68,
+        "width": 814,
+        "height": 482,
+        "local_src": "figures/06.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2509.02544/x4.png",
+        "caption": "Figure 4 : The four-layer architecture of the interactive annotation platform.",
+        "score": 60,
+        "width": 830,
+        "height": 451
+      },
+      {
+        "src": "https://arxiv.org/html/2509.02544/x15.png",
+        "caption": "(a) Training reward of hybrid training versus training purely on one interface. Figure 15 : (a)(b) Training reward of hybrid training versus training purely on one interface; (c)(d) Iteration length of hybrid training (Orange line) with training purely on one interface (Blue line); (e) Explained Variance of the value model in hybrid training versus training on one modality. Unified tasks enable the value function to perform optimally across all scenarios.",
+        "score": 29,
+        "width": 747,
+        "height": 294
+      },
+      {
+        "src": "https://arxiv.org/html/2509.02544/x7.png",
+        "caption": "Figure 7 : Training reward dynamics for GUI-Browsing, GUI-General, and game scenarios in UI-TARS-2.",
+        "score": 27,
+        "width": 788,
+        "height": 259
+      },
+      {
+        "src": "https://arxiv.org/html/2509.02544/x1.png",
+        "caption": "Figure 1 : A demo trajectory of UI-TARS-2.",
+        "score": 25,
+        "width": 789,
+        "height": 591
+      }
+    ]
+  },
+  "7": {
+    "title": "GUI-R1: A Generalist R1-Style Vision-Language Action Model for GUI Agents",
+    "arxiv": "2504.10458",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2504.10458/x4.png",
+        "caption": "Figure 2 : Overview of the GUI-R1 Framework. Given the high-level instruction, action history, and visual image inputs, the policy model generates multiple responses containing reasoning steps. Then the verifiable rewards, such as action type reward, click point reward, and input text reward, are used with the policy gradient optimization algorithm to update the policy model.",
+        "score": 139,
+        "width": 647,
+        "height": 235,
+        "local_src": "figures/07.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2504.10458/x10.png",
+        "caption": "(c) PG loss curve with training steps.",
+        "score": 17,
+        "width": 660,
+        "height": 327
+      },
+      {
+        "src": "https://arxiv.org/html/2504.10458/x11.png",
+        "caption": "(d) Mean response length curve with training steps.",
+        "score": 17,
+        "width": 660,
+        "height": 327
+      },
+      {
+        "src": "https://arxiv.org/html/2504.10458/x2.png",
+        "caption": "(b) Low-level task capability.",
+        "score": 8,
+        "width": 660,
+        "height": 635
+      },
+      {
+        "src": "https://arxiv.org/html/2504.10458/x3.png",
+        "caption": "(c) High-level task capability.",
+        "score": 8,
+        "width": 660,
+        "height": 661
+      }
+    ]
+  },
+  "8": {
+    "title": "UI-R1: Enhancing Efficient Action Prediction of GUI Agents by RL",
+    "arxiv": "2503.21620",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2503.21620/x2.png",
+        "caption": "Figure 2: Overview of UI-R1 training framework. Given a GUI screenshot and a text instruction from the user, the policy model (i.e., Qwen2.5-VL-3B) generates multiple action planning responses with reasoning. Our proposed rule-based action reward function is then applied, and the policy model is updated using a policy gradient optimization algorithm.",
+        "score": 207,
+        "width": 760,
+        "height": 478,
+        "local_src": "figures/08.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2503.21620/x5.png",
+        "caption": "Figure 5: UI-R1 training process.",
+        "score": 25,
+        "width": 760,
+        "height": 806
+      },
+      {
+        "src": "https://arxiv.org/html/2503.21620/x3.png",
+        "caption": "Figure 3: Left : Impact of data selection methods and data size; Right : Study of relation between answering accuracy and reasoning length.",
+        "score": 19,
+        "width": 761,
+        "height": 245
+      },
+      {
+        "src": "https://arxiv.org/html/2503.21620/x8.png",
+        "caption": "Figure 8: An example of use case.",
+        "score": 8,
+        "width": 685,
+        "height": 649
+      },
+      {
+        "src": "https://arxiv.org/html/2503.21620/x7.png",
+        "caption": "Figure 7: Accuracy change over rounds.",
+        "score": 5,
+        "width": 685,
+        "height": 437
+      }
+    ]
+  },
+  "9": {
+    "title": "GUI-G2: Gaussian Reward Modeling for GUI Grounding",
+    "arxiv": "2507.15846",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2507.15846/x4.png",
+        "caption": "Figure 3: GUI Gaussian Grounding Rewards (GUI-G 2 ). Our framework transforms GUI grounding through continuous Gaussian modeling. Given a task instruction and screenshot, the policy model generates multiple predictions that are evaluated using our dual reward mechanism. Gaussian Point Rewards assess localization precision while Gaussian Coverage Rewards measure spatial overlap, together providing dense learning signals that guide policy optimization.",
+        "score": 83,
+        "width": 761,
+        "height": 468,
+        "local_src": "figures/09.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2507.15846/x11.png",
+        "caption": "(a) Information-Dense Interface (b) Visual and Structural Ambiguity Figure 10: Analysis of GUI grounding failure cases.",
+        "score": 17,
+        "width": 761,
+        "height": 490
+      },
+      {
+        "src": "https://arxiv.org/html/2507.15846/x12.png",
+        "caption": "(b) Visual and Structural Ambiguity",
+        "score": 17,
+        "width": 760,
+        "height": 490
+      },
+      {
+        "src": "https://arxiv.org/html/2507.15846/x10.png",
+        "caption": "Figure 9: Reward distribution and standard deviation analysis during training. The reward variance patterns illustrate the fundamental differences between continuous and binary random reward mechanisms in reinforcement learning dynamics.",
+        "score": 16,
+        "width": 761,
+        "height": 249
+      },
+      {
+        "src": "https://arxiv.org/html/2507.15846/x1.png",
+        "caption": "Figure 1: GUI grounding performance and human click behavior. Left: Performance comparison of various models on ScreenSpot-Pro. Right: Human click distribution from AITW (Rawles et al., 2023 ) reveals natural Gaussian patterns around target centers ( μ = 0.111 \\mu=0.111 italic_μ = 0.111 , σ = 0.429 \\sigma=0.429 italic_σ = 0.429 ), validating our design choice of continuous Gaussian rewards over discrete binary feedback.",
+        "score": -173,
+        "width": 760,
+        "height": 365
+      }
+    ]
+  },
+  "10": {
+    "title": "SE-GUI: Enhancing Visual Grounding via Self-Evolutionary RL",
+    "arxiv": "2505.12370",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2505.12370/x2.png",
+        "caption": "Figure 2 : Overview of the SE-GUI Framework. Given high-level instructions and the corresponding screenshots, SE-GUI generates multiple candidate responses and is optimized via GRPO using verifiable rewards as feedback signals. The updated model is then leveraged to identify high-quality samples in the training set, which yields cleaner learning signal for subsequent iterations. This iterative process enables SE-GUI to progressively improve itself by refining its predictions and training data.",
+        "score": 156,
+        "width": 813,
+        "height": 442,
+        "local_src": "figures/10.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2505.12370/x4.png",
+        "caption": "Figure 4 : Training curve of our SE-GUI-7B model.",
+        "score": 42,
+        "width": 830,
+        "height": 441
+      },
+      {
+        "src": "https://arxiv.org/html/2505.12370/x6.png",
+        "caption": "Figure 6 : The model attention on specific training sample.",
+        "score": 33,
+        "width": 830,
+        "height": 488
+      },
+      {
+        "src": "https://arxiv.org/html/2505.12370/x5.png",
+        "caption": "Figure 5 : The model attention on specific training sample.",
+        "score": 32,
+        "width": 830,
+        "height": 467
+      },
+      {
+        "src": "https://arxiv.org/html/2505.12370/x1.png",
+        "caption": "Figure 1 : Performance comparison of various GUI agents on both the grounding benchmark (ScreenSpot [ 18 ] , ScreenSpot-v2 [ 7 ] , ScreenSpot-Pro [ 4 ] ) and the agent benchmark (Android_Control-High [ 19 ] , Android_Control-Low [ 19 ] , OmniACT [ 20 ] ). Our model, SE-GUI marked with a star, demonstrates state-of-the-art performance against models with larger parameter counts.",
+        "score": -337,
+        "width": 789,
+        "height": 273
+      }
+    ]
+  },
+  "11": {
+    "title": "InfiGUI-G1: Adaptive Exploration Policy Optimization for GUI Grounding",
+    "arxiv": "2508.05731",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2508.05731/x1.png",
+        "caption": "Figure 1: Primary GUI‐grounding failure modes. (a) Spatial‐alignment failure: the model selects the correct icon but localizes it imprecisely. (b) Semantic‐alignment failure: the model localizes precisely on an incorrect icon due to misinterpreting the instruction. Although RLVR methods have advanced spatial alignment, semantic alignment remains the critical bottleneck for complex GUI tasks—this work is devoted to addressing it.",
+        "score": -8,
+        "width": 748,
+        "height": 690
+      },
+      {
+        "src": "https://arxiv.org/html/2508.05731/x2.png",
+        "caption": "Figure 2: Visualization of the AER function based on the efficiency ratio η = U / C \\eta=U/C . (a) The reward curve increases nonlinearly to strongly incentivize selection of the correct answer, i.e., lower rank k k . (b) The AER dynamically balances exploration and exploitation: successful trials (green/blue curves) receive higher reward for greater efficiency (smaller candidate set N N ), whereas failures (red curve) incur diminishing penalties to promote broader exploration.",
+        "score": -18,
+        "width": 830,
+        "height": 660
+      },
+      {
+        "src": "https://arxiv.org/html/2508.05731/x3.png",
+        "caption": "Figure 3: Comparison of AEPO and a naive RL baseline. Top: The naive single-answer approach becomes trapped on high-confidence errors, repeatedly sampling the same incorrect action and producing a vanishing learning signal when no positive reward is discovered. Bottom: AEPO employs multi-answer generation to explore diverse candidates each rollout and an AER to derive an informative learning signal from their efficiency and correctness. These mechanisms break the exploration bottleneck in GUI agents and enable robust semantic alignment.",
+        "score": -102,
+        "width": 969,
+        "height": 367
+      }
+    ]
+  },
+  "12": {
+    "title": "UI-AGILE: Effective RL and Precise Inference-Time Grounding",
+    "arxiv": "2507.22025",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2507.22025v4/x1.png",
+        "caption": "Figure 1 : An overview of UI-AGILE. (1) Left: The training stage is enhanced with our three core contributions: “Simple Thinking”, continuous grounding reward and cropping-based resampling. Continuous grounding reward being zero would result in crop-based resampling. (2) Right: The inference stage uses our proposed decomposed grounding with selection.",
+        "score": 179,
+        "width": 923,
+        "height": 437,
+        "local_src": "figures/12.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2507.22025v4/x2.png",
+        "caption": "Figure 2 : An example of cropping-based resampling. Yellow bounding boxes are the ground truth, red bounding boxes are invalid cropping, and blue bounding boxes are valid cropping. Green arrows show that the overlap of cropping windows is equivalent to the width or height of the ground-truth bounding box.",
+        "score": 13,
+        "width": 951,
+        "height": 282
+      },
+      {
+        "src": "https://arxiv.org/html/2507.22025v4/x4.png",
+        "caption": "Figure 4 : Distribution of attempts per step throughout the training process. Max attempt number is set to 4.",
+        "score": 13,
+        "width": 248,
+        "height": 99
+      },
+      {
+        "src": "https://arxiv.org/html/2507.22025v4/x5.png",
+        "caption": "Figure 5 : Prompt for VLM-based adjudication.",
+        "score": 1,
+        "width": 428,
+        "height": 165
+      },
+      {
+        "src": "https://arxiv.org/html/2507.22025v4/x6.png",
+        "caption": "Figure 6 : Ablation study using Type and GR as evaluation metrics on AndroidControl.",
+        "score": -128,
+        "width": 428,
+        "height": 254
+      }
+    ]
+  },
+  "13": {
+    "title": "InfiGUI-R1: Reactive Actors to Deliberative Reasoners",
+    "arxiv": "2504.14239",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2504.14239/x1.png",
+        "caption": "Figure 2. Overview of the Actor2Reasoner framework, a two-stage methodology for progressively transforming a Reactive Actor into a Deliberative Reasoner. Stage 1: Reasoning Injection uses Supervised Fine-Tuning (SFT) with Spatial Reasoning Distillation—identifying reasoning bottlenecks ( Pinpoint ) and leveraging a teacher model ( Distill )—to instill foundational cross-modal reasoning and transition the agent into a Basic Reasoner (Perception → → \\rightarrow → Reasoning → → \\rightarrow → Action). Stage 2: Deliberation Enhancement applies RL to refine planning and reflection capabilities, using Sub-goal Guidance ( Reward ) for forward-looking task decomposition and Error Recovery Scenario Construction ( Reflect ) for backward-looking self-correction, culminating in a Deliberative Reasoner.",
+        "score": 166,
+        "width": 830,
+        "height": 233,
+        "local_src": "figures/13.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2504.14239/x2.png",
+        "caption": "Figure 3. Reward curves during reinforcement learning training. The plot shows the overall reward and the rewards for individual task types (Low-level, High-level, Grounding) over training steps.",
+        "score": -15,
+        "width": 830,
+        "height": 541
+      },
+      {
+        "src": "https://arxiv.org/html/2504.14239/extracted/6373560/images/screenspot_pro_comparison.png",
+        "caption": "Figure 1. Performance comparison of various GUI agents on the ScreenSpot-Pro benchmark. Our model, InfiGUI-R1-3B marked with a star, demonstrates competitive performance against models with larger parameter counts.",
+        "score": -337,
+        "width": 598,
+        "height": 358
+      }
+    ]
+  },
+  "14": {
+    "title": "BacktrackAgent: Error Detection and Backtracking Mechanism",
+    "arxiv": "2505.20660",
+    "candidates": []
+  },
+  "15": {
+    "title": "VSC-RL: Variational Subgoal-Conditioned RL",
+    "arxiv": "2502.07949",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2502.07949/x1.png",
+        "caption": "Figure 1 : The pipeline of VSC-RL. (a) VLM autonomously decomposes the goal g 𝑔 g italic_g to the subgoals { s ⁢ g i } i = 1 N superscript subscript 𝑠 subscript 𝑔 𝑖 𝑖 1 𝑁 \\{sg_{i}\\}_{i=1}^{N} { italic_s italic_g start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT } start_POSTSUBSCRIPT italic_i = 1 end_POSTSUBSCRIPT start_POSTSUPERSCRIPT italic_N end_POSTSUPERSCRIPT . VSC-RL optimizes the objective of SGC-ELBO consisting of (b) maximizing the subgoal-conditioned return and (c) minimizing the subgoal-conditioned difference.",
+        "score": 74,
+        "width": 830,
+        "height": 231,
+        "local_src": "figures/15.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2502.07949/x2.png",
+        "caption": "Figure 2 : Autonomous subgoal generation in AitW task. The VLM autonomously decomposes the goal of the complicated mobile device control task into easily achievable subgoals.",
+        "score": 10,
+        "width": 830,
+        "height": 180
+      },
+      {
+        "src": "https://arxiv.org/html/2502.07949/x3.png",
+        "caption": "Figure 5 : Learning curves on WebArena-Lite.",
+        "score": 9,
+        "width": 831,
+        "height": 594
+      },
+      {
+        "src": "https://arxiv.org/html/2502.07949/extracted/6460098/figs/appendix/prompt_webarena.png",
+        "caption": "Figure 20 : Prompt example for our subgoal generator for WebArena-Lite tasks. The subgoal generator decomposes a user task into a sequence of more specific and actionable instructions based on the provided HTML context.",
+        "score": 8,
+        "width": 598,
+        "height": 694
+      },
+      {
+        "src": "https://arxiv.org/html/2502.07949/extracted/6460098/figs/appendix/example_aitw_1.png",
+        "caption": "Figure 22 : Qualitative example of VSC-RL on the AitW General task.",
+        "score": 4,
+        "width": 538,
+        "height": 442
+      }
+    ]
+  },
+  "16": {
+    "title": "Explorer: Scaling Exploration-Driven Web Trajectory Synthesis",
+    "arxiv": "2502.11357",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2502.11357/x1.png",
+        "caption": "Figure 1: Data Generation Pipeline. The task proposer agent generates an abstract task proposal and the first action based on the website homepage. The task is then iteratively refined in subsequent steps by the refiner agent. Finally, the task summarizer agent constructs an overall task description from the action sequence, followed by task verification to assess correctness.",
+        "score": 88,
+        "width": 830,
+        "height": 389,
+        "local_src": "figures/16.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2502.11357/x3.png",
+        "caption": "Figure E.3: Visualization of the model inputs during trajectory generation, model training, and inference. The example corresponds to step 2 of the trajectory in Figure 1 .",
+        "score": 46,
+        "width": 830,
+        "height": 343
+      },
+      {
+        "src": "https://arxiv.org/html/2502.11357/extracted/6495230/figures/treemap_4.png",
+        "caption": "Figure 2: Data composition for Explorer. Its extensive diversity showcases its potential to train end-to-end generalist web agents.",
+        "score": 21,
+        "width": 419,
+        "height": 255
+      },
+      {
+        "src": "https://arxiv.org/html/2502.11357/x2.png",
+        "caption": "Figure E.2: Example synthetic trajectory from Explorer. Each step shows the set-of-mark annotated screenshot along with the grounded action taken by the GPT-4 agent.",
+        "score": 18,
+        "width": 830,
+        "height": 441
+      },
+      {
+        "src": "https://arxiv.org/html/2502.11357/extracted/6495230/figures/perf_metrics.png",
+        "caption": "",
+        "score": 5,
+        "width": 598,
+        "height": 440
+      }
+    ]
+  },
+  "17": {
+    "title": "UI-S1: Semi-online Reinforcement Learning",
+    "arxiv": "2509.11543",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2509.11543/x1.png",
+        "caption": "Figure 1: Illustrations of three RL approaches. Our proposed Semi-online RL simulates online RL on offline static trajectories, which enhances multi-turn agent capabilities more efficiently.",
+        "score": 30,
+        "width": 746,
+        "height": 267,
+        "local_src": "figures/17.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2509.11543/images/case_aw_failure.png",
+        "caption": "Figure 17: A failed task case in AndroidWorld . The instruction is “Open the file task.html in Downloads in the file manager; when prompted open it with Chrome. Then click the button 5 times, remember the numbers displayed, and enter their product in the form.” . While the model was able to remember the numbers it encountered, it made an error at step 11, calculating 9 ⋅ 10 ⋅ 9 ⋅ 5 ⋅ 5 9\\cdot 10\\cdot 9\\cdot 5\\cdot 5 as 2250 2250 .",
+        "score": 13,
+        "width": 548,
+        "height": 142
+      },
+      {
+        "src": "https://arxiv.org/html/2509.11543/x3.png",
+        "caption": "Figure 3: Illustrations of our proposed Semi-online RL. During semi-online rollout, a Patch Module adaptively recovers from action mismatches. The dual-level advantages capture both step-wise and episode-level optimization signals with future reward propagation.",
+        "score": 4,
+        "width": 760,
+        "height": 292
+      },
+      {
+        "src": "https://arxiv.org/html/2509.11543/images/case_study.png",
+        "caption": "Figure 9: A cross-app and memorable task case in AndroidWorld. The instruction is ”Create a file in Markor, called receipt.md with the transactions from the receipt.png. Use Simple Gallery to view the receipt. Please enter transactions in csv format including the header ’Date, Item, Amount’.”",
+        "score": 3,
+        "width": 548,
+        "height": 297
+      },
+      {
+        "src": "https://arxiv.org/html/2509.11543/x5.png",
+        "caption": "Figure 5: Actor entropy during training process with different patch method and threshold.",
+        "score": 2,
+        "width": 830,
+        "height": 581
+      }
+    ]
+  },
+  "18": {
+    "title": "Hi-Agent: Hierarchical Vision-Language Agents for Mobile Device Control",
+    "arxiv": "2510.14388",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2510.14388/x1.png",
+        "caption": "Figure 1: Different paradigms for mobile control agents. (a) Flat Agents use a single trainable model for state-to-(reason-)action mapping. (b) Hierarchical Agents use a planner to improve reasoning, but it is typically a frozen black-box. (c) Hi-Agent (Ours) enables joint optimization where the high-level reasoning and low-level action models are co-adapted and fully trainable.",
+        "score": 135,
+        "width": 789,
+        "height": 334,
+        "local_src": "figures/18.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2510.14388/x3.png",
+        "caption": "Figure 3: Hierarchical Policy Optimization. (a) Standard GRPO incurs exponential sample complexity ( G n G^{n} ) and lacks intermediate reward signals in long-horizon tasks. (b) Hi-Agent reduces complexity to n ⋅ G n\\cdot G by decoupling subgoal generation from execution, and enables efficient joint training through foresight-guided subgoal evaluation.",
+        "score": 40,
+        "width": 830,
+        "height": 379
+      },
+      {
+        "src": "https://arxiv.org/html/2510.14388/x5.png",
+        "caption": "Figure 5: Effectiveness and efficiency of Hi-Agent. (a) Task success across model scales and training algorithms, showing consistent gains from hierarchical modeling and post-training. (b) Training curves under different group sizes G G ; larger G G improves stability and speeds up convergence.",
+        "score": 40,
+        "width": 830,
+        "height": 275
+      },
+      {
+        "src": "https://arxiv.org/html/2510.14388/x11.png",
+        "caption": "Figure 11: Illustration of Hi-Agent completing the task “Play the new Drake video on YouTube” .",
+        "score": 19,
+        "width": 665,
+        "height": 644
+      },
+      {
+        "src": "https://arxiv.org/html/2510.14388/x16.png",
+        "caption": "Figure 18: Illustration of Hi-Agent completing the task “Add the following expenses into the pro expense: name|amount_dollars|category_name|note Movie Night|$375.45|Entertainment|Urgent” .",
+        "score": 19,
+        "width": 664,
+        "height": 656
+      }
+    ]
+  },
+  "19": {
+    "title": "MobileRL: Online Agentic RL for Mobile GUI Agents",
+    "arxiv": "2509.18119",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2509.18119/x2.png",
+        "caption": "Figure 2: Overview of MobileRL . It consists of 1) reasoning warm-up with both reasoning-free SFT and reasoning SFT and 2) online agentic RL with AdaGRPO . In AdaGRPO , the warmed-up policy interacts with mobile environments to generate rollouts, which are scored by shortest-path reward adjustment (SPA). High-quality positive trajectories are stored in the AdaPR buffer, while low-performing rollouts are pruned via failure curriculum filtering.",
+        "score": 75,
+        "width": 830,
+        "height": 270,
+        "local_src": "figures/19.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2509.18119/x1.png",
+        "caption": "Figure 1: Left and Center : Task success rates on AndroidWorld (Rawles et al., 2024 ) and AndroidLab (Xu et al., 2024 ) ; hatched areas indicate gains from MobileRL on top of the SFT model. Right : Trajectory-level success rate curves on AndroidWorld train and test sets during RL training.",
+        "score": 43,
+        "width": 665,
+        "height": 206
+      },
+      {
+        "src": "https://arxiv.org/html/2509.18119/x3.png",
+        "caption": "(b) Training trajectory-level rewards from the AndroidWorld environment with respect to training steps.",
+        "score": 19,
+        "width": 747,
+        "height": 468
+      },
+      {
+        "src": "https://arxiv.org/html/2509.18119/x5.png",
+        "caption": "Figure 4: Pass@ k k on AndroidWorld by task complexity ( Rawles et al. ( 2024 ) ) levels. Pass@ k k is the fraction of tasks solved within the top- k k attempts. Figure 5: Win rate of MobileRL vs. MobileRL w/o SPA, where a win means completing a task with fewer steps. n n denotes the number of task templates per category. Categories: All (all templates); C1–C4 (complexity levels 1–4); BC / BW (both methods correct/wrong); Others (exactly one method correct).",
+        "score": 18,
+        "width": 327,
+        "height": 327
+      },
+      {
+        "src": "https://arxiv.org/html/2509.18119/x6.png",
+        "caption": "Figure 5: Win rate of MobileRL vs. MobileRL w/o SPA, where a win means completing a task with fewer steps. n n denotes the number of task templates per category. Categories: All (all templates); C1–C4 (complexity levels 1–4); BC / BW (both methods correct/wrong); Others (exactly one method correct).",
+        "score": 18,
+        "width": 419,
+        "height": 275
+      }
+    ]
+  },
+  "20": {
+    "title": "WebAgent-R1: End-to-End Multi-Turn RL for Web Agents",
+    "arxiv": "",
+    "candidates": []
+  },
+  "21": {
+    "title": "DART-GUI: Decoupled Training and Adaptive Data Curation",
+    "arxiv": "2509.23866",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2509.23866/x1.png",
+        "caption": "Figure 1: Overview of the D ecoupled A gentic R L T raining ( DART ) framework for GUI agents.",
+        "score": 149,
+        "width": 789,
+        "height": 433,
+        "local_src": "figures/21.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2509.23866/x2.png",
+        "caption": "Figure 2: Overall architecture of our framework. The Rollout Service interacts with multiple environments in parallel to generate trajectories, which are managed and delivered to the Trainer for policy updates. Updated actors are synchronized back to the Rollout Service , enabling scalable and efficient asynchronous learning. Implementation techniques are annotated within the figure.",
+        "score": 119,
+        "width": 746,
+        "height": 331
+      },
+      {
+        "src": "https://arxiv.org/html/2509.23866/figure/dynamic_rollout.png",
+        "caption": "Figure 5: Dynamic rollout N N with task success rate.",
+        "score": 7,
+        "width": 598,
+        "height": 601
+      },
+      {
+        "src": "https://arxiv.org/html/2509.23866/x3.png",
+        "caption": "Figure 3: Visualization of sampling timelines for 4 tasks in two batches (denoted by different colors) with rollout number N = 4 N=4 , batch size = 2 =2 , and a total of 8 8 environments. Each bar represents the timeline of rollout execution of a task on one environment.",
+        "score": 3,
+        "width": 830,
+        "height": 215
+      },
+      {
+        "src": "https://arxiv.org/html/2509.23866/figure/env_dashboard.png",
+        "caption": "Figure 8: Dashboard of the distributed Ubuntu env cluster.",
+        "score": 0,
+        "width": 247,
+        "height": 174
+      }
+    ]
+  },
+  "22": {
+    "title": "Mano Technical Report",
+    "arxiv": "2509.17336",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2509.17336/x1.png",
+        "caption": "Figure 1: Overview of the Mano framework. The left part illustrates the Exploration Module , which operates in simulated browsers and desktop environments to collect interaction elements and candidate goals, generating diverse trajectories and login assistance data for training. The center shows the Inference Process Pipeline , where the model follows a structured “think–act–verify” loop: interpreting GUI states, producing action descriptions (e.g., clicks or type), executing them, and validating outcomes through a verifier. The right part depicts the Optimize Process , a progressive pipeline of SFT, offline RL, and online RL, which systematically strengthens reasoning, adaptability, and end-to-end decision-making in dynamic GUI environments.",
+        "score": 232,
+        "width": 830,
+        "height": 369,
+        "local_src": "figures/22.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2509.17336/x3.png",
+        "caption": "Figure 3: Overall framework of online RL in Mano. The Mano model interacts with multiple parallel Playwright instances, each representing a GUI environment. For every step, the model fetches the status and screenshot, performs inference to generate thought and action, and then executes the action within the corresponding environment. The loop continues until the task is completed, while memory traces are recorded and trajectories are exported for further training and analysis.",
+        "score": 143,
+        "width": 830,
+        "height": 291
+      },
+      {
+        "src": "https://arxiv.org/html/2509.17336/x4.png",
+        "caption": "Figure 4: The operational workflow of Mano-parking , which illustrates its autonomous data extraction pipeline. The process begins with request reception and function registry lookup, followed by either direct execution of pre-validated functions or initiation of a multi-phase extraction synthesis. In the latter case, simplified HTML structures are obtained through browser automation and cleaning algorithms, combined with user-defined attribute specifications to generate customized extraction functions. These functions undergo a three-tier validation—field completeness, semantic consistency, and structural integrity—before being executed and stored for reuse. Furthermore, Mano-parking incorporates continuous monitoring and a self-healing mechanism, enabling adaptive regeneration of extraction logic when website structures evolve. This design ensures robustness, efficiency, and minimal hu",
+        "score": 117,
+        "width": 830,
+        "height": 230
+      },
+      {
+        "src": "https://arxiv.org/html/2509.17336/x6.png",
+        "caption": "Figure 6: The schematic representation of the automation engine’s architecture for collecting web interactions. The process begins with the generation of various URLs by a large language model (LLM). These URLs serve as inputs to identify common operation targets specific to the current website. Subsequently, the system fetches interactive elements on webpages using Mano-C , while also gathering descriptions of current webpage elements along with Document Object Model (DOM) information. This data facilitates the selection of candidate elements for subsequent exploration and operations. The iterative process is governed by a condition that checks whether the maximum exploration depth has been reached. If not, the cycle continues; otherwise, the exploration for the current candidate is deemed complete.",
+        "score": 82,
+        "width": 830,
+        "height": 210
+      },
+      {
+        "src": "https://arxiv.org/html/2509.17336/x2.png",
+        "caption": "Figure 2: Overall fine-tuning framework of Mano for GUI-oriented tasks. The pipeline consists of three progressive stages: (i) SFT on offline demonstrations; (ii) Offline RL leveraging static trajectories with reward decomposition; and (iii) Online RL with active environment interaction. The system incorporates step-level reasoning, explicit action description, and operation type selection (e.g., click, drag, type, scroll), while final performance is evaluated through structured outputs and multi-dimensional rewards combining format accuracy, operation correctness, and task completion.",
+        "score": 18,
+        "width": 830,
+        "height": 445
+      }
+    ]
+  },
+  "23": {
+    "title": "GELab-Zero / GUI Exploration Lab",
+    "arxiv": "2512.02423",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2512.02423/x2.png",
+        "caption": "Figure 2: (A) Overview of the interactive training framework: the GUI agent receives observations ( o o ), actions ( a a ), rewards ( r r ), and interacts with the GE-Lab environment to receive feedback and execute actions. (B) Reinforcement learning: ST-RL operates on pre-constructed trajectories, while MT-RL extends to multi-step online rollouts, enabling the agent to generate observation-action sequences interactively within the environment. (C) The navigation task is formalized as a POMDP, where historical states and current observations jointly inform the agent’s decisions.",
+        "score": 204,
+        "width": 789,
+        "height": 319,
+        "local_src": "figures/23.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2512.02423/x1.png",
+        "caption": "Figure 1: (A) Page transition sequences: green arrows show optimal paths, red arrows show detours. (B) Tree-structured navigation map with optimal (green) and redundant (red) paths. (C) SFT enables memorizing page transitions for basic navigation. (D) ST-RL generalizes to unseen paths, enhancing navigation. (E) MT-RL improves exploration and task success through environment interaction.",
+        "score": 22,
+        "width": 830,
+        "height": 383
+      },
+      {
+        "src": "https://arxiv.org/html/2512.02423/x10.png",
+        "caption": "Figure 7: Out-of-Distribution Environment Configurations: Env-Base serves as the in-domain baseline, while Env-Image, Env-Name, Env-Position, and Env-Noise introduce controlled perturbations targeting visual appearance, semantic labels, spatial layout, and visual complexity, respectively. Each environment maintains the same underlying task structure while introducing specific domain shifts to probe different aspects of model robustness.",
+        "score": 16,
+        "width": 747,
+        "height": 318
+      },
+      {
+        "src": "https://arxiv.org/html/2512.02423/x9.png",
+        "caption": "Figure 6: The navigation map of Env-Base.",
+        "score": 4,
+        "width": 498,
+        "height": 495
+      },
+      {
+        "src": "https://arxiv.org/html/2512.02423/x11.png",
+        "caption": "Figure 8: Real-world Data with Expanded Action Space.",
+        "score": -28,
+        "width": 830,
+        "height": 506
+      }
+    ]
+  },
+  "24": {
+    "title": "Step-GUI Technical Report",
+    "arxiv": "2512.15431",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2512.15431/x6.png",
+        "caption": "Figure 4: Overview of GUI-MCP architecture. The dual-layer design includes Low-level MCP (providing atomic device operations) and High-level MCP (delegating tasks to a local GUI specialist model). This hierarchical approach enables efficient task execution while preserving user privacy through local processing.",
+        "score": 177,
+        "width": 813,
+        "height": 414,
+        "local_src": "figures/24.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2512.15431/x4.png",
+        "caption": "Figure 2: Calibrated Step Reward System (CSRS) Architecture. The system consists of a Calibration Layer that performs trajectory-level validation (success/failure) and a Data Extraction module powered by thinking models that generates seven categories of structured training data. Model-generated trajectories flow through CSRS in an iterative loop: rollout generates trajectories, CSRS processes them into high-quality training data, and training produces stronger models for the next iteration. Advantage A : Trajectory-level validation provides high-confidence reward signals, ensuring learning stability. Advantage B : LLM-generated chain-of-thought provides rich reasoning that enhances model understanding. Success trajectories yield all seven data types while failed trajectories contribute only knowledge-related data (categories 1-6), implementing a selective learning strategy.",
+        "score": 106,
+        "width": 830,
+        "height": 386
+      },
+      {
+        "src": "https://arxiv.org/html/2512.15431/x5.png",
+        "caption": "Figure 3: Self-Evolving Training Pipeline with Closed-Loop Data Refinement. The pipeline consists of three progressive training stages (Mid-Train, Cold-Start, and RLVR) and two parallel data flows. Generation Data Flow: The Policy Model generates new trajectories via Task Generator, which are verified through the CSRS to produce high-quality Knowledge Data and Trajectory Data for the next training round. Refinement Data Flow: Existing trajectory data undergo dual-path filtering through Self-Distillation and Rejection Sampling. This iterative loop continuously enhances data quality and model capability across rounds.",
+        "score": 86,
+        "width": 830,
+        "height": 372
+      },
+      {
+        "src": "https://arxiv.org/html/2512.15431/x8.png",
+        "caption": "Figure 19: AndroidWorld Trajectory 1: Delete the following expenses from pro expense: Tutoring Services, Magazines, Theater Show.",
+        "score": 12,
+        "width": 747,
+        "height": 857
+      },
+      {
+        "src": "https://arxiv.org/html/2512.15431/x9.png",
+        "caption": "Figure 20: AndroidWorld Trajectory 2: In Simple Calendar Pro, create a calendar event for tomorrow at 4h with the title ’Workshop on Annual Report’ and the description ’We will review annual budget.’. The event should last for 15 mins.",
+        "score": 12,
+        "width": 830,
+        "height": 816
+      }
+    ]
+  },
+  "25": {
+    "title": "MAI-UI Technical Report",
+    "arxiv": "2512.22047",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2512.22047/x4.png",
+        "caption": "Figure 4: Overview of the self-evolving data pipeline for trajectory synthesis. The pipeline comprises task generation, trajectory construction via human annotation and autonomous agent rollouts, and iterative rejection sampling that jointly evolve the model and the training corpus.",
+        "score": 147,
+        "width": 705,
+        "height": 309,
+        "local_src": "figures/25.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2512.22047/x5.png",
+        "caption": "Figure 5: Overview of the agentic reinforcement learning framework. The framework alternates between rollout phases where the latest policy interacts with online mobile environments to generate trajectories and training phases that progressively improve the policy using trajectory-level rewards.",
+        "score": 135,
+        "width": 789,
+        "height": 318
+      },
+      {
+        "src": "https://arxiv.org/html/2512.22047/x7.png",
+        "caption": "Figure 7: Overview of device-cloud collaboration architecture. The system adaptively routes computation between device and cloud models based on task context and data sensitivity.",
+        "score": 135,
+        "width": 789,
+        "height": 292
+      },
+      {
+        "src": "https://arxiv.org/html/2512.22047/x3.png",
+        "caption": "Figure 3: Overview of grounding and perception data pipeline",
+        "score": 112,
+        "width": 789,
+        "height": 338
+      },
+      {
+        "src": "https://arxiv.org/html/2512.22047/x2.png",
+        "caption": "Figure 2: Example trajectory of MAI-UI. MAI-UI completes GUI agent tasks via both UI operations and extended actions, including agent-user interaction and MCP tool use, and integrates a native device-cloud collaboration system.",
+        "score": 50,
+        "width": 789,
+        "height": 453
+      }
+    ]
+  },
+  "26": {
+    "title": "GUI-Eyes: Tool-Augmented Perception for Visual Grounding",
+    "arxiv": "2601.09770",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2601.09770/x2.png",
+        "caption": "Figure 2: Overview of the GUI-Eyes Framework. The top illustrates a rollout example with optional visual tool invocation, together with a tool-specific reward function that combines spatial proximity and region overlap relative to the ground-truth. The bottom depicts the progressive inference architecture and end-to-end training pipeline, where the two-stage decision process is guided by stage-specific prompts, and visual inputs are dynamically generated through previously applied visual tools.",
+        "score": 252,
+        "width": 814,
+        "height": 476,
+        "local_src": "figures/26.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2601.09770/x6.png",
+        "caption": "Figure 1: An Example of Active Perception with Cropping. Offset maps the point from crop to original image.",
+        "score": 28,
+        "width": 831,
+        "height": 1324
+      },
+      {
+        "src": "https://arxiv.org/html/2601.09770/x3.png",
+        "caption": "Figure 3: Inference Example of Tool-Augmented Reasoning with Cropping in a GUI Task.",
+        "score": 21,
+        "width": 830,
+        "height": 717
+      },
+      {
+        "src": "https://arxiv.org/html/2601.09770/x7.png",
+        "caption": "Figure 2: An Example of Direct Grounding without Tool.",
+        "score": 19,
+        "width": 831,
+        "height": 684
+      },
+      {
+        "src": "https://arxiv.org/html/2601.09770/x8.png",
+        "caption": "Figure 3: An Example of Active Perception with Zooming. Offset maps the point from crop to original image. Unzoomed click refers to the click point adjusted by the inverse of zoom factor.",
+        "score": 12,
+        "width": 831,
+        "height": 1258
+      }
+    ]
+  },
+  "27": {
+    "title": "DynaWeb: Model-Based RL of Web Agents",
+    "arxiv": "2601.22149",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2601.22149v2/figures/dynaweb.png",
+        "caption": "Figure 2 : Overview of DynaWeb. DynaWeb trains web agents via imagination-driven, model-based reinforcement learning. A learned web world model serves as a synthetic environment, enabling the agent to generate multi-step imagined rollouts without interacting with the live web. These imagined trajectories are mixed with a small fraction of real expert trajectories to stabilize learning. The agent policy is optimized using sequence-level policy optimization, allowing efficient and robust credit assignment for long-horizon web tasks with sparse terminal rewards.",
+        "score": 85,
+        "width": 476,
+        "height": 232,
+        "local_src": "figures/27.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2601.22149v2/x1.png",
+        "caption": "(a) Agent success rate vs. dream length. A moderate length (4–5) performs best; shorter trajectories under-complete, while longer ones compound hallucinations. (b) Impact of real trajectory data on success rate. Adding 40% ground-truth real data significantly outperforms the SFT baseline, with diminishing returns for higher percentages.",
+        "score": 21,
+        "width": 830,
+        "height": 622
+      },
+      {
+        "src": "https://arxiv.org/html/2601.22149v2/x1.png",
+        "caption": "(a) Agent success rate vs. dream length. A moderate length (4–5) performs best; shorter trajectories under-complete, while longer ones compound hallucinations.",
+        "score": 21,
+        "width": 830,
+        "height": 622
+      },
+      {
+        "src": "https://arxiv.org/html/2601.22149v2/x2.png",
+        "caption": "(b) Impact of real trajectory data on success rate. Adding 40% ground-truth real data significantly outperforms the SFT baseline, with diminishing returns for higher percentages.",
+        "score": 10,
+        "width": 830,
+        "height": 622
+      },
+      {
+        "src": "https://arxiv.org/html/2601.22149v2/figures/intro.png",
+        "caption": "Figure 1 : Comparison between traditional web agent training via live web interaction and DynaWeb. By replacing risky and inefficient real-world interaction with a learned web world model, DynaWeb enables imagination-driven training using virtual pages and dreamed trajectories, optionally augmented with real expert data, resulting in safer and more efficient agent optimization.",
+        "score": -207,
+        "width": 359,
+        "height": 186
+      }
+    ]
+  },
+  "28": {
+    "title": "UltraCUA: Foundation Model for Computer Use Agents with Hybrid Action",
+    "arxiv": "2510.17790",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2510.17790v3/x3.png",
+        "caption": "Figure 2 : An overview of UltraCUA’s design. UltraCUA adaptively switches between visual grounding and tool execution based on task requirements. This establishes the hybrid action mechanism that seamlessly integrates GUI primitives with high-level tool capabilities for enhanced computer-use automation across diverse environments.",
+        "score": 119,
+        "width": 830,
+        "height": 335,
+        "local_src": "figures/28.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2510.17790v3/x10.png",
+        "caption": "Figure 7 : An example of UltraCUA-32B helping processing images with hybrid action. The model starts coding at the very first step by calling the terminal tool, and finally writes a bash script and executes it to make the task successful.",
+        "score": 24,
+        "width": 830,
+        "height": 980
+      },
+      {
+        "src": "https://arxiv.org/html/2510.17790v3/x9.png",
+        "caption": "Figure 6 : An example of UltraCUA-32B helping clear certain Chrome history with hybrid action. The agent calls prothe grammatic tool at the first step to assist in going into the desired page directly.",
+        "score": 21,
+        "width": 830,
+        "height": 605
+      },
+      {
+        "src": "https://arxiv.org/html/2510.17790v3/x8.png",
+        "caption": "Figure 5 : An example of UltraCUA-32B helping processing emails. The agent alternates between low-level actions and programmatic tool calls smartly, leading to efficient completion of the task.",
+        "score": 17,
+        "width": 830,
+        "height": 419
+      },
+      {
+        "src": "https://arxiv.org/html/2510.17790v3/x1.png",
+        "caption": "(a) OSWorld and WindowsAgentArena (b) Existing Agents v.s. UltraCUA Figure 1 : (a) UltraCUA demonstrates superior performance on OSWorld and WindowsAgentArena benchmarks; (b) Comparison of execution paradigms between existing GUI agents and UltraCUA. Traditional agents using pure low-level actions suffer from cascading errors, while UltraCUA’s hybrid approach achieves faster and more robust execution.",
+        "score": -261,
+        "width": 440,
+        "height": 218
+      }
+    ]
+  },
+  "29": {
+    "title": "ComputerRL: Scaling End-to-End Online RL for Computer Use Agents",
+    "arxiv": "2508.14040",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2508.14040/x4.png",
+        "caption": "Figure 3: Overview of ComputerRL framework. We introduce an API-GUI action paradigm that seamlessly integrates automatically constructed APIs with GUI actions to improve agent efficiency and effectiveness. A large-scale parallel desktop environment with 1,000+ real-world instances, combined with an asynchronous RL framework, enables efficient sampling and robust agent training.",
+        "score": 190,
+        "width": 723,
+        "height": 285,
+        "local_src": "figures/29.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2508.14040/x5.png",
+        "caption": "Figure 4: Overview of ComputerRL , which includes three stages: (1) BC cold start with trajectories collected from general LLMs; (2) RL with step-level GRPO using verifiable, rule-based rewards; (3) Entropulse, which alternates RL with SFT on correct rollouts to restore entropy and sustain learning.",
+        "score": 56,
+        "width": 722,
+        "height": 322
+      },
+      {
+        "src": "https://arxiv.org/html/2508.14040/x1.png",
+        "caption": "(a) The success rates of agents on OSWorld.",
+        "score": 20,
+        "width": 830,
+        "height": 581
+      },
+      {
+        "src": "https://arxiv.org/html/2508.14040/x7.png",
+        "caption": "Figure 6: Error distribution.",
+        "score": 12,
+        "width": 748,
+        "height": 955
+      },
+      {
+        "src": "https://arxiv.org/html/2508.14040/x8.png",
+        "caption": "Figure 7: Document for Human Annotation (1 / 2)",
+        "score": 12,
+        "width": 760,
+        "height": 985
+      }
+    ]
+  },
+  "30": {
+    "title": "ZeroGUI: Online GUI Learning at Zero Human Cost",
+    "arxiv": "2505.23762",
+    "candidates": []
+  },
+  "31": {
+    "title": "ProgRM: Build Better GUI Agents with Progress Rewards",
+    "arxiv": "2505.18121",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2505.18121/x6.png",
+        "caption": "Figure 5: A failed trajectory with partial progress showing with the progress scores predicted by ProgRM and the final score predicted by ORM. Each line in the bottom-left section is an action taken by the agent in episode. The progress values predicted by ProgRM after each action executed are illustrated in the bottom-right section. The agent achieves partial progress in the episode, while doesn’t reach the final goal and stops at a progress score lower than 1 (100%). Init in the figure is not an actual action, but a placeholder.",
+        "score": 20,
+        "width": 830,
+        "height": 557
+      },
+      {
+        "src": "https://arxiv.org/html/2505.18121/x7.png",
+        "caption": "(a) A successful trajectory and the temporal variation of ProgRM -measured progress. (b) A successful trajectory with agent’s hesitation ( GOBACK at step <5> ) and the temporal variation of ProgRM -measured progress. Figure 6: Temporal variation of progress measurement over successful episodes. Each line in the bottom-left sections is an action taken by the agent in episode. The progress scores predicted by ProgRM after each action executed are illustrated in the bottom-right sections.",
+        "score": 17,
+        "width": 640,
+        "height": 529
+      },
+      {
+        "src": "https://arxiv.org/html/2505.18121/x8.png",
+        "caption": "(b) A successful trajectory with agent’s hesitation ( GOBACK at step <5> ) and the temporal variation of ProgRM -measured progress.",
+        "score": 16,
+        "width": 640,
+        "height": 415
+      },
+      {
+        "src": "https://arxiv.org/html/2505.18121/x2.png",
+        "caption": "Figure 2: Progress labeling algorithm. The proposed labeling algorithm consists of three stages: (a) LCS recipe library construction, where trajectories sharing similar core policies are grouped and the common pattern called recipe within each group is extracted by computing the group LCS; (b) Key Step Discovery, in which key steps (matched steps, highlighted in green; best viewed in color) are identified by matching each trajectory to the recipe with the highest completion ratio (see Eq. 4 ); and (c) Progress Label Assignment, where progress labels for key steps are determined by their position within the recipe, and labels for non-key steps are inherited from their nearest preceding key step. Once progress values are assigned, per-step progress gains are used as rewards.",
+        "score": 14,
+        "width": 747,
+        "height": 463
+      },
+      {
+        "src": "https://arxiv.org/html/2505.18121/x1.png",
+        "caption": "Figure 1: Comparison of policy optimization methods. (a) Imitation Learning optimizes the agent’s policy using per-step expert labels. (b) ORM provides sparse rewards by updating the policy only based on the trajectory’s final success or failure. (c) ProgRM predicts progress value at each step, using the progress gain ( Δ p subscript Δ 𝑝 \\Delta_{p} roman_Δ start_POSTSUBSCRIPT italic_p end_POSTSUBSCRIPT ) as dense reward signal.",
+        "score": -82,
+        "width": 747,
+        "height": 391
+      }
+    ]
+  },
+  "32": {
+    "title": "Co-EPG: Co-Evolution of Planning and Grounding",
+    "arxiv": "2511.10705",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2511.10705/x1.png",
+        "caption": "Figure 1: Overview of our proposed Co-EPG framework. The framework drives the co-evolution of the planning model ( π \\pi ) and the grounding model ( ϕ \\phi ) through an optimization loop. This loop alternates between Iterative Training, which employs C-DREM to drive the co-evolution of both models, and Data Enhancement, which refines the dataset for the next iteration.",
+        "score": 26,
+        "width": 969,
+        "height": 476,
+        "local_src": "figures/32.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2511.10705/x7.png",
+        "caption": "Figure 7: Iterative improvement of Co-EPG-Web models across all tasks on the Multimodal-Mind2Web.",
+        "score": 18,
+        "width": 747,
+        "height": 427
+      },
+      {
+        "src": "https://arxiv.org/html/2511.10705/x2.png",
+        "caption": "Figure 2: Effectiveness of the self-iterative evolution mechanism in Co-EPG on Multimodal-Mind2Web.",
+        "score": 14,
+        "width": 747,
+        "height": 427
+      },
+      {
+        "src": "https://arxiv.org/html/2511.10705/x8.png",
+        "caption": "Figure 8: Evolution Examples of Co-EPG on Multimodal-Mind2Web.",
+        "score": 12,
+        "width": 969,
+        "height": 1162
+      },
+      {
+        "src": "https://arxiv.org/html/2511.10705/x3.png",
+        "caption": "Figure 3: An Evolution Example of Co-EPG.",
+        "score": 11,
+        "width": 830,
+        "height": 671
+      }
+    ]
+  },
+  "33": {
+    "title": "AEBPO: Agentic Entropy-Balanced Policy Optimization",
+    "arxiv": "2510.14545",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2510.14545/x4.png",
+        "caption": "Figure 4. The overview of Agentic Entropy-Balanced Policy Optimization.",
+        "score": 69,
+        "width": 818,
+        "height": 367,
+        "local_src": "figures/33.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2510.14545/x2.png",
+        "caption": "Figure 2 . Two high-entropy challenges in agentic RL. (1) High-Entropy Rollout Collapse : Over-branching at high-entropy steps along specific paths, limiting exploration of other potential correct branches; (2) High-Entropy Token Gradient Clipping: Consistent clipping of high-entropy token gradients during policy updates hinders learning effective exploration behaviors.",
+        "score": 22,
+        "width": 818,
+        "height": 191
+      },
+      {
+        "src": "https://arxiv.org/html/2510.14545/figures/tsne_visual.png",
+        "caption": "Figure 6. Visualization of Rollout diversity: ARPO (left) and AEPO (right)",
+        "score": 3,
+        "width": 598,
+        "height": 283
+      },
+      {
+        "src": "https://arxiv.org/html/2510.14545/x1.png",
+        "caption": "Figure 1 . Performance overview of AEPO algorithm.",
+        "score": -56,
+        "width": 830,
+        "height": 410
+      },
+      {
+        "src": "https://arxiv.org/html/2510.14545/x6.png",
+        "caption": "Figure 7. The comparison of branch sampling distribution in rollout (left); The comparison of tool-call efficiency across four RL algorithms (right).",
+        "score": -124,
+        "width": 830,
+        "height": 415
+      }
+    ]
+  },
+  "34": {
+    "title": "Nested Browser-Use Learning / NestBrowse",
+    "arxiv": "2512.23647",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2512.23647/x2.png",
+        "caption": "Figure 2: Overview of the Nested Browser-Use Framework. The outer loop interleaves reasoning and tool calls to solve the user task. Page-transition actions trigger an inner loop for intra-page exploration, which extracts and returns goal-relevant content to the outer loop, forming a nested interaction structure.",
+        "score": 118,
+        "width": 660,
+        "height": 320,
+        "local_src": "figures/34.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2512.23647/x5.png",
+        "caption": "Figure 5: A case study where an online browser-based calculator is used for numerical computation.",
+        "score": -32,
+        "width": 660,
+        "height": 312
+      },
+      {
+        "src": "https://arxiv.org/html/2512.23647/x1.png",
+        "caption": "Figure 1: Performance of the proposed NestBrowse on the challenging deep IS benchmark BrowseComp.",
+        "score": -234,
+        "width": 830,
+        "height": 606
+      },
+      {
+        "src": "https://arxiv.org/html/2512.23647/x4.png",
+        "caption": "Figure 4: Intra-page exploration performance over inner-loop instances from 100 trajectories per benchmark.",
+        "score": -251,
+        "width": 830,
+        "height": 598
+      }
+    ]
+  },
+  "35": {
+    "title": "WebSynthesis: World-Model-Guided MCTS for WebUI Trajectory Synthesis",
+    "arxiv": "2507.04370",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2507.04370/extracted/6599680/image/webMCTS_02.jpg",
+        "caption": "Figure 2: The pipeline of world model-guided Monte Carlo Tree Search and trajectory collection.",
+        "score": 87,
+        "width": 598,
+        "height": 250,
+        "local_src": "figures/35.jpg"
+      },
+      {
+        "src": "https://arxiv.org/html/2507.04370/extracted/6599680/image/class1.jpg",
+        "caption": "Figure 1: An overview of the UI Fundamental Understanding datasets, which offer single-step, fine-grained annotations, including dense captions, element functionality, and state transitions, designed to train the model to understand, describe, and predict web page states.",
+        "score": -4,
+        "width": 598,
+        "height": 179
+      },
+      {
+        "src": "https://arxiv.org/html/2507.04370/extracted/6599680/image/class2.jpg",
+        "caption": "Figure 3: An overview of the UI Behavior Cloning dataset, which provides multi-step demonstrations for training policy agents. Valuable trajectories capture high-quality, target-directed browsing sessions, while rollback trajectories illustrate error recovery through explicit \"go_back\" corrections. These datasets bridge the gap between understanding individual UI elements and performing end-to-end web navigation tasks.",
+        "score": -53,
+        "width": 598,
+        "height": 159
+      },
+      {
+        "src": "https://arxiv.org/html/2507.04370/extracted/6599680/image/scaling.jpg",
+        "caption": "Figure 4: Performance improvement with the synthetic trajectory data scaling up",
+        "score": -260,
+        "width": 299,
+        "height": 166
+      }
+    ]
+  },
+  "36": {
+    "title": "WebWorld: Large-Scale World Model for Web Agent Training",
+    "arxiv": "2602.14721",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2602.14721/fig/url_filter.png",
+        "caption": "Figure 6: LLM-based URL Filtering Pipeline. We evaluate candidate URLs across four dimensions—accessibility, content suitability, interactivity, and engineering quality—using an LLM judge. The chart shows the distribution of scores and the filtering threshold (red dashed line), which retains only the top 32% of URLs for data collection.",
+        "score": 57,
+        "width": 476,
+        "height": 262,
+        "local_src": "figures/36.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2602.14721/x2.png",
+        "caption": "Figure 2: WebWorld Example. Left: Agent. Right: WebWorld.",
+        "score": 25,
+        "width": 595,
+        "height": 511
+      },
+      {
+        "src": "https://arxiv.org/html/2602.14721/x8.png",
+        "caption": "Figure 7: Impact of Reasoning Activation on Output Token Length. The plot compares the average tokens of answer between the Real-World Transition Modeling baseline (grey dashed line) and the Reasoning Activation stage (blue solid line). The introduction of reasoning data leads to a ∼ \\sim 49.4% reduction in output length, indicating a shift from verbose raw state prediction to a more concise and structured simulation pattern.",
+        "score": 15,
+        "width": 498,
+        "height": 327
+      },
+      {
+        "src": "https://arxiv.org/html/2602.14721/x1.png",
+        "caption": "Figure 1: Overview of WebWorld. WebWorld is a large-scale world model for the open web, trained on over 1M real-world trajectories. It supports long-horizon, multi-format simulation, enabling agents trained with its data to achieve significant performance gains.",
+        "score": -37,
+        "width": 561,
+        "height": 236
+      },
+      {
+        "src": "https://arxiv.org/html/2602.14721/x7.png",
+        "caption": "Figure 5: Domain and Source Distribution of WebWorld Training Data. The chart illustrates the composition of our trajectory dataset, which contains over one million samples, across 15 distinct data sources. The colors represent different semantic domains (e.g., Technology, E-Commerce), showing that our data collection pipelines significantly contribute to the diversity of open-domain topics compared to traditional web generation methods.",
+        "score": -76,
+        "width": 660,
+        "height": 476
+      }
+    ]
+  },
+  "37": {
+    "title": "Code2World: GUI World Model via Renderable Code Generation",
+    "arxiv": "2602.09856",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2602.09856/x5.png",
+        "caption": "Figure 3 : Illustration of the “Propose, Simulate, Select” pipeline for Code2World enhanced GUI agent, exemplified by an AndroidWorld task (Rawles et al. , 2025 ) . (1) Propose : The GUI agent generates K K candidate actions, with red and green highlighting hallucinated/irrational reasoning and logically sound reasoning, respectively. (2) Simulate : Code2World predicts the execution result of each candidate via renderable code generation. (3) Select : By evaluating the rendered future states, the system identifies the potential failure in the original policy and rectifies the decision, ultimately selecting the optimal action that aligns with the user’s intent.",
+        "score": 183,
+        "width": 660,
+        "height": 280,
+        "local_src": "figures/37.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2602.09856/x8.png",
+        "caption": "Figure 6 : Ablation analysis of training pipeline design for task success rate (SR) on AndroidWorld. “Base” denotes Qwen3-VL-8B. “+SFT only” and reward-based variants (“+SFT+ R sem R_{\\mathrm{sem}} ”, “+SFT+ R act R_{\\mathrm{act}} ”) represent additional training applied on the Base model.",
+        "score": 1,
+        "width": 830,
+        "height": 460
+      },
+      {
+        "src": "https://arxiv.org/html/2602.09856/x22.png",
+        "caption": "Figure 8 : Agent action-selection performance w/ and w/o Code2World on the SystemWifiTurnOffVerify task in AndroidWorld. Red indicates the action ultimately selected by the Code2World pipeline.",
+        "score": -43,
+        "width": 830,
+        "height": 442
+      },
+      {
+        "src": "https://arxiv.org/html/2602.09856/x4.png",
+        "caption": "Figure 2 : Left: Illustration of Data Synthesis. The high-fidelity AndroidCode dataset is curated via constrainted initial synthesis and a visual-feedback revision loop , where synthesized HTML is iteratively refined based on rendered visual discrepancies to ensure strict alignment (SigLIP score > > 0.9). Right: Two-stage Model Optimization. The pipeline progresses from an SFT cold start to Render-Aware Reinforcement Learning (RARL) . Utilizing Group Relative Policy Optimization (GRPO), the model optimizes dual rewards—visual semantic ( R sem R_{\\text{sem}} ) and action consistency ( R act R_{\\text{act}} )—derived directly from rendered outcomes to enforce structural and logical fidelity.",
+        "score": -52,
+        "width": 660,
+        "height": 261
+      },
+      {
+        "src": "https://arxiv.org/html/2602.09856/x21.png",
+        "caption": "Figure 7 : Agent action-selection performance w/ and w/o Code2World on the MarkorCreateNoteFromClipboard task in AndroidWorld. Red indicates the action ultimately selected by the Code2World pipeline.",
+        "score": -57,
+        "width": 830,
+        "height": 430
+      }
+    ]
+  },
+  "38": {
+    "title": "AgentCPM-Explore",
+    "arxiv": "2602.06485",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2602.06485/x2.png",
+        "caption": "Figure 1: Overall Training Framework of AgentCPM-Explore.",
+        "score": 197,
+        "width": 830,
+        "height": 211,
+        "local_src": "figures/38.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2602.06485/assets/appendix2.png",
+        "caption": "Figure 6: Overview of the Standardized Agentic Training and Inference Infrastructure.",
+        "score": 79,
+        "width": 479,
+        "height": 399
+      },
+      {
+        "src": "https://arxiv.org/html/2602.06485/assets/appendix1.png",
+        "caption": "Figure 5: Standardized agentic training and inference infrastructure.",
+        "score": 28,
+        "width": 598,
+        "height": 344
+      },
+      {
+        "src": "https://arxiv.org/html/2602.06485/x1.png",
+        "caption": "",
+        "score": 12,
+        "width": 1507,
+        "height": 633
+      },
+      {
+        "src": "https://arxiv.org/html/2602.06485/assets/RL-lines.png",
+        "caption": "Figure 3: RL learning curves in different train settings.",
+        "score": 2,
+        "width": 539,
+        "height": 259
+      }
+    ]
+  },
+  "39": {
+    "title": "ClawGUI: Unified Framework for Training, Evaluating, and Deploying GUI Agents",
+    "arxiv": "2604.11784",
+    "candidates": [
+      {
+        "src": "https://arxiv.org/html/2604.11784v1/x2.png",
+        "caption": "Figure 2 : Overview of ClawGUI-RL, consisting of an RL Infrastructure and a Real & Virtual Environment backend. The Environment Manager orchestrates multi-task parallel rollouts across real devices and Android emulators, with built-in health checking, crash recovery, and spare server rotation. Task evaluation combines system-level verification with MLLM-as-judge to provide robust reward signals for both virtual and real device training.",
+        "score": 103,
+        "width": 822,
+        "height": 403,
+        "local_src": "figures/39.png"
+      },
+      {
+        "src": "https://arxiv.org/html/2604.11784v1/x4.png",
+        "caption": "Figure 4 : Overview of ClawGUI-Agent, where users issue natural language instructions through 12+ chat platforms and the server side executes tasks via a message-driven agent loop with persistent memory and skills, controlling both virtual and real devices across phone, web browser, and desktop.",
+        "score": 81,
+        "width": 813,
+        "height": 511
+      },
+      {
+        "src": "https://arxiv.org/html/2604.11784v1/x1.png",
+        "caption": "Figure 1 : Overview of ClawGUI, a unified open-source framework for GUI agent research and deployment. It integrates scalable online RL training (ClawGUI-RL) with outcome-based rewards and no human annotation, reproducible three-stage evaluation across 6 benchmarks and 11+ models (ClawGUI-Eval), and real-device deployment across Android, HarmonyOS, and iOS through 12+ chat platforms (ClawGUI-Agent).",
+        "score": 44,
+        "width": 830,
+        "height": 368
+      },
+      {
+        "src": "https://arxiv.org/html/2604.11784v1/x3.png",
+        "caption": "Figure 3 : Overview of ClawGUI-Eval, featuring a standardized Infer → \\to Judge → \\to Metric pipeline across 6 benchmarks and 11+ models. Reproduced results are compared against official baselines across five benchmarks, achieving a 95.8% overall reproduction rate. The full pipeline can be triggered via a single natural language command through ClawGUI-Agent (OpenClaw-GUI).",
+        "score": -242,
+        "width": 814,
+        "height": 546
+      }
+    ]
+  },
+  "40": {
+    "title": "AgentTrek: Trajectory Synthesis via Web Tutorials",
+    "arxiv": "2412.09605",
+    "candidates": []
+  },
+  "41": {
+    "title": "OS-Copilot / FRIDAY",
+    "arxiv": "2402.07456",
+    "candidates": []
+  }
+}

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import html
+import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -9,6 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 SOURCE = ROOT.parent / "gui_agent_rl_survey.md"
+FIGURES = ROOT / "figures.json"
 SURVEY_URL = "https://arxiv.org/abs/2604.27955"
 
 
@@ -447,6 +449,12 @@ def parse_references(section: str) -> list[tuple[str, str]]:
     return refs
 
 
+def load_figures() -> dict[str, object]:
+    if not FIGURES.exists():
+        return {}
+    return json.loads(FIGURES.read_text(encoding="utf-8"))
+
+
 def slug_for(paper: Paper) -> str:
     raw = paper.title.lower()
     raw = raw.replace("π", "pi").replace("τ", "tau")
@@ -707,6 +715,96 @@ def pipeline_for(paper: Paper) -> list[str]:
     ]
 
 
+def figure_kind(caption: str) -> str:
+    lower = caption.lower()
+    if "pipeline" in lower:
+        return "pipeline 图"
+    if "framework" in lower:
+        return "framework 图"
+    if "architecture" in lower:
+        return "architecture 图"
+    if "overview" in lower:
+        return "overview 图"
+    if "paradigm" in lower:
+        return "范式对比图"
+    return "方法结构图"
+
+
+def figure_label(caption: str) -> str:
+    fig = re.search(r"\bFigure\s+\d+\b|\bFig\.\s*\d+\b", caption, flags=re.I)
+    prefix = fig.group(0).replace("Fig.", "Figure") if fig else "原论文图"
+    return f"{prefix} · {figure_kind(caption)}"
+
+
+def strip_sentence_end(text: str) -> str:
+    return text.rstrip("。；;，, ")
+
+
+def figure_reading_points(paper: Paper) -> list[str]:
+    task_rows = task_form_for(paper)
+    pipeline = pipeline_for(paper)
+    observation = strip_sentence_end(task_rows[0][1])
+    action = strip_sentence_end(task_rows[1][1])
+    reward = strip_sentence_end(task_rows[2][1])
+    return [
+        f"先看输入端：{observation}。",
+        f"再看中间模块：{pipeline[1] if len(pipeline) > 1 else pipeline[0]}",
+        f"接着看反馈回路：{reward}，这一项如何回到策略、价值函数、reward model 或数据筛选器。",
+        f"最后看输出端：{action}；这决定论文结果到底是在单步 grounding、完整 trajectory 还是系统吞吐上成立。",
+    ]
+
+
+def framework_html(paper: Paper, figure_info: object) -> str:
+    info = figure_info if isinstance(figure_info, dict) else {}
+    candidates = info.get("candidates") if isinstance(info.get("candidates"), list) else []
+    selected = None
+    for cand in candidates:
+        if isinstance(cand, dict) and cand.get("local_src"):
+            selected = cand
+            break
+
+    guide = "\n".join(f"<li>{inline_md(point)}</li>" for point in figure_reading_points(paper))
+    fallback_steps = pipeline_for(paper)[:5]
+    while len(fallback_steps) < 5:
+        fallback_steps.append("评测结果")
+    fallback_flow = "\n".join(f"<span>{inline_md(step.split('，', 1)[0])}</span>" for step in fallback_steps[:5])
+
+    if selected:
+        local_src = "../" + str(selected["local_src"])
+        remote_src = str(selected.get("src") or "")
+        caption = str(selected.get("caption") or "")
+        source_link = (
+            f'<a href="{html.escape(remote_src)}" target="_blank" rel="noreferrer">打开 arXiv HTML 原图</a>'
+            if remote_src
+            else ""
+        )
+        return f"""
+          <figure class="framework-figure">
+            <a href="{html.escape(local_src)}" target="_blank" rel="noreferrer">
+              <img src="{html.escape(local_src)}" alt="{html.escape(paper.title)} framework figure" loading="lazy">
+            </a>
+            <figcaption>{inline_md(figure_label(caption))}。图片已本地化到本站；{source_link}</figcaption>
+          </figure>
+          <div class="figure-guide">
+            <h3>读图顺序</h3>
+            <ol>{guide}</ol>
+            <p>读这类图不要只看模块名，要沿着 observation → action → reward/update 的方向追踪数据流。只要能指出 reward 或 verifier 是在哪里产生的、又如何回到策略更新，就基本抓住了论文的核心。</p>
+          </div>
+        """
+
+    return f"""
+      <div class="framework-fallback">
+        <p>未能从公开 arXiv HTML 稳定抓取这篇论文的 framework 图，或候选图更像实验曲线/结果表。下面按论文方法重构读图骨架。</p>
+        <div class="flow-strip figure-flow">{fallback_flow}</div>
+      </div>
+      <div class="figure-guide">
+        <h3>读图顺序</h3>
+        <ol>{guide}</ol>
+        <p>如果之后补到论文原始图，可以优先对照这五个节点：输入、策略/规划、环境执行、奖励或验证、策略更新。</p>
+      </div>
+    """
+
+
 def benchmark_table_rows(paper: Paper) -> list[tuple[str, str, str, str]]:
     exp = paper.experiment
     benchmark = "论文/综述列出的 GUI benchmark"
@@ -744,7 +842,7 @@ def method_blocks_for(paper: Paper) -> str:
             extra = "这一层通常是稳定性或效率设计：课程学习、replay、过滤、重采样、异步 rollout、上下文压缩、工具调用或层级拆分，目的都是减少无效探索和系统等待。"
         blocks.append(
             f"""<div class="method-block">
-              <h3>4.{idx} {inline_md(title)}</h3>
+              <h3>5.{idx} {inline_md(title)}</h3>
               <p>{inline_md(note)}</p>
               <p>{inline_md(extra)}</p>
             </div>"""
@@ -809,7 +907,12 @@ def relation_for(paper: Paper) -> str:
     return "它为 GUI Agent RL 提供数据、环境或系统支撑，是从单点算法走向可复现工程栈的一部分。"
 
 
-def detail_page(paper: Paper, prev_paper: Paper | None, next_paper: Paper | None) -> str:
+def detail_page(
+    paper: Paper,
+    prev_paper: Paper | None,
+    next_paper: Paper | None,
+    figures: dict[str, object],
+) -> str:
     notes = detail_notes_for(paper)
     task_rows = "\n".join(
         f"<tr><th>{inline_md(k)}</th><td>{inline_md(v)}</td></tr>" for k, v in task_form_for(paper)
@@ -818,6 +921,7 @@ def detail_page(paper: Paper, prev_paper: Paper | None, next_paper: Paper | None
         f"<tr><th>{inline_md(k)}</th><td>{inline_md(v)}</td></tr>" for k, v in profile_rows(paper)
     )
     pipeline_html = "\n".join(f"<li>{inline_md(step)}</li>" for step in pipeline_for(paper))
+    framework_section = framework_html(paper, figures.get(str(paper.number), {}))
     notes_html = "\n".join(f"<li>{inline_md(note)}</li>" for note in notes)
     method_blocks = method_blocks_for(paper)
     recipe_html = "\n".join(f"<li>{inline_md(item)}</li>" for item in training_recipe_for(paper))
@@ -880,6 +984,7 @@ def detail_page(paper: Paper, prev_paper: Paper | None, next_paper: Paper | None
       <aside class="toc-panel" aria-label="本页目录">
         <a href="#tldr">TL;DR</a>
         <a href="#profile">定位卡</a>
+        <a href="#framework">框架图</a>
         <a href="#problem">问题</a>
         <a href="#form">任务形式</a>
         <a href="#pipeline">闭环</a>
@@ -902,19 +1007,23 @@ def detail_page(paper: Paper, prev_paper: Paper | None, next_paper: Paper | None
           <table class="detail-table"><tbody>{profile_table}</tbody></table>
           <p>先看这张卡可以避免误读：GUI Agent RL 论文经常把“模型能力”“环境系统”“奖励设计”“数据生成”混在一起讨论。这里把它拆成环境、动作空间、奖励信号和优化方式四个轴，方便判断论文到底贡献在哪里。</p>
         </section>
+        <section id="framework">
+          <h2>1. 框架图与读图指南</h2>
+          {framework_section}
+        </section>
         <section id="problem">
-          <h2>1. 要解决的问题</h2>
+          <h2>2. 要解决的问题</h2>
           <p>{inline_md(paper.motivation)}</p>
           <p>换成 GUI agent 的语言，这个问题通常落在三件事上：界面状态部分可观测、正确反馈稀疏且延迟、静态示范无法覆盖真实软件变化。论文的价值就在于把这些问题中的一个或多个转成可训练的闭环信号。</p>
           <p>如果只用 SFT 或行为克隆，模型学到的是“在数据集截图上下一步该怎么点”；而 GUI Agent 真正部署时会遇到状态漂移、异步加载、误点回退、任务参数变化和界面版本变化。本文所属路线试图回答的是：如何让模型从环境反馈、可验证标签或合成轨迹里继续改进，而不是停留在一次性模仿。</p>
         </section>
         <section id="form">
-          <h2>2. 任务形式：输入、动作、奖励</h2>
+          <h2>3. 任务形式：输入、动作、奖励</h2>
           <table class="detail-table"><tbody>{task_rows}</tbody></table>
           <p>这个表是读 GUI Agent RL 论文最重要的入口：只要弄清楚模型看到了什么、能做什么、奖励从哪里来，就能判断它是算法贡献、环境贡献、奖励贡献还是系统贡献。</p>
         </section>
         <section id="pipeline">
-          <h2>3. 训练闭环怎么跑</h2>
+          <h2>4. 训练闭环怎么跑</h2>
           <ol>{pipeline_html}</ol>
           <div class="flow-strip">
             <span>任务/轨迹</span><span>策略采样</span><span>环境或 verifier</span><span>奖励/筛选</span><span>策略更新</span>
@@ -922,27 +1031,27 @@ def detail_page(paper: Paper, prev_paper: Paper | None, next_paper: Paper | None
           <p>这条闭环是理解论文的主线。无论它叫 GRPO、DPO、AEPO、MCTS、world model 还是 semi-online，最终都要把“模型输出的动作”转换成“可执行状态变化”，再把状态变化转换成“可训练信号”。</p>
         </section>
         <section id="method">
-          <h2>4. 方法与架构怎么跑</h2>
+          <h2>5. 方法与架构怎么跑</h2>
           <div class="method-summary"><ol>{notes_html}</ol></div>
           {method_blocks}
           <p>因此，这篇论文不是简单地“让大模型点屏幕”，而是围绕 observation-action-reward 契约重写训练闭环：先让动作可执行，再让反馈可验证，最后让策略能从成功和失败中更新。</p>
-          <h3>4.{len(notes) + 1} 关键中间变量</h3>
+          <h3>5.{len(notes) + 1} 关键中间变量</h3>
           <p>读方法时要特别盯住中间变量：轨迹是按 step 存、按 episode 存，还是按候选动作组存？奖励是只在终局出现，还是每一步都有 progress？模型更新时用的是整条轨迹的相对优势、单步坐标误差、偏好对，还是 value/Q head？这些细节决定了论文能否处理长任务和稀疏奖励。</p>
-          <h3>4.{len(notes) + 2} 为什么这种设计能解决原问题</h3>
+          <h3>5.{len(notes) + 2} 为什么这种设计能解决原问题</h3>
           <p>核心逻辑是把原本不可微、不可直接监督的 GUI 成功条件拆成更接近训练信号的形式：要么用规则/verifier 把成功自动判出来，要么用 reward model 学过程进展，要么用世界模型/搜索生成更多成功轨迹，要么用层级结构把几十步任务拆成几个短子目标。</p>
         </section>
         <section id="training">
-          <h2>5. 训练、奖励与数据流</h2>
+          <h2>6. 训练、奖励与数据流</h2>
           <ul>{recipe_html}</ul>
           <p>读实验时要特别注意 reward 口径：有的论文评估单步坐标，有的评估整条任务成功，有的只报告系统吞吐或数据合成质量。不同口径不能直接相加或横向混算。</p>
         </section>
         <section id="innovation">
-          <h2>6. 关键设计与创新点</h2>
+          <h2>7. 关键设计与创新点</h2>
           <ul>{innovations_html}</ul>
           <p>这些创新点的共同目标，是把 GUI 交互从一次性 prompt 调用变成可迭代优化的训练系统。</p>
         </section>
         <section id="experiment">
-          <h2>7. 实验怎么读</h2>
+          <h2>8. 实验怎么读</h2>
           <p>{inline_md(paper.experiment)}</p>
           <table class="result-table">
             <thead><tr><th>项目</th><th>口径</th><th>指标</th><th>结论/注意事项</th></tr></thead>
@@ -952,16 +1061,16 @@ def detail_page(paper: Paper, prev_paper: Paper | None, next_paper: Paper | None
           <p>尤其要避免一个常见误读：ScreenSpot/grounding accuracy、WebArena success rate、AndroidWorld task success、OSWorld desktop success、world-model rollout speed 不是同一个指标。本文页面保留原论文或综述的原始口径，不把它们强行换算。</p>
         </section>
         <section id="misread">
-          <h2>8. 常见误读</h2>
+          <h2>9. 常见误读</h2>
           <ul>{misreadings_html}</ul>
         </section>
         <section id="reproduce">
-          <h2>9. 复现或落地时要准备什么</h2>
+          <h2>10. 复现或落地时要准备什么</h2>
           <ol>{checklist_html}</ol>
           <p>如果只能先复现一小部分，建议优先复现 action schema、verifier 和一组可重置任务；没有这三件事，后续 RL 指标很难可信。</p>
         </section>
         <section id="limits">
-          <h2>10. 局限与读法</h2>
+          <h2>11. 局限与读法</h2>
           <ul>{limits_html}</ul>
           <p>{inline_md(relation_for(paper))}</p>
           <p>和参考站的可信度规则一致，本页把作者自评、技术报告自报和综述转述都按 ⚠️ 处理；只有基准维护方统一评测或第三方复现才适合当作更强证据。</p>
@@ -1023,6 +1132,7 @@ def build() -> None:
     trends = extract_between(source, "## 4. 关键趋势", "## 5. 参考链接")
     refs = parse_references(extract_between(source, "## 5. 参考链接"))
     papers = parse_papers(paper_section)
+    figures = load_figures()
     envs = parse_heading_sections(env_section)
     paper_dir = ROOT / "papers"
     paper_dir.mkdir(exist_ok=True)
@@ -1179,7 +1289,10 @@ def build() -> None:
     for idx, paper in enumerate(papers):
         prev_paper = papers[idx - 1] if idx > 0 else None
         next_paper = papers[idx + 1] if idx + 1 < len(papers) else None
-        (paper_dir / f"{slug_for(paper)}.html").write_text(detail_page(paper, prev_paper, next_paper), encoding="utf-8")
+        (paper_dir / f"{slug_for(paper)}.html").write_text(
+            detail_page(paper, prev_paper, next_paper, figures),
+            encoding="utf-8",
+        )
 
 
 CSS = r"""
@@ -1740,6 +1853,55 @@ input {
   margin: 0;
   color: var(--ink);
   font-weight: 720;
+}
+
+.framework-figure {
+  margin: 1rem 0 1.2rem;
+  padding: 0.75rem;
+  border: 1px solid color-mix(in oklch, var(--ink) 28%, var(--rule));
+  background: color-mix(in oklch, var(--paper) 90%, white);
+}
+
+.framework-figure a {
+  display: block;
+}
+
+.framework-figure img {
+  display: block;
+  width: 100%;
+  max-height: 720px;
+  object-fit: contain;
+  background: white;
+  border: 1px solid color-mix(in oklch, var(--rule) 72%, transparent);
+}
+
+.framework-figure figcaption {
+  margin-top: 0.65rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.figure-guide,
+.framework-fallback {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-left: 4px solid var(--blue);
+  background: color-mix(in oklch, var(--paper-strong) 62%, transparent);
+}
+
+.figure-guide h3 {
+  margin-top: 0;
+}
+
+.figure-guide p {
+  margin-top: 0.9rem;
+}
+
+.figure-flow span {
+  min-height: 68px;
+  align-content: center;
+  line-height: 1.35;
 }
 
 .detail-content p + p,
