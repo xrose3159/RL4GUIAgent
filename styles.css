@@ -533,11 +533,29 @@ input {
   margin-bottom: 1rem;
 }
 
+.detail-content h3 {
+  margin: 1.25rem 0 0.55rem;
+  font-size: clamp(1.12rem, 2vw, 1.38rem);
+}
+
 .detail-content p,
 .detail-content li,
 .detail-table td {
   color: color-mix(in oklch, var(--ink) 84%, var(--muted));
   font-size: 1rem;
+}
+
+.detail-content blockquote {
+  margin: 1rem 0 0;
+  padding: 0.8rem 1rem;
+  border-left: 4px solid var(--red);
+  background: color-mix(in oklch, var(--amber) 18%, transparent);
+}
+
+.detail-content blockquote p {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 720;
 }
 
 .detail-content p + p,
@@ -575,6 +593,47 @@ input {
   width: 7rem;
   color: var(--red);
   font-size: 0.9rem;
+}
+
+.result-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  background: color-mix(in oklch, var(--paper) 90%, white);
+}
+
+.result-table th,
+.result-table td {
+  border: 1px solid color-mix(in oklch, var(--rule) 80%, var(--ink));
+  padding: 0.72rem;
+  vertical-align: top;
+  text-align: left;
+  font-size: 0.93rem;
+}
+
+.result-table th {
+  color: var(--red);
+  background: var(--paper-strong);
+}
+
+.flow-strip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin: 1rem 0;
+}
+
+.flow-strip span {
+  min-height: 52px;
+  display: grid;
+  place-items: center;
+  padding: 0.45rem;
+  border: 1px solid var(--ink);
+  background: color-mix(in oklch, var(--paper) 88%, white);
+  color: var(--ink);
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 800;
 }
 
 .source-links {
@@ -675,6 +734,10 @@ code {
 
   .pager a {
     max-width: none;
+  }
+
+  .flow-strip {
+    grid-template-columns: 1fr;
   }
 }
 

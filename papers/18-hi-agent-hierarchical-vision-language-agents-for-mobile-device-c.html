@@ -34,8 +34,10 @@
     <article class="detail-layout">
       <aside class="toc-panel" aria-label="本页目录">
         <a href="#tldr">TL;DR</a>
+        <a href="#profile">定位卡</a>
         <a href="#problem">问题</a>
         <a href="#form">任务形式</a>
+        <a href="#pipeline">闭环</a>
         <a href="#method">方法拆解</a>
         <a href="#training">训练与奖励</a>
         <a href="#innovation">创新</a>
@@ -47,11 +49,23 @@
         <section id="tldr">
           <h2>TL;DR</h2>
           <p>Hi-Agent 把移动 GUI agent 拆成高层 reasoning model 与低层 action model，并联合优化。高层负责分解任务、生成中间目标和上下文决策；低层根据当前屏幕和子目标执行具体 GUI 动作。训练上属于 hybrid/层级路线：用示范冷启动，再用 RL 强化高低层协同，缓解长时序 credit assignment。 论文摘要报告 Hi-Agent 在 AITW 达 87.9%，AndroidWorld 达 21.0%，并在 AndroidControl-Low/High、AMEX、AndroidLab 等基准上展示跨任务泛化。综述把它作为“System-1 执行 + System-2 规划”式认知分层的代表。</p>
+          <blockquote><p>⚠️ 数值主要按论文/技术报告/综述自报口径整理，未声明为第三方独立复现。</p></blockquote>
+        </section>
+        <section id="profile">
+          <h2>0. 论文定位卡</h2>
+          <table class="detail-table"><tbody><tr><th>路线</th><td>Hybrid / Mobile</td></tr>
+<tr><th>环境</th><td>Mobile / Android emulator / ADB</td></tr>
+<tr><th>动作空间</th><td>tap / type / swipe / scroll / back / home / finish</td></tr>
+<tr><th>奖励信号</th><td>任务完成 + 过程进展 + verifier</td></tr>
+<tr><th>优化方式</th><td>SFT warmup + RL/RFT 或系统级闭环优化</td></tr>
+<tr><th>读表口径</th><td>⚠️ 数值主要按论文/技术报告/综述自报口径整理，未声明为第三方独立复现。</td></tr></tbody></table>
+          <p>先看这张卡可以避免误读：GUI Agent RL 论文经常把“模型能力”“环境系统”“奖励设计”“数据生成”混在一起讨论。这里把它拆成环境、动作空间、奖励信号和优化方式四个轴，方便判断论文到底贡献在哪里。</p>
         </section>
         <section id="problem">
           <h2>1. 要解决的问题</h2>
           <p>移动端任务天然有层级结构：高层需要规划“先打开哪个 app、进入哪个页面、完成哪个子目标”，低层需要精确执行点击、输入和滑动。单一模型直接从指令到动作，容易在长任务中丢失全局目标，也难以同时兼顾语义推理和坐标/控件级执行。</p>
           <p>换成 GUI agent 的语言，这个问题通常落在三件事上：界面状态部分可观测、正确反馈稀疏且延迟、静态示范无法覆盖真实软件变化。论文的价值就在于把这些问题中的一个或多个转成可训练的闭环信号。</p>
+          <p>如果只用 SFT 或行为克隆，模型学到的是“在数据集截图上下一步该怎么点”；而 GUI Agent 真正部署时会遇到状态漂移、异步加载、误点回退、任务参数变化和界面版本变化。本文所属路线试图回答的是：如何让模型从环境反馈、可验证标签或合成轨迹里继续改进，而不是停留在一次性模仿。</p>
         </section>
         <section id="form">
           <h2>2. 任务形式：输入、动作、奖励</h2>
@@ -60,45 +74,68 @@
 <tr><th>奖励</th><td>任务完成由 ADB/SQLite/文件状态、页面状态或 VLM judge 验证；中间奖励看状态进展和路径长度。</td></tr></tbody></table>
           <p>这个表是读 GUI Agent RL 论文最重要的入口：只要弄清楚模型看到了什么、能做什么、奖励从哪里来，就能判断它是算法贡献、环境贡献、奖励贡献还是系统贡献。</p>
         </section>
+        <section id="pipeline">
+          <h2>3. 训练闭环怎么跑</h2>
+          <ol><li>先用 SFT 或离线轨迹让模型学会基本动作格式和界面语义。</li>
+<li>再加入层级 planner、verifier、API/tool call、半在线修正或在线环境反馈。</li>
+<li>把长任务拆成子目标、状态检查和错误恢复，让每个模块都有可验证输出。</li>
+<li>最终在真实或半真实环境中检验整条 trajectory 的完成率，而不只看单步准确率。</li></ol>
+          <div class="flow-strip">
+            <span>任务/轨迹</span><span>策略采样</span><span>环境或 verifier</span><span>奖励/筛选</span><span>策略更新</span>
+          </div>
+          <p>这条闭环是理解论文的主线。无论它叫 GRPO、DPO、AEPO、MCTS、world model 还是 semi-online，最终都要把“模型输出的动作”转换成“可执行状态变化”，再把状态变化转换成“可训练信号”。</p>
+        </section>
         <section id="method">
-          <h2>3. 方法与架构怎么跑</h2>
+          <h2>4. 方法与架构怎么跑</h2>
           <ol><li>Hi-Agent 采用高低层分工：高层 reasoning model 负责理解任务、拆子目标和决定下一阶段，低层 action model 负责把子目标变成具体手机动作。</li>
 <li>高层输出不是最终坐标，而是语义计划，例如进入某 app、找到某设置项、确认某状态；低层再用当前截图执行 tap/type/swipe。</li>
 <li>训练时既需要示范轨迹让两层对齐，也需要 RL 奖励高低层协同：高层目标如果不可执行，低层会失败；低层误操作也会破坏高层计划。</li>
 <li>它代表移动 GUI 的层级控制路线，用结构分工降低长任务 credit assignment 难度。</li></ol>
           <p>因此，这篇论文不是简单地“让大模型点屏幕”，而是围绕 observation-action-reward 契约重写训练闭环：先让动作可执行，再让反馈可验证，最后让策略能从成功和失败中更新。</p>
+          <h3>4.1 关键中间变量</h3>
+          <p>读方法时要特别盯住中间变量：轨迹是按 step 存、按 episode 存，还是按候选动作组存？奖励是只在终局出现，还是每一步都有 progress？模型更新时用的是整条轨迹的相对优势、单步坐标误差、偏好对，还是 value/Q head？这些细节决定了论文能否处理长任务和稀疏奖励。</p>
+          <h3>4.2 为什么这种设计能解决原问题</h3>
+          <p>核心逻辑是把原本不可微、不可直接监督的 GUI 成功条件拆成更接近训练信号的形式：要么用规则/verifier 把成功自动判出来，要么用 reward model 学过程进展，要么用世界模型/搜索生成更多成功轨迹，要么用层级结构把几十步任务拆成几个短子目标。</p>
         </section>
         <section id="training">
-          <h2>4. 训练、奖励与数据流</h2>
+          <h2>5. 训练、奖励与数据流</h2>
           <ul><li>混合路线先用 SFT/offline 数据冷启动，再用在线反馈、分层规划、API-GUI 混合动作或 verifier 做二次强化。</li>
 <li>它的核心取舍是：离线数据给稳定性，在线环境给真实反馈，系统结构负责把两者接起来。</li></ul>
           <p>读实验时要特别注意 reward 口径：有的论文评估单步坐标，有的评估整条任务成功，有的只报告系统吞吐或数据合成质量。不同口径不能直接相加或横向混算。</p>
         </section>
         <section id="innovation">
-          <h2>5. 关键设计与创新点</h2>
+          <h2>6. 关键设计与创新点</h2>
           <ul><li>通过层级、验证器、工具/API 或半在线机制，把长任务拆成更可控的子问题。</li></ul>
           <p>这些创新点的共同目标，是把 GUI 交互从一次性 prompt 调用变成可迭代优化的训练系统。</p>
         </section>
         <section id="experiment">
-          <h2>6. 实验怎么读</h2>
+          <h2>7. 实验怎么读</h2>
           <p>论文摘要报告 Hi-Agent 在 AITW 达 87.9%，AndroidWorld 达 21.0%，并在 AndroidControl-Low/High、AMEX、AndroidLab 等基准上展示跨任务泛化。综述把它作为“System-1 执行 + System-2 规划”式认知分层的代表。</p>
+          <table class="result-table">
+            <thead><tr><th>项目</th><th>口径</th><th>指标</th><th>结论/注意事项</th></tr></thead>
+            <tbody><tr><td>主 benchmark</td><td>AndroidWorld / AndroidLab / AITW</td><td>任务成功率 / grounding accuracy / 系统吞吐</td><td>论文摘要报告 Hi-Agent 在 AITW 达 87.9%，AndroidWorld 达 21.0%，并在 AndroidControl-Low/High、AMEX、AndroidLab 等基准上展示跨任务泛化。综述把它作为“System-1 执行 + System-2 规划”式认知分层的代表。</td></tr>
+<tr><td>对照基线</td><td>SFT、BC、prompting、闭源 VLM 或同尺寸开源模型</td><td>相同任务口径下比较</td><td>不同论文的环境和任务集合不同，不能把数值直接跨表相加。</td></tr>
+<tr><td>可信度</td><td>作者自评或综述转述</td><td>⚠️ / 待核</td><td>⚠️ 数值主要按论文/技术报告/综述自报口径整理，未声明为第三方独立复现。</td></tr></tbody>
+          </table>
           <p>这类实验通常需要同时看三组数字：第一是任务成功率或 grounding accuracy；第二是与 SFT、BC、prompting、GPT-4V/闭源模型或开源基线的对比；第三是环境成本，例如 rollout 速度、样本数量、标注成本和并行规模。</p>
+          <p>尤其要避免一个常见误读：ScreenSpot/grounding accuracy、WebArena success rate、AndroidWorld task success、OSWorld desktop success、world-model rollout speed 不是同一个指标。本文页面保留原论文或综述的原始口径，不把它们强行换算。</p>
         </section>
         <section id="reproduce">
-          <h2>7. 复现或落地时要准备什么</h2>
+          <h2>8. 复现或落地时要准备什么</h2>
           <ol><li>先固定 action schema，并写一个能把模型输出解析成真实 GUI 操作的 adapter。</li>
 <li>准备 verifier：至少要能判断终局成功；如果是 grounding 论文，还要能计算坐标/区域奖励。</li>
 <li>Mobile 任务需要 Android Emulator/ADB、snapshot reset、任务参数化和状态检查脚本。</li></ol>
           <p>如果只能先复现一小部分，建议优先复现 action schema、verifier 和一组可重置任务；没有这三件事，后续 RL 指标很难可信。</p>
         </section>
         <section id="limits">
-          <h2>8. 局限与读法</h2>
+          <h2>9. 局限与读法</h2>
           <ul><li>论文结果大多是作者自报或综述转述，跨 benchmark 的数值不可直接混算。</li></ul>
           <p>它属于系统融合路线：用层级结构、工具调用、验证器或半在线机制把真实 GUI 的长时序问题拆小。</p>
+          <p>和参考站的可信度规则一致，本页把作者自评、技术报告自报和综述转述都按 ⚠️ 处理；只有基准维护方统一评测或第三方复现才适合当作更强证据。</p>
         </section>
         <section id="sources">
           <h2>来源</h2>
-          <p>本页依据 GUI Agent RL 综述、论文摘要/公开页面和站内总报告整理；数值优先保留论文自报口径，未做第三方复现实验。</p>
+          <p>本页依据 GUI Agent RL 综述、论文摘要/公开页面和站内总报告整理；数值优先保留论文自报口径，未做第三方复现实验。参考站体例来自具身智能学习站的论文细读页面，例如 RT-2 与 SimpleVLA-RL 细读。</p>
           <div class="source-links"><a class="primary-action" href="https://arxiv.org/abs/2510.14388" target="_blank" rel="noreferrer">打开论文</a><a href="../index.html#refs">返回参考链接表</a></div>
         </section>
       </div>

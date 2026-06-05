@@ -34,8 +34,10 @@
     <article class="detail-layout">
       <aside class="toc-panel" aria-label="本页目录">
         <a href="#tldr">TL;DR</a>
+        <a href="#profile">定位卡</a>
         <a href="#problem">问题</a>
         <a href="#form">任务形式</a>
+        <a href="#pipeline">闭环</a>
         <a href="#method">方法拆解</a>
         <a href="#training">训练与奖励</a>
         <a href="#innovation">创新</a>
@@ -47,11 +49,23 @@
         <section id="tldr">
           <h2>TL;DR</h2>
           <p>核心是 Difficulty-Adaptive GRPO。按历史成功率调节任务权重；对困难任务使用 positive replay；对持续失败任务使用 failure curriculum filtering；Shortest-Path Reward Adjustment 惩罚冗余操作，减少 reward hacking。 在 Qwen2.5-VL-7B-Instruct 和 GLM-4.1V-9B-Base 上训练。MobileRL-9B 在 AndroidWorld 达 80.2%，AndroidLab 达 53.6%，为当时 SOTA。</p>
+          <blockquote><p>⚠️ 数值主要按论文/技术报告/综述自报口径整理，未声明为第三方独立复现。</p></blockquote>
+        </section>
+        <section id="profile">
+          <h2>0. 论文定位卡</h2>
+          <table class="detail-table"><tbody><tr><th>路线</th><td>Online RL / Mobile</td></tr>
+<tr><th>环境</th><td>Mobile / Android emulator / ADB</td></tr>
+<tr><th>动作空间</th><td>tap / type / swipe / scroll / back / home / finish</td></tr>
+<tr><th>奖励信号</th><td>环境终局成功、verifier/VLM judge、replay 中的成功轨迹</td></tr>
+<tr><th>优化方式</th><td>GRPO / RLVR</td></tr>
+<tr><th>读表口径</th><td>⚠️ 数值主要按论文/技术报告/综述自报口径整理，未声明为第三方独立复现。</td></tr></tbody></table>
+          <p>先看这张卡可以避免误读：GUI Agent RL 论文经常把“模型能力”“环境系统”“奖励设计”“数据生成”混在一起讨论。这里把它拆成环境、动作空间、奖励信号和优化方式四个轴，方便判断论文到底贡献在哪里。</p>
         </section>
         <section id="problem">
           <h2>1. 要解决的问题</h2>
           <p>移动 GUI 任务难度分布重尾，大量简单任务主导梯度，困难任务又长期零奖励；大规模 Android 环境采样效率低。</p>
           <p>换成 GUI agent 的语言，这个问题通常落在三件事上：界面状态部分可观测、正确反馈稀疏且延迟、静态示范无法覆盖真实软件变化。论文的价值就在于把这些问题中的一个或多个转成可训练的闭环信号。</p>
+          <p>如果只用 SFT 或行为克隆，模型学到的是“在数据集截图上下一步该怎么点”；而 GUI Agent 真正部署时会遇到状态漂移、异步加载、误点回退、任务参数变化和界面版本变化。本文所属路线试图回答的是：如何让模型从环境反馈、可验证标签或合成轨迹里继续改进，而不是停留在一次性模仿。</p>
         </section>
         <section id="form">
           <h2>2. 任务形式：输入、动作、奖励</h2>
@@ -60,34 +74,56 @@
 <tr><th>奖励</th><td>任务完成由 ADB/SQLite/文件状态、页面状态或 VLM judge 验证；中间奖励看状态进展和路径长度。</td></tr></tbody></table>
           <p>这个表是读 GUI Agent RL 论文最重要的入口：只要弄清楚模型看到了什么、能做什么、奖励从哪里来，就能判断它是算法贡献、环境贡献、奖励贡献还是系统贡献。</p>
         </section>
+        <section id="pipeline">
+          <h2>3. 训练闭环怎么跑</h2>
+          <ol><li>任务采样器选择一批当前模型有机会学会的 GUI/Web/Mobile 任务。</li>
+<li>rollout worker 在浏览器、VM 或 Android emulator 中执行策略，记录截图、动作、状态和终局结果。</li>
+<li>verifier / reward model / 环境脚本把轨迹转成成功、失败或过程进展信号。</li>
+<li>trainer 用 GRPO/AWR/PPO/自定义策略优化更新模型，同时 replay/filtering 保留稀有成功轨迹。</li></ol>
+          <div class="flow-strip">
+            <span>任务/轨迹</span><span>策略采样</span><span>环境或 verifier</span><span>奖励/筛选</span><span>策略更新</span>
+          </div>
+          <p>这条闭环是理解论文的主线。无论它叫 GRPO、DPO、AEPO、MCTS、world model 还是 semi-online，最终都要把“模型输出的动作”转换成“可执行状态变化”，再把状态变化转换成“可训练信号”。</p>
+        </section>
         <section id="method">
-          <h2>3. 方法与架构怎么跑</h2>
+          <h2>4. 方法与架构怎么跑</h2>
           <ol><li>MobileRL 面向真实移动 GUI online RL，核心难点是任务难度重尾和 emulator 采样慢。</li>
 <li>Difficulty-Adaptive GRPO 根据历史成功率给任务调权：太简单的少训，刚好有学习信号的多训，长期失败的暂时过滤。</li>
 <li>positive replay 保存困难任务里的成功轨迹，避免成功样本很少时被新 batch 的失败淹没；Shortest-Path Reward Adjustment 惩罚绕路。</li>
 <li>系统上需要大规模 Android emulator 并行，CPU/内存/ADB I/O 往往比 GPU 更先成为瓶颈。</li></ol>
           <p>因此，这篇论文不是简单地“让大模型点屏幕”，而是围绕 observation-action-reward 契约重写训练闭环：先让动作可执行，再让反馈可验证，最后让策略能从成功和失败中更新。</p>
+          <h3>4.1 关键中间变量</h3>
+          <p>读方法时要特别盯住中间变量：轨迹是按 step 存、按 episode 存，还是按候选动作组存？奖励是只在终局出现，还是每一步都有 progress？模型更新时用的是整条轨迹的相对优势、单步坐标误差、偏好对，还是 value/Q head？这些细节决定了论文能否处理长任务和稀疏奖励。</p>
+          <h3>4.2 为什么这种设计能解决原问题</h3>
+          <p>核心逻辑是把原本不可微、不可直接监督的 GUI 成功条件拆成更接近训练信号的形式：要么用规则/verifier 把成功自动判出来，要么用 reward model 学过程进展，要么用世界模型/搜索生成更多成功轨迹，要么用层级结构把几十步任务拆成几个短子目标。</p>
         </section>
         <section id="training">
-          <h2>4. 训练、奖励与数据流</h2>
+          <h2>5. 训练、奖励与数据流</h2>
           <ul><li>在线阶段让当前策略真实或半真实地执行任务，把环境返回的成功/失败和过程状态写入 replay buffer。</li>
 <li>训练一般需要课程学习、positive replay、任务过滤和异步 rollout，否则大量失败轨迹会吞掉训练信号。</li>
 <li>如果使用 GRPO/RLVR，模型会在同一状态采样多个候选动作，用相对奖励更新策略，避免训练单独 critic。</li></ul>
           <p>读实验时要特别注意 reward 口径：有的论文评估单步坐标，有的评估整条任务成功，有的只报告系统吞吐或数据合成质量。不同口径不能直接相加或横向混算。</p>
         </section>
         <section id="innovation">
-          <h2>5. 关键设计与创新点</h2>
+          <h2>6. 关键设计与创新点</h2>
           <ul><li>把 GUI 任务改造成可验证奖励问题，让策略优化不必依赖昂贵的逐步人工标注。</li>
 <li>把环境交互纳入训练闭环，直接优化真实多轮成功率，而不是只优化离线动作匹配。</li></ul>
           <p>这些创新点的共同目标，是把 GUI 交互从一次性 prompt 调用变成可迭代优化的训练系统。</p>
         </section>
         <section id="experiment">
-          <h2>6. 实验怎么读</h2>
+          <h2>7. 实验怎么读</h2>
           <p>在 Qwen2.5-VL-7B-Instruct 和 GLM-4.1V-9B-Base 上训练。MobileRL-9B 在 AndroidWorld 达 80.2%，AndroidLab 达 53.6%，为当时 SOTA。</p>
+          <table class="result-table">
+            <thead><tr><th>项目</th><th>口径</th><th>指标</th><th>结论/注意事项</th></tr></thead>
+            <tbody><tr><td>主 benchmark</td><td>AndroidWorld / AndroidLab / AITW</td><td>任务成功率 / grounding accuracy / 系统吞吐</td><td>在 Qwen2.5-VL-7B-Instruct 和 GLM-4.1V-9B-Base 上训练。MobileRL-9B 在 AndroidWorld 达 80.2%，AndroidLab 达 53.6%，为当时 SOTA。</td></tr>
+<tr><td>对照基线</td><td>SFT、BC、prompting、闭源 VLM 或同尺寸开源模型</td><td>相同任务口径下比较</td><td>不同论文的环境和任务集合不同，不能把数值直接跨表相加。</td></tr>
+<tr><td>可信度</td><td>作者自评或综述转述</td><td>⚠️ / 待核</td><td>⚠️ 数值主要按论文/技术报告/综述自报口径整理，未声明为第三方独立复现。</td></tr></tbody>
+          </table>
           <p>这类实验通常需要同时看三组数字：第一是任务成功率或 grounding accuracy；第二是与 SFT、BC、prompting、GPT-4V/闭源模型或开源基线的对比；第三是环境成本，例如 rollout 速度、样本数量、标注成本和并行规模。</p>
+          <p>尤其要避免一个常见误读：ScreenSpot/grounding accuracy、WebArena success rate、AndroidWorld task success、OSWorld desktop success、world-model rollout speed 不是同一个指标。本文页面保留原论文或综述的原始口径，不把它们强行换算。</p>
         </section>
         <section id="reproduce">
-          <h2>7. 复现或落地时要准备什么</h2>
+          <h2>8. 复现或落地时要准备什么</h2>
           <ol><li>先固定 action schema，并写一个能把模型输出解析成真实 GUI 操作的 adapter。</li>
 <li>准备 verifier：至少要能判断终局成功；如果是 grounding 论文，还要能计算坐标/区域奖励。</li>
 <li>Mobile 任务需要 Android Emulator/ADB、snapshot reset、任务参数化和状态检查脚本。</li>
@@ -95,14 +131,15 @@
           <p>如果只能先复现一小部分，建议优先复现 action schema、verifier 和一组可重置任务；没有这三件事，后续 RL 指标很难可信。</p>
         </section>
         <section id="limits">
-          <h2>8. 局限与读法</h2>
+          <h2>9. 局限与读法</h2>
           <ul><li>在线 rollout 成本高，浏览器、VM、ADB 和截图 I/O 往往限制可扩展性。</li>
 <li>自动 verifier 或 VLM judge 一旦误判，策略可能学习 reward hacking。</li></ul>
           <p>它属于闭环自我改进路线：让 agent 在环境里行动、失败、修正，而不是停留在离线示范模仿。</p>
+          <p>和参考站的可信度规则一致，本页把作者自评、技术报告自报和综述转述都按 ⚠️ 处理；只有基准维护方统一评测或第三方复现才适合当作更强证据。</p>
         </section>
         <section id="sources">
           <h2>来源</h2>
-          <p>本页依据 GUI Agent RL 综述、论文摘要/公开页面和站内总报告整理；数值优先保留论文自报口径，未做第三方复现实验。</p>
+          <p>本页依据 GUI Agent RL 综述、论文摘要/公开页面和站内总报告整理；数值优先保留论文自报口径，未做第三方复现实验。参考站体例来自具身智能学习站的论文细读页面，例如 RT-2 与 SimpleVLA-RL 细读。</p>
           <div class="source-links"><a class="primary-action" href="https://arxiv.org/abs/2509.18119" target="_blank" rel="noreferrer">打开论文</a><a href="../index.html#refs">返回参考链接表</a></div>
         </section>
       </div>

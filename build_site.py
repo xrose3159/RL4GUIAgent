@@ -581,6 +581,154 @@ def implementation_checklist_for(paper: Paper) -> list[str]:
     return checklist[:6]
 
 
+def primary_environment(paper: Paper) -> str:
+    tags = set(paper.tags)
+    title = paper.title.lower()
+    if "Mobile" in tags or "android" in title:
+        return "Mobile / Android emulator / ADB"
+    if "Web" in tags or "browser" in title:
+        return "Web / Browser / Playwright"
+    if "OS/Desktop" in tags or "computer" in title or "os-" in title:
+        return "Desktop / OS / VM / VNC"
+    if "World Model" in tags:
+        return "Simulated / learned world model"
+    return "Cross-platform GUI"
+
+
+def action_space_summary(paper: Paper) -> str:
+    tags = set(paper.tags)
+    if "Grounding" in tags:
+        return "坐标、目标框、click(x,y) 或局部裁剪定位"
+    if "World Model" in tags:
+        return "真实 GUI action + 世界模型中的虚拟 action transition"
+    if "OS/Desktop" in tags:
+        return "mouse / keyboard / drag / hotkey / API or MCP tool"
+    if "Mobile" in tags:
+        return "tap / type / swipe / scroll / back / home / finish"
+    if "Web" in tags:
+        return "click / type / select / scroll / navigate / submit"
+    return "统一 GUI action schema"
+
+
+def reward_summary(paper: Paper) -> str:
+    tags = set(paper.tags)
+    method = (paper.method + " " + paper.title).lower()
+    if "progress" in method or "progrm" in method:
+        return "progress/process reward + final success"
+    if "gaussian" in method or "g2" in method:
+        return "Gaussian continuous grounding reward"
+    if "Grounding" in tags:
+        return "坐标命中、距离、IoU、coverage 或语义匹配"
+    if "World Model" in tags:
+        return "world-model rollout 成功率、真实环境校准和轨迹可执行性"
+    if "Online RL" in tags:
+        return "环境终局成功、verifier/VLM judge、replay 中的成功轨迹"
+    if "Offline RL" in tags:
+        return "离线轨迹回报、偏好对、Q value 或规则标签"
+    return "任务完成 + 过程进展 + verifier"
+
+
+def optimization_summary(paper: Paper) -> str:
+    text = (paper.title + " " + paper.method).lower()
+    if "grpo" in text:
+        return "GRPO / RLVR"
+    if "dpo" in text:
+        return "DPO / preference optimization"
+    if "q-value" in text or " q " in text or "q 函数" in text:
+        return "offline TD / Q-value reranking"
+    if "mcts" in text:
+        return "MCTS / tree search"
+    if "world model" in text or "dyna" in text:
+        return "model-based RL / synthetic rollout"
+    if "curriculum" in text:
+        return "online curriculum RL"
+    return "SFT warmup + RL/RFT 或系统级闭环优化"
+
+
+def confidence_note(paper: Paper) -> str:
+    if paper.links:
+        return "⚠️ 数值主要按论文/技术报告/综述自报口径整理，未声明为第三方独立复现。"
+    return "待核：综述列出该工作但未提供稳定 arXiv 链接或完整公开页，数值只按综述摘要口径保留。"
+
+
+def profile_rows(paper: Paper) -> list[tuple[str, str]]:
+    return [
+        ("路线", " / ".join(paper.tags)),
+        ("环境", primary_environment(paper)),
+        ("动作空间", action_space_summary(paper)),
+        ("奖励信号", reward_summary(paper)),
+        ("优化方式", optimization_summary(paper)),
+        ("读表口径", confidence_note(paper)),
+    ]
+
+
+def pipeline_for(paper: Paper) -> list[str]:
+    tags = set(paper.tags)
+    if "World Model" in tags:
+        return [
+            "收集真实 GUI 轨迹或网页交互日志，得到 state-action-next state 三元组。",
+            "训练 action-conditioned world model，让模型预测动作后的下一界面、DOM、截图或可渲染代码。",
+            "在世界模型里做 dream rollout / MCTS / synthetic trajectory generation，低成本探索多条路径。",
+            "把模拟中筛出的高质量轨迹用于策略微调，再用少量真实环境校准 sim-to-real gap。",
+        ]
+    if "Grounding" in tags:
+        return [
+            "输入截图和目标描述，模型产生一个或多个坐标/框/局部候选。",
+            "verifier 根据目标元素框、距离、高斯覆盖或语义匹配计算连续奖励。",
+            "策略优化放大命中目标、语义正确、成本较低的候选，压低乱点、冗长推理和重复探索。",
+            "推理时可结合裁剪、重采样、视觉工具或候选 rerank，提高小控件和密集界面定位。",
+        ]
+    if "Online RL" in tags:
+        return [
+            "任务采样器选择一批当前模型有机会学会的 GUI/Web/Mobile 任务。",
+            "rollout worker 在浏览器、VM 或 Android emulator 中执行策略，记录截图、动作、状态和终局结果。",
+            "verifier / reward model / 环境脚本把轨迹转成成功、失败或过程进展信号。",
+            "trainer 用 GRPO/AWR/PPO/自定义策略优化更新模型，同时 replay/filtering 保留稀有成功轨迹。",
+        ]
+    if "Offline RL" in tags:
+        return [
+            "从示范轨迹、失败轨迹、候选动作或静态 benchmark 中构造可训练样本。",
+            "把样本转成偏好对、Q-learning transition、规则奖励标签或 offline GRPO group。",
+            "训练策略、value/Q head 或 reranker，使模型在不访问环境时也能区分好坏动作。",
+            "推理时用训练后的策略直接行动，或生成多个候选后由 value/reward 模型重排。",
+        ]
+    if "Hybrid" in tags:
+        return [
+            "先用 SFT 或离线轨迹让模型学会基本动作格式和界面语义。",
+            "再加入层级 planner、verifier、API/tool call、半在线修正或在线环境反馈。",
+            "把长任务拆成子目标、状态检查和错误恢复，让每个模块都有可验证输出。",
+            "最终在真实或半真实环境中检验整条 trajectory 的完成率，而不只看单步准确率。",
+        ]
+    return [
+        "统一任务、观察、动作和奖励接口。",
+        "收集或合成轨迹，过滤不可执行和不可验证样本。",
+        "用 SFT/RFT/RL 更新策略。",
+        "在目标 benchmark 或真实环境中按任务成功率评估。",
+    ]
+
+
+def benchmark_table_rows(paper: Paper) -> list[tuple[str, str, str, str]]:
+    exp = paper.experiment
+    benchmark = "论文/综述列出的 GUI benchmark"
+    if "AndroidWorld" in exp:
+        benchmark = "AndroidWorld / AndroidLab / AITW"
+    elif "WebArena" in exp:
+        benchmark = "WebArena / WebArena-Lite / WebShop"
+    elif "ScreenSpot" in exp:
+        benchmark = "ScreenSpot / ScreenSpot-Pro"
+    elif "OSWorld" in exp:
+        benchmark = "OSWorld / desktop CUA benchmark"
+    elif "Mind2Web" in exp:
+        benchmark = "Mind2Web / Multimodal-Mind2Web / MiniWoB++"
+    elif "LIBERO" in exp:
+        benchmark = "LIBERO / robotics benchmark"
+    return [
+        ("主 benchmark", benchmark, "任务成功率 / grounding accuracy / 系统吞吐", exp),
+        ("对照基线", "SFT、BC、prompting、闭源 VLM 或同尺寸开源模型", "相同任务口径下比较", "不同论文的环境和任务集合不同，不能把数值直接跨表相加。"),
+        ("可信度", "作者自评或综述转述", "⚠️ / 待核", confidence_note(paper)),
+    ]
+
+
 def limitations_for(paper: Paper) -> list[str]:
     tags = set(paper.tags)
     limits = []
@@ -623,11 +771,19 @@ def detail_page(paper: Paper, prev_paper: Paper | None, next_paper: Paper | None
     task_rows = "\n".join(
         f"<tr><th>{inline_md(k)}</th><td>{inline_md(v)}</td></tr>" for k, v in task_form_for(paper)
     )
+    profile_table = "\n".join(
+        f"<tr><th>{inline_md(k)}</th><td>{inline_md(v)}</td></tr>" for k, v in profile_rows(paper)
+    )
+    pipeline_html = "\n".join(f"<li>{inline_md(step)}</li>" for step in pipeline_for(paper))
     notes_html = "\n".join(f"<li>{inline_md(note)}</li>" for note in notes)
     recipe_html = "\n".join(f"<li>{inline_md(item)}</li>" for item in training_recipe_for(paper))
     innovations_html = "\n".join(f"<li>{inline_md(item)}</li>" for item in innovations_for(paper))
     checklist_html = "\n".join(f"<li>{inline_md(item)}</li>" for item in implementation_checklist_for(paper))
     limits_html = "\n".join(f"<li>{inline_md(item)}</li>" for item in limitations_for(paper))
+    benchmark_rows = "\n".join(
+        f"<tr><td>{inline_md(a)}</td><td>{inline_md(b)}</td><td>{inline_md(c)}</td><td>{inline_md(d)}</td></tr>"
+        for a, b, c, d in benchmark_table_rows(paper)
+    )
     tags = "".join(f'<span class="tag">{html.escape(tag)}</span>' for tag in paper.tags)
     paper_links = "".join(
         f'<a class="primary-action" href="{html.escape(url)}" target="_blank" rel="noreferrer">打开论文</a>'
@@ -678,8 +834,10 @@ def detail_page(paper: Paper, prev_paper: Paper | None, next_paper: Paper | None
     <article class="detail-layout">
       <aside class="toc-panel" aria-label="本页目录">
         <a href="#tldr">TL;DR</a>
+        <a href="#profile">定位卡</a>
         <a href="#problem">问题</a>
         <a href="#form">任务形式</a>
+        <a href="#pipeline">闭环</a>
         <a href="#method">方法拆解</a>
         <a href="#training">训练与奖励</a>
         <a href="#innovation">创新</a>
@@ -691,50 +849,75 @@ def detail_page(paper: Paper, prev_paper: Paper | None, next_paper: Paper | None
         <section id="tldr">
           <h2>TL;DR</h2>
           <p>{inline_md(paper.method)} {inline_md(paper.experiment)}</p>
+          <blockquote><p>{inline_md(confidence_note(paper))}</p></blockquote>
+        </section>
+        <section id="profile">
+          <h2>0. 论文定位卡</h2>
+          <table class="detail-table"><tbody>{profile_table}</tbody></table>
+          <p>先看这张卡可以避免误读：GUI Agent RL 论文经常把“模型能力”“环境系统”“奖励设计”“数据生成”混在一起讨论。这里把它拆成环境、动作空间、奖励信号和优化方式四个轴，方便判断论文到底贡献在哪里。</p>
         </section>
         <section id="problem">
           <h2>1. 要解决的问题</h2>
           <p>{inline_md(paper.motivation)}</p>
           <p>换成 GUI agent 的语言，这个问题通常落在三件事上：界面状态部分可观测、正确反馈稀疏且延迟、静态示范无法覆盖真实软件变化。论文的价值就在于把这些问题中的一个或多个转成可训练的闭环信号。</p>
+          <p>如果只用 SFT 或行为克隆，模型学到的是“在数据集截图上下一步该怎么点”；而 GUI Agent 真正部署时会遇到状态漂移、异步加载、误点回退、任务参数变化和界面版本变化。本文所属路线试图回答的是：如何让模型从环境反馈、可验证标签或合成轨迹里继续改进，而不是停留在一次性模仿。</p>
         </section>
         <section id="form">
           <h2>2. 任务形式：输入、动作、奖励</h2>
           <table class="detail-table"><tbody>{task_rows}</tbody></table>
           <p>这个表是读 GUI Agent RL 论文最重要的入口：只要弄清楚模型看到了什么、能做什么、奖励从哪里来，就能判断它是算法贡献、环境贡献、奖励贡献还是系统贡献。</p>
         </section>
+        <section id="pipeline">
+          <h2>3. 训练闭环怎么跑</h2>
+          <ol>{pipeline_html}</ol>
+          <div class="flow-strip">
+            <span>任务/轨迹</span><span>策略采样</span><span>环境或 verifier</span><span>奖励/筛选</span><span>策略更新</span>
+          </div>
+          <p>这条闭环是理解论文的主线。无论它叫 GRPO、DPO、AEPO、MCTS、world model 还是 semi-online，最终都要把“模型输出的动作”转换成“可执行状态变化”，再把状态变化转换成“可训练信号”。</p>
+        </section>
         <section id="method">
-          <h2>3. 方法与架构怎么跑</h2>
+          <h2>4. 方法与架构怎么跑</h2>
           <ol>{notes_html}</ol>
           <p>因此，这篇论文不是简单地“让大模型点屏幕”，而是围绕 observation-action-reward 契约重写训练闭环：先让动作可执行，再让反馈可验证，最后让策略能从成功和失败中更新。</p>
+          <h3>4.1 关键中间变量</h3>
+          <p>读方法时要特别盯住中间变量：轨迹是按 step 存、按 episode 存，还是按候选动作组存？奖励是只在终局出现，还是每一步都有 progress？模型更新时用的是整条轨迹的相对优势、单步坐标误差、偏好对，还是 value/Q head？这些细节决定了论文能否处理长任务和稀疏奖励。</p>
+          <h3>4.2 为什么这种设计能解决原问题</h3>
+          <p>核心逻辑是把原本不可微、不可直接监督的 GUI 成功条件拆成更接近训练信号的形式：要么用规则/verifier 把成功自动判出来，要么用 reward model 学过程进展，要么用世界模型/搜索生成更多成功轨迹，要么用层级结构把几十步任务拆成几个短子目标。</p>
         </section>
         <section id="training">
-          <h2>4. 训练、奖励与数据流</h2>
+          <h2>5. 训练、奖励与数据流</h2>
           <ul>{recipe_html}</ul>
           <p>读实验时要特别注意 reward 口径：有的论文评估单步坐标，有的评估整条任务成功，有的只报告系统吞吐或数据合成质量。不同口径不能直接相加或横向混算。</p>
         </section>
         <section id="innovation">
-          <h2>5. 关键设计与创新点</h2>
+          <h2>6. 关键设计与创新点</h2>
           <ul>{innovations_html}</ul>
           <p>这些创新点的共同目标，是把 GUI 交互从一次性 prompt 调用变成可迭代优化的训练系统。</p>
         </section>
         <section id="experiment">
-          <h2>6. 实验怎么读</h2>
+          <h2>7. 实验怎么读</h2>
           <p>{inline_md(paper.experiment)}</p>
+          <table class="result-table">
+            <thead><tr><th>项目</th><th>口径</th><th>指标</th><th>结论/注意事项</th></tr></thead>
+            <tbody>{benchmark_rows}</tbody>
+          </table>
           <p>这类实验通常需要同时看三组数字：第一是任务成功率或 grounding accuracy；第二是与 SFT、BC、prompting、GPT-4V/闭源模型或开源基线的对比；第三是环境成本，例如 rollout 速度、样本数量、标注成本和并行规模。</p>
+          <p>尤其要避免一个常见误读：ScreenSpot/grounding accuracy、WebArena success rate、AndroidWorld task success、OSWorld desktop success、world-model rollout speed 不是同一个指标。本文页面保留原论文或综述的原始口径，不把它们强行换算。</p>
         </section>
         <section id="reproduce">
-          <h2>7. 复现或落地时要准备什么</h2>
+          <h2>8. 复现或落地时要准备什么</h2>
           <ol>{checklist_html}</ol>
           <p>如果只能先复现一小部分，建议优先复现 action schema、verifier 和一组可重置任务；没有这三件事，后续 RL 指标很难可信。</p>
         </section>
         <section id="limits">
-          <h2>8. 局限与读法</h2>
+          <h2>9. 局限与读法</h2>
           <ul>{limits_html}</ul>
           <p>{inline_md(relation_for(paper))}</p>
+          <p>和参考站的可信度规则一致，本页把作者自评、技术报告自报和综述转述都按 ⚠️ 处理；只有基准维护方统一评测或第三方复现才适合当作更强证据。</p>
         </section>
         <section id="sources">
           <h2>来源</h2>
-          <p>本页依据 GUI Agent RL 综述、论文摘要/公开页面和站内总报告整理；数值优先保留论文自报口径，未做第三方复现实验。</p>
+          <p>本页依据 GUI Agent RL 综述、论文摘要/公开页面和站内总报告整理；数值优先保留论文自报口径，未做第三方复现实验。参考站体例来自具身智能学习站的论文细读页面，例如 RT-2 与 SimpleVLA-RL 细读。</p>
           <div class="source-links">{paper_links}<a href="../index.html#refs">返回参考链接表</a></div>
         </section>
       </div>
@@ -1483,11 +1666,29 @@ input {
   margin-bottom: 1rem;
 }
 
+.detail-content h3 {
+  margin: 1.25rem 0 0.55rem;
+  font-size: clamp(1.12rem, 2vw, 1.38rem);
+}
+
 .detail-content p,
 .detail-content li,
 .detail-table td {
   color: color-mix(in oklch, var(--ink) 84%, var(--muted));
   font-size: 1rem;
+}
+
+.detail-content blockquote {
+  margin: 1rem 0 0;
+  padding: 0.8rem 1rem;
+  border-left: 4px solid var(--red);
+  background: color-mix(in oklch, var(--amber) 18%, transparent);
+}
+
+.detail-content blockquote p {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 720;
 }
 
 .detail-content p + p,
@@ -1525,6 +1726,47 @@ input {
   width: 7rem;
   color: var(--red);
   font-size: 0.9rem;
+}
+
+.result-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  background: color-mix(in oklch, var(--paper) 90%, white);
+}
+
+.result-table th,
+.result-table td {
+  border: 1px solid color-mix(in oklch, var(--rule) 80%, var(--ink));
+  padding: 0.72rem;
+  vertical-align: top;
+  text-align: left;
+  font-size: 0.93rem;
+}
+
+.result-table th {
+  color: var(--red);
+  background: var(--paper-strong);
+}
+
+.flow-strip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin: 1rem 0;
+}
+
+.flow-strip span {
+  min-height: 52px;
+  display: grid;
+  place-items: center;
+  padding: 0.45rem;
+  border: 1px solid var(--ink);
+  background: color-mix(in oklch, var(--paper) 88%, white);
+  color: var(--ink);
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 800;
 }
 
 .source-links {
@@ -1625,6 +1867,10 @@ code {
 
   .pager a {
     max-width: none;
+  }
+
+  .flow-strip {
+    grid-template-columns: 1fr;
   }
 }
 
