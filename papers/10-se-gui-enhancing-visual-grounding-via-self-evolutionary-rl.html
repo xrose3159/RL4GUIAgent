@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SE-GUI: Enhancing Visual Grounding via Self-Evolutionary RL | GUI Agent RL 论文细读</title>
+  <meta name="description" content="SE-GUI: Enhancing Visual Grounding via Self-Evolutionary RL 论文细读：问题、方法、训练、奖励、实验与局限。">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav-shell" aria-label="站点导航">
+      <a class="brand" href="../index.html#top">GUI Agent RL</a>
+      <div class="nav-links">
+        <a href="../index.html#papers">论文列表</a>
+        <a href="../index.html#env">环境</a>
+        <a href="../index.html#refs">参考</a>
+      </div>
+    </nav>
+  </header>
+  <main class="paper-detail">
+    <section class="detail-hero">
+      <p class="eyebrow">Paper 10 · 论文细读</p>
+      <h1>SE-GUI: Enhancing Visual Grounding via Self-Evolutionary RL</h1>
+      <div class="tag-row"><span class="tag">Grounding</span></div>
+      <p class="lead">高分辨率、专业软件界面中，GUI grounding 很难靠大量 SFT 泛化；需要更数据高效的 RL 方式。</p>
+      <div class="hero-actions">
+        <a class="primary-action" href="https://arxiv.org/abs/2505.12370" target="_blank" rel="noreferrer">打开论文</a>
+        <a class="secondary-action" href="https://arxiv.org/abs/2604.27955" target="_blank" rel="noreferrer">综述来源</a>
+      </div>
+    </section>
+
+    <article class="detail-layout">
+      <aside class="toc-panel" aria-label="本页目录">
+        <a href="#tldr">TL;DR</a>
+        <a href="#problem">问题</a>
+        <a href="#form">任务形式</a>
+        <a href="#method">方法拆解</a>
+        <a href="#training">训练与奖励</a>
+        <a href="#innovation">创新</a>
+        <a href="#experiment">实验</a>
+        <a href="#reproduce">复现</a>
+        <a href="#limits">局限</a>
+      </aside>
+      <div class="detail-content">
+        <section id="tldr">
+          <h2>TL;DR</h2>
+          <p>三部分：高质量 seed data curation；dense policy gradient，按预测精度给连续反馈；self-evolutionary RFT，用注意力图迭代提炼模型的伪监督和定位能力。 只用 3K 样本，7B 模型在三个 grounding benchmark 达同尺寸 SOTA；ScreenSpot-Pro 47.3%，比 UI-TARS-72B 高 24.2%。这说明 attention map 可作为中间监督信号。</p>
+        </section>
+        <section id="problem">
+          <h2>1. 要解决的问题</h2>
+          <p>高分辨率、专业软件界面中，GUI grounding 很难靠大量 SFT 泛化；需要更数据高效的 RL 方式。</p>
+          <p>换成 GUI agent 的语言，这个问题通常落在三件事上：界面状态部分可观测、正确反馈稀疏且延迟、静态示范无法覆盖真实软件变化。论文的价值就在于把这些问题中的一个或多个转成可训练的闭环信号。</p>
+        </section>
+        <section id="form">
+          <h2>2. 任务形式：输入、动作、奖励</h2>
+          <table class="detail-table"><tbody><tr><th>观察</th><td>屏幕截图、目标文本或自然语言指令，有时还包含裁剪区域和候选元素。</td></tr>
+<tr><th>动作</th><td>输出坐标、边界框或带坐标的 GUI action，例如 click(x,y)。</td></tr>
+<tr><th>奖励</th><td>坐标命中、IoU、距离衰减、高斯覆盖度或语义定位是否正确。</td></tr></tbody></table>
+          <p>这个表是读 GUI Agent RL 论文最重要的入口：只要弄清楚模型看到了什么、能做什么、奖励从哪里来，就能判断它是算法贡献、环境贡献、奖励贡献还是系统贡献。</p>
+        </section>
+        <section id="method">
+          <h2>3. 方法与架构怎么跑</h2>
+          <ol><li>SE-GUI 从少量高质量 seed data 出发，不追求先堆大数据，而是让模型用自己的注意力和定位结果不断产生更有信息量的训练信号。</li>
+<li>dense policy gradient 把坐标误差转成连续反馈，让模型知道“差多少”，而不只是知道“对或错”。</li>
+<li>self-evolutionary RFT 用模型当前注意力图和预测行为筛选/修正样本，再进入下一轮训练，形成小数据自迭代。</li>
+<li>它适合专业软件和高分辨率界面，因为这类场景控件密集、纯 SFT 泛化差、人工标注成本高。</li></ol>
+          <p>因此，这篇论文不是简单地“让大模型点屏幕”，而是围绕 observation-action-reward 契约重写训练闭环：先让动作可执行，再让反馈可验证，最后让策略能从成功和失败中更新。</p>
+        </section>
+        <section id="training">
+          <h2>4. 训练、奖励与数据流</h2>
+          <ul><li>Grounding 训练必须把视觉空间误差转成可优化 reward；常见做法包括距离奖励、IoU、高斯奖励和裁剪重采样。</li></ul>
+          <p>读实验时要特别注意 reward 口径：有的论文评估单步坐标，有的评估整条任务成功，有的只报告系统吞吐或数据合成质量。不同口径不能直接相加或横向混算。</p>
+        </section>
+        <section id="innovation">
+          <h2>5. 关键设计与创新点</h2>
+          <ul><li>把视觉定位从硬命中扩展到连续或主动感知反馈，使坐标错误能产生可学习梯度。</li></ul>
+          <p>这些创新点的共同目标，是把 GUI 交互从一次性 prompt 调用变成可迭代优化的训练系统。</p>
+        </section>
+        <section id="experiment">
+          <h2>6. 实验怎么读</h2>
+          <p>只用 3K 样本，7B 模型在三个 grounding benchmark 达同尺寸 SOTA；ScreenSpot-Pro 47.3%，比 UI-TARS-72B 高 24.2%。这说明 attention map 可作为中间监督信号。</p>
+          <p>这类实验通常需要同时看三组数字：第一是任务成功率或 grounding accuracy；第二是与 SFT、BC、prompting、GPT-4V/闭源模型或开源基线的对比；第三是环境成本，例如 rollout 速度、样本数量、标注成本和并行规模。</p>
+        </section>
+        <section id="reproduce">
+          <h2>7. 复现或落地时要准备什么</h2>
+          <ol><li>先固定 action schema，并写一个能把模型输出解析成真实 GUI 操作的 adapter。</li>
+<li>准备 verifier：至少要能判断终局成功；如果是 grounding 论文，还要能计算坐标/区域奖励。</li>
+<li>Grounding 实验要保留原始分辨率、元素框和坐标归一化规则，否则不同 benchmark 不可比。</li></ol>
+          <p>如果只能先复现一小部分，建议优先复现 action schema、verifier 和一组可重置任务；没有这三件事，后续 RL 指标很难可信。</p>
+        </section>
+        <section id="limits">
+          <h2>8. 局限与读法</h2>
+          <ul><li>单步 grounding 分数高不等于多轮任务成功；坐标准但点错流程仍会失败。</li>
+<li>连续奖励或裁剪策略可能对特定 benchmark 有利，跨分辨率、跨应用仍需验证。</li></ul>
+          <p>它位于“把视觉定位做准”的支线：没有可靠 grounding，多轮策略再强也会在第一步点击或输入上失败。</p>
+        </section>
+        <section id="sources">
+          <h2>来源</h2>
+          <p>本页依据 GUI Agent RL 综述、论文摘要/公开页面和站内总报告整理；数值优先保留论文自报口径，未做第三方复现实验。</p>
+          <div class="source-links"><a class="primary-action" href="https://arxiv.org/abs/2505.12370" target="_blank" rel="noreferrer">打开论文</a><a href="../index.html#refs">返回参考链接表</a></div>
+        </section>
+      </div>
+    </article>
+    <nav class="pager" aria-label="论文翻页"><a href="09-gui-g2-gaussian-reward-modeling-for-gui-grounding.html">上一篇：GUI-G2: Gaussian Reward Modeling for GUI Grounding</a><a href="11-infigui-g1-adaptive-exploration-policy-optimization-for-gui-grou.html">下一篇：InfiGUI-G1: Adaptive Exploration Policy Optimization for GUI Grounding</a></nav>
+  </main>
+  <footer class="site-footer">
+    <p><a href="../index.html#papers">返回论文列表</a></p>
+  </footer>
+</body>
+</html>

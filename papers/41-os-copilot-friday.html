@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OS-Copilot / FRIDAY | GUI Agent RL 论文细读</title>
+  <meta name="description" content="OS-Copilot / FRIDAY 论文细读：问题、方法、训练、奖励、实验与局限。">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav-shell" aria-label="站点导航">
+      <a class="brand" href="../index.html#top">GUI Agent RL</a>
+      <div class="nav-links">
+        <a href="../index.html#papers">论文列表</a>
+        <a href="../index.html#env">环境</a>
+        <a href="../index.html#refs">参考</a>
+      </div>
+    </nav>
+  </header>
+  <main class="paper-detail">
+    <section class="detail-hero">
+      <p class="eyebrow">Paper 41 · 论文细读</p>
+      <h1>OS-Copilot / FRIDAY</h1>
+      <div class="tag-row"><span class="tag">OS/Desktop</span></div>
+      <p class="lead">大多数 agent 局限于单网站或单软件，无法覆盖真实 OS 中的网页、终端、文件、多媒体和第三方应用。</p>
+      <div class="hero-actions">
+        <a class="primary-action" href="https://arxiv.org/abs/2402.07456" target="_blank" rel="noreferrer">打开论文</a>
+        <a class="secondary-action" href="https://arxiv.org/abs/2604.27955" target="_blank" rel="noreferrer">综述来源</a>
+      </div>
+    </section>
+
+    <article class="detail-layout">
+      <aside class="toc-panel" aria-label="本页目录">
+        <a href="#tldr">TL;DR</a>
+        <a href="#problem">问题</a>
+        <a href="#form">任务形式</a>
+        <a href="#method">方法拆解</a>
+        <a href="#training">训练与奖励</a>
+        <a href="#innovation">创新</a>
+        <a href="#experiment">实验</a>
+        <a href="#reproduce">复现</a>
+        <a href="#limits">局限</a>
+      </aside>
+      <div class="detail-content">
+        <section id="tldr">
+          <h2>TL;DR</h2>
+          <p>OS-Copilot 构建 generalist computer agent 框架，FRIDAY 通过积累技能进行 self-improvement。它更偏 agent framework，但被综述用于 GUI/CUA 历史脉络和自改进方向。 在 GAIA 上比此前方法高 35%；在 Excel/PowerPoint 控制上展示少监督自改进。它对 GUI RL 的启示是：长期记忆/技能库和自改进会成为数字居民式 agent 的必要结构。</p>
+        </section>
+        <section id="problem">
+          <h2>1. 要解决的问题</h2>
+          <p>大多数 agent 局限于单网站或单软件，无法覆盖真实 OS 中的网页、终端、文件、多媒体和第三方应用。</p>
+          <p>换成 GUI agent 的语言，这个问题通常落在三件事上：界面状态部分可观测、正确反馈稀疏且延迟、静态示范无法覆盖真实软件变化。论文的价值就在于把这些问题中的一个或多个转成可训练的闭环信号。</p>
+        </section>
+        <section id="form">
+          <h2>2. 任务形式：输入、动作、奖励</h2>
+          <table class="detail-table"><tbody><tr><th>观察</th><td>桌面截图、窗口状态、文件系统或应用状态，通常通过 VM/VNC/系统 API 获取。</td></tr>
+<tr><th>动作</th><td>鼠标点击、键盘输入、拖拽、快捷键，以及部分 API/MCP/tool call。</td></tr>
+<tr><th>奖励</th><td>检查文件、数据库、应用 UI、终端输出或系统状态是否达到任务要求。</td></tr></tbody></table>
+          <p>这个表是读 GUI Agent RL 论文最重要的入口：只要弄清楚模型看到了什么、能做什么、奖励从哪里来，就能判断它是算法贡献、环境贡献、奖励贡献还是系统贡献。</p>
+        </section>
+        <section id="method">
+          <h2>3. 方法与架构怎么跑</h2>
+          <ol><li>OS-Copilot/FRIDAY 把 agent 放到真实操作系统，任务覆盖浏览器、文件、终端、Office 和第三方应用。</li>
+<li>FRIDAY 会积累技能：成功完成的任务被抽象成可复用程序或操作模式，下次遇到相似任务时直接调用。</li>
+<li>它不是严格的 RL 论文，但提供了 GUI/CUA 自我改进的重要系统视角：长期记忆和技能库可以减少重复探索。</li>
+<li>对 GUI RL 的启示是，未来 agent 不能只靠单次 episode 学习，还要在跨任务、跨天的使用中持续积累技能。</li></ol>
+          <p>因此，这篇论文不是简单地“让大模型点屏幕”，而是围绕 observation-action-reward 契约重写训练闭环：先让动作可执行，再让反馈可验证，最后让策略能从成功和失败中更新。</p>
+        </section>
+        <section id="training">
+          <h2>4. 训练、奖励与数据流</h2>
+          <ul><li>训练流程一般从动作格式 SFT 开始，再引入可验证反馈做策略优化，最后在动态环境中验证多轮成功率。</li></ul>
+          <p>读实验时要特别注意 reward 口径：有的论文评估单步坐标，有的评估整条任务成功，有的只报告系统吞吐或数据合成质量。不同口径不能直接相加或横向混算。</p>
+        </section>
+        <section id="innovation">
+          <h2>5. 关键设计与创新点</h2>
+          <ul><li>贡献点主要在把 GUI agent 的训练、评测或部署流程标准化，让后续算法能复用同一套接口。</li></ul>
+          <p>这些创新点的共同目标，是把 GUI 交互从一次性 prompt 调用变成可迭代优化的训练系统。</p>
+        </section>
+        <section id="experiment">
+          <h2>6. 实验怎么读</h2>
+          <p>在 GAIA 上比此前方法高 35%；在 Excel/PowerPoint 控制上展示少监督自改进。它对 GUI RL 的启示是：长期记忆/技能库和自改进会成为数字居民式 agent 的必要结构。</p>
+          <p>这类实验通常需要同时看三组数字：第一是任务成功率或 grounding accuracy；第二是与 SFT、BC、prompting、GPT-4V/闭源模型或开源基线的对比；第三是环境成本，例如 rollout 速度、样本数量、标注成本和并行规模。</p>
+        </section>
+        <section id="reproduce">
+          <h2>7. 复现或落地时要准备什么</h2>
+          <ol><li>先固定 action schema，并写一个能把模型输出解析成真实 GUI 操作的 adapter。</li>
+<li>准备 verifier：至少要能判断终局成功；如果是 grounding 论文，还要能计算坐标/区域奖励。</li>
+<li>Desktop 任务需要 VM/VNC/截图通道，并把文件系统或应用状态检查写成可重复 verifier。</li></ol>
+          <p>如果只能先复现一小部分，建议优先复现 action schema、verifier 和一组可重置任务；没有这三件事，后续 RL 指标很难可信。</p>
+        </section>
+        <section id="limits">
+          <h2>8. 局限与读法</h2>
+          <ul><li>桌面任务环境重、状态复杂，评测结果容易受 VM 配置、软件版本和任务初始化影响。</li></ul>
+          <p>它为 GUI Agent RL 提供数据、环境或系统支撑，是从单点算法走向可复现工程栈的一部分。</p>
+        </section>
+        <section id="sources">
+          <h2>来源</h2>
+          <p>本页依据 GUI Agent RL 综述、论文摘要/公开页面和站内总报告整理；数值优先保留论文自报口径，未做第三方复现实验。</p>
+          <div class="source-links"><a class="primary-action" href="https://arxiv.org/abs/2402.07456" target="_blank" rel="noreferrer">打开论文</a><a href="../index.html#refs">返回参考链接表</a></div>
+        </section>
+      </div>
+    </article>
+    <nav class="pager" aria-label="论文翻页"><a href="40-agenttrek-trajectory-synthesis-via-web-tutorials.html">上一篇：AgentTrek: Trajectory Synthesis via Web Tutorials</a><span></span></nav>
+  </main>
+  <footer class="site-footer">
+    <p><a href="../index.html#papers">返回论文列表</a></p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VSC-RL: Variational Subgoal-Conditioned RL | GUI Agent RL 论文细读</title>
+  <meta name="description" content="VSC-RL: Variational Subgoal-Conditioned RL 论文细读：问题、方法、训练、奖励、实验与局限。">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav-shell" aria-label="站点导航">
+      <a class="brand" href="../index.html#top">GUI Agent RL</a>
+      <div class="nav-links">
+        <a href="../index.html#papers">论文列表</a>
+        <a href="../index.html#env">环境</a>
+        <a href="../index.html#refs">参考</a>
+      </div>
+    </nav>
+  </header>
+  <main class="paper-detail">
+    <section class="detail-hero">
+      <p class="eyebrow">Paper 15 · 论文细读</p>
+      <h1>VSC-RL: Variational Subgoal-Conditioned RL</h1>
+      <div class="tag-row"><span class="tag">Hybrid</span></div>
+      <p class="lead">视觉-语言 agent 的真实任务稀疏奖励、长时序依赖强，普通在线 RL 学习效率低。</p>
+      <div class="hero-actions">
+        <a class="primary-action" href="https://arxiv.org/abs/2502.07949" target="_blank" rel="noreferrer">打开论文</a>
+        <a class="secondary-action" href="https://arxiv.org/abs/2604.27955" target="_blank" rel="noreferrer">综述来源</a>
+      </div>
+    </section>
+
+    <article class="detail-layout">
+      <aside class="toc-panel" aria-label="本页目录">
+        <a href="#tldr">TL;DR</a>
+        <a href="#problem">问题</a>
+        <a href="#form">任务形式</a>
+        <a href="#method">方法拆解</a>
+        <a href="#training">训练与奖励</a>
+        <a href="#innovation">创新</a>
+        <a href="#experiment">实验</a>
+        <a href="#reproduce">复现</a>
+        <a href="#limits">局限</a>
+      </aside>
+      <div class="detail-content">
+        <section id="tldr">
+          <h2>TL;DR</h2>
+          <p>把任务重写为 variational goal-conditioned RL，优化 SubGoal Evidence Lower Bound。目标包括最大化 subgoal-conditioned return，以及约束与参考 goal-conditioned policy 的差异。VLM 自动把大目标分解成可行 subgoal。 在多类 benchmark，包括移动设备控制和 Web 控制任务上超过 SOTA，并提升学习效率。综述将它列为移动/网页长任务的 subgoal-conditioned RL 代表。</p>
+        </section>
+        <section id="problem">
+          <h2>1. 要解决的问题</h2>
+          <p>视觉-语言 agent 的真实任务稀疏奖励、长时序依赖强，普通在线 RL 学习效率低。</p>
+          <p>换成 GUI agent 的语言，这个问题通常落在三件事上：界面状态部分可观测、正确反馈稀疏且延迟、静态示范无法覆盖真实软件变化。论文的价值就在于把这些问题中的一个或多个转成可训练的闭环信号。</p>
+        </section>
+        <section id="form">
+          <h2>2. 任务形式：输入、动作、奖励</h2>
+          <table class="detail-table"><tbody><tr><th>观察</th><td>当前 GUI 视觉状态、任务指令和必要的历史上下文。</td></tr>
+<tr><th>动作</th><td>统一 GUI action schema，包括 click/type/scroll/swipe/back/finish 或工具调用。</td></tr>
+<tr><th>奖励</th><td>由终局完成、过程进展、动作合法性、坐标定位或 verifier 判断组成。</td></tr></tbody></table>
+          <p>这个表是读 GUI Agent RL 论文最重要的入口：只要弄清楚模型看到了什么、能做什么、奖励从哪里来，就能判断它是算法贡献、环境贡献、奖励贡献还是系统贡献。</p>
+        </section>
+        <section id="method">
+          <h2>3. 方法与架构怎么跑</h2>
+          <ol><li>VSC-RL 把长任务拆成可学习的 subgoal：先让 VLM 或 planner 生成中间目标，再训练策略在每个子目标条件下行动。</li>
+<li>SubGoal Evidence Lower Bound 把最终成功、子目标可达性和与参考策略的偏差放进同一个优化目标。</li>
+<li>这样做的好处是 reward 不必从终局一次性回传几十步，模型可以在“到达某个中间界面”时得到更短程的学习信号。</li>
+<li>它是层级 RL 在 GUI/Web/Mobile 任务中的自然落地，尤其适合搜索、填写、确认这种多阶段流程。</li></ol>
+          <p>因此，这篇论文不是简单地“让大模型点屏幕”，而是围绕 observation-action-reward 契约重写训练闭环：先让动作可执行，再让反馈可验证，最后让策略能从成功和失败中更新。</p>
+        </section>
+        <section id="training">
+          <h2>4. 训练、奖励与数据流</h2>
+          <ul><li>混合路线先用 SFT/offline 数据冷启动，再用在线反馈、分层规划、API-GUI 混合动作或 verifier 做二次强化。</li>
+<li>它的核心取舍是：离线数据给稳定性，在线环境给真实反馈，系统结构负责把两者接起来。</li></ul>
+          <p>读实验时要特别注意 reward 口径：有的论文评估单步坐标，有的评估整条任务成功，有的只报告系统吞吐或数据合成质量。不同口径不能直接相加或横向混算。</p>
+        </section>
+        <section id="innovation">
+          <h2>5. 关键设计与创新点</h2>
+          <ul><li>通过层级、验证器、工具/API 或半在线机制，把长任务拆成更可控的子问题。</li></ul>
+          <p>这些创新点的共同目标，是把 GUI 交互从一次性 prompt 调用变成可迭代优化的训练系统。</p>
+        </section>
+        <section id="experiment">
+          <h2>6. 实验怎么读</h2>
+          <p>在多类 benchmark，包括移动设备控制和 Web 控制任务上超过 SOTA，并提升学习效率。综述将它列为移动/网页长任务的 subgoal-conditioned RL 代表。</p>
+          <p>这类实验通常需要同时看三组数字：第一是任务成功率或 grounding accuracy；第二是与 SFT、BC、prompting、GPT-4V/闭源模型或开源基线的对比；第三是环境成本，例如 rollout 速度、样本数量、标注成本和并行规模。</p>
+        </section>
+        <section id="reproduce">
+          <h2>7. 复现或落地时要准备什么</h2>
+          <ol><li>先固定 action schema，并写一个能把模型输出解析成真实 GUI 操作的 adapter。</li>
+<li>准备 verifier：至少要能判断终局成功；如果是 grounding 论文，还要能计算坐标/区域奖励。</li></ol>
+          <p>如果只能先复现一小部分，建议优先复现 action schema、verifier 和一组可重置任务；没有这三件事，后续 RL 指标很难可信。</p>
+        </section>
+        <section id="limits">
+          <h2>8. 局限与读法</h2>
+          <ul><li>论文结果大多是作者自报或综述转述，跨 benchmark 的数值不可直接混算。</li></ul>
+          <p>它属于系统融合路线：用层级结构、工具调用、验证器或半在线机制把真实 GUI 的长时序问题拆小。</p>
+        </section>
+        <section id="sources">
+          <h2>来源</h2>
+          <p>本页依据 GUI Agent RL 综述、论文摘要/公开页面和站内总报告整理；数值优先保留论文自报口径，未做第三方复现实验。</p>
+          <div class="source-links"><a class="primary-action" href="https://arxiv.org/abs/2502.07949" target="_blank" rel="noreferrer">打开论文</a><a href="../index.html#refs">返回参考链接表</a></div>
+        </section>
+      </div>
+    </article>
+    <nav class="pager" aria-label="论文翻页"><a href="14-backtrackagent-error-detection-and-backtracking-mechanism.html">上一篇：BacktrackAgent: Error Detection and Backtracking Mechanism</a><a href="16-explorer-scaling-exploration-driven-web-trajectory-synthesis.html">下一篇：Explorer: Scaling Exploration-Driven Web Trajectory Synthesis</a></nav>
+  </main>
+  <footer class="site-footer">
+    <p><a href="../index.html#papers">返回论文列表</a></p>
+  </footer>
+</body>
+</html>

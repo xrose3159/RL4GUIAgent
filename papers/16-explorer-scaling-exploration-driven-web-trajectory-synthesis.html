@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Explorer: Scaling Exploration-Driven Web Trajectory Synthesis | GUI Agent RL 论文细读</title>
+  <meta name="description" content="Explorer: Scaling Exploration-Driven Web Trajectory Synthesis 论文细读：问题、方法、训练、奖励、实验与局限。">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav-shell" aria-label="站点导航">
+      <a class="brand" href="../index.html#top">GUI Agent RL</a>
+      <div class="nav-links">
+        <a href="../index.html#papers">论文列表</a>
+        <a href="../index.html#env">环境</a>
+        <a href="../index.html#refs">参考</a>
+      </div>
+    </nav>
+  </header>
+  <main class="paper-detail">
+    <section class="detail-hero">
+      <p class="eyebrow">Paper 16 · 论文细读</p>
+      <h1>Explorer: Scaling Exploration-Driven Web Trajectory Synthesis</h1>
+      <div class="tag-row"><span class="tag">Data</span><span class="tag">Web</span></div>
+      <p class="lead">真实 online web agent 的轨迹数据昂贵，开源 LMM agent 在更真实的 online benchmark 上仍远低于人类水平。</p>
+      <div class="hero-actions">
+        <a class="primary-action" href="https://arxiv.org/abs/2502.11357" target="_blank" rel="noreferrer">打开论文</a>
+        <a class="secondary-action" href="https://arxiv.org/abs/2604.27955" target="_blank" rel="noreferrer">综述来源</a>
+      </div>
+    </section>
+
+    <article class="detail-layout">
+      <aside class="toc-panel" aria-label="本页目录">
+        <a href="#tldr">TL;DR</a>
+        <a href="#problem">问题</a>
+        <a href="#form">任务形式</a>
+        <a href="#method">方法拆解</a>
+        <a href="#training">训练与奖励</a>
+        <a href="#innovation">创新</a>
+        <a href="#experiment">实验</a>
+        <a href="#reproduce">复现</a>
+        <a href="#limits">局限</a>
+      </aside>
+      <div class="detail-content">
+        <section id="tldr">
+          <h2>TL;DR</h2>
+          <p>用大规模网页探索合成轨迹。Explorer 随机/策略化探索网页，发现新状态和任务意图；annotator 反推出自然语言指令并筛选成功轨迹，形成多模态网页轨迹数据。 生成 94K+ 成功多模态 web trajectories，覆盖 49K unique URLs、720K screenshots、33M web elements，平均每条成功轨迹 0.28 美元。训练后的 Explorer 在 Mind2Web-Live、Multimodal-Mind2Web、MiniWoB++ 等离线和在线 benchmark 上表现强，并显示数据规模是关键驱动。</p>
+        </section>
+        <section id="problem">
+          <h2>1. 要解决的问题</h2>
+          <p>真实 online web agent 的轨迹数据昂贵，开源 LMM agent 在更真实的 online benchmark 上仍远低于人类水平。</p>
+          <p>换成 GUI agent 的语言，这个问题通常落在三件事上：界面状态部分可观测、正确反馈稀疏且延迟、静态示范无法覆盖真实软件变化。论文的价值就在于把这些问题中的一个或多个转成可训练的闭环信号。</p>
+        </section>
+        <section id="form">
+          <h2>2. 任务形式：输入、动作、奖励</h2>
+          <table class="detail-table"><tbody><tr><th>观察</th><td>网页截图、URL、DOM/accessibility tree、任务指令和历史操作摘要。</td></tr>
+<tr><th>动作</th><td>click、type、select、scroll、navigate、submit，有的系统还允许 browser tool/API。</td></tr>
+<tr><th>奖励</th><td>目标 URL、DOM 变化、后端数据库状态、表单提交结果或 reward model 判断。</td></tr></tbody></table>
+          <p>这个表是读 GUI Agent RL 论文最重要的入口：只要弄清楚模型看到了什么、能做什么、奖励从哪里来，就能判断它是算法贡献、环境贡献、奖励贡献还是系统贡献。</p>
+        </section>
+        <section id="method">
+          <h2>3. 方法与架构怎么跑</h2>
+          <ol><li>Explorer 先让 agent 在真实网页中探索，而不是等人工写任务；它记录可点击元素、页面跳转、表单结果和截图。</li>
+<li>当探索发现一条可完成的路径后，annotator 反向生成自然语言指令，相当于从行为轨迹合成任务描述。</li>
+<li>筛选器再剔除不可复现、语义不清或重复的轨迹，得到大规模多模态 web trajectory 数据。</li>
+<li>这条路线的本质是把环境探索变成数据生成器，为后续 SFT、offline RL 和 online curriculum 提供便宜轨迹。</li></ol>
+          <p>因此，这篇论文不是简单地“让大模型点屏幕”，而是围绕 observation-action-reward 契约重写训练闭环：先让动作可执行，再让反馈可验证，最后让策略能从成功和失败中更新。</p>
+        </section>
+        <section id="training">
+          <h2>4. 训练、奖励与数据流</h2>
+          <ul><li>数据路线把网页教程、环境探索、模拟器或世界模型变成轨迹工厂，关键是自动筛选可复现成功轨迹。</li></ul>
+          <p>读实验时要特别注意 reward 口径：有的论文评估单步坐标，有的评估整条任务成功，有的只报告系统吞吐或数据合成质量。不同口径不能直接相加或横向混算。</p>
+        </section>
+        <section id="innovation">
+          <h2>5. 关键设计与创新点</h2>
+          <ul><li>把探索、教程、模拟器或世界模型变成轨迹生成器，减少人工收集 demonstration 的依赖。</li></ul>
+          <p>这些创新点的共同目标，是把 GUI 交互从一次性 prompt 调用变成可迭代优化的训练系统。</p>
+        </section>
+        <section id="experiment">
+          <h2>6. 实验怎么读</h2>
+          <p>生成 94K+ 成功多模态 web trajectories，覆盖 49K unique URLs、720K screenshots、33M web elements，平均每条成功轨迹 0.28 美元。训练后的 Explorer 在 Mind2Web-Live、Multimodal-Mind2Web、MiniWoB++ 等离线和在线 benchmark 上表现强，并显示数据规模是关键驱动。</p>
+          <p>这类实验通常需要同时看三组数字：第一是任务成功率或 grounding accuracy；第二是与 SFT、BC、prompting、GPT-4V/闭源模型或开源基线的对比；第三是环境成本，例如 rollout 速度、样本数量、标注成本和并行规模。</p>
+        </section>
+        <section id="reproduce">
+          <h2>7. 复现或落地时要准备什么</h2>
+          <ol><li>先固定 action schema，并写一个能把模型输出解析成真实 GUI 操作的 adapter。</li>
+<li>准备 verifier：至少要能判断终局成功；如果是 grounding 论文，还要能计算坐标/区域奖励。</li>
+<li>Web 任务优先用 Playwright/BrowserGym/WebArena 这类可重置环境，记录 URL、DOM、截图和后端状态。</li></ol>
+          <p>如果只能先复现一小部分，建议优先复现 action schema、verifier 和一组可重置任务；没有这三件事，后续 RL 指标很难可信。</p>
+        </section>
+        <section id="limits">
+          <h2>8. 局限与读法</h2>
+          <ul><li>自动合成数据需要严格去重和可复现检查，否则会把伪成功、模板泄漏或不可执行指令带入训练。</li></ul>
+          <p>它为 GUI Agent RL 提供数据、环境或系统支撑，是从单点算法走向可复现工程栈的一部分。</p>
+        </section>
+        <section id="sources">
+          <h2>来源</h2>
+          <p>本页依据 GUI Agent RL 综述、论文摘要/公开页面和站内总报告整理；数值优先保留论文自报口径，未做第三方复现实验。</p>
+          <div class="source-links"><a class="primary-action" href="https://arxiv.org/abs/2502.11357" target="_blank" rel="noreferrer">打开论文</a><a href="../index.html#refs">返回参考链接表</a></div>
+        </section>
+      </div>
+    </article>
+    <nav class="pager" aria-label="论文翻页"><a href="15-vsc-rl-variational-subgoal-conditioned-rl.html">上一篇：VSC-RL: Variational Subgoal-Conditioned RL</a><a href="17-ui-s1-semi-online-reinforcement-learning.html">下一篇：UI-S1: Semi-online Reinforcement Learning</a></nav>
+  </main>
+  <footer class="site-footer">
+    <p><a href="../index.html#papers">返回论文列表</a></p>
+  </footer>
+</body>
+</html>
