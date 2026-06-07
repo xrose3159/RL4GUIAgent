@@ -4,9 +4,18 @@
 
 站点结构：
 
-- `index.html`：总览、路线、搜索、筛选、环境/容器/框架总结。
-- `papers/*.html`：41 篇论文独立细读页，包含 TL;DR、问题、任务形式、方法拆解、训练/奖励、实验、复现清单、局限。
-- `build_site.py`：从上一级目录的 `gui_agent_rl_survey.md` 生成静态站点。
+- `docs/*.md`：41 篇论文的权威 Markdown 精读数据源。
+- `data/papers.json`：论文元数据、标签、环境、方法路线、详情页路径和 MD 路径。
+- `index.html`：总览、路线、环境/容器/框架总结；论文库由 `<literature-browser>` 运行时读取 `docs/*.md` 渲染。
+- `papers/*.html`：41 篇论文独立详情页壳；正文由 `<literature-detail>` 运行时读取对应 MD 文档。
+- `assets/js/`：Markdown 数据读取、Markdown/LaTeX 渲染、文献浏览器和文献详情组件。
+- `build_site.py`：旧版静态站点生成脚本，保留作参考；当前正文不再依赖它的粗粒度摘要。
+
+详情页中：
+
+- “方法深度解析”直接渲染 MD 第 1 部分。
+- “实验数据看板”从 MD 第 2 部分抽取 benchmark、baseline、metric、ablation，并继续完整渲染第 2 部分原文。
+- Markdown 渲染使用 `marked + DOMPurify + KaTeX`，支持 GFM 表格、加粗、列表、代码块和 LaTeX 公式。
 
 ## 本地预览
 

@@ -1,11 +1,11 @@
 
 :root {
   color-scheme: light;
-  --paper: oklch(96.8% 0.018 78);
-  --paper-strong: oklch(91.5% 0.024 78);
+  --paper: oklch(97.4% 0.008 230);
+  --paper-strong: oklch(92.8% 0.018 220);
   --ink: oklch(21% 0.027 255);
   --muted: oklch(43% 0.035 252);
-  --rule: oklch(77% 0.035 75);
+  --rule: oklch(76% 0.035 220);
   --red: oklch(55% 0.18 27);
   --blue: oklch(41% 0.12 236);
   --green: oklch(47% 0.10 155);
@@ -748,13 +748,439 @@ code {
   border-radius: 4px;
 }
 
+.detail-content pre {
+  overflow-x: auto;
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid color-mix(in oklch, var(--ink) 28%, var(--rule));
+  background: color-mix(in oklch, var(--ink) 92%, black);
+  color: var(--paper);
+  border-radius: var(--radius);
+  line-height: 1.55;
+}
+
+.detail-content pre code {
+  display: block;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  white-space: pre;
+}
+
+.markdown-image-placeholder {
+  margin: 1rem 0;
+  padding: 0.95rem 1rem;
+  border: 1px dashed color-mix(in oklch, var(--ink) 48%, var(--rule));
+  background: color-mix(in oklch, var(--paper-strong) 68%, transparent);
+  color: var(--ink);
+  font-weight: 760;
+}
+
+.library-shell {
+  display: grid;
+  grid-template-columns: minmax(220px, 270px) minmax(0, 1fr);
+  gap: clamp(1.25rem, 4vw, 3rem);
+  align-items: start;
+}
+
+.library-rail,
+.reader-rail {
+  position: sticky;
+  top: 88px;
+  display: grid;
+  gap: 1rem;
+  align-self: start;
+}
+
+.library-stamp,
+.reader-source,
+.reader-meta {
+  border: 1px solid color-mix(in oklch, var(--ink) 35%, var(--rule));
+  background: color-mix(in oklch, var(--paper) 90%, white);
+  padding: 0.85rem;
+}
+
+.library-stamp span,
+.reader-source span,
+.reader-meta span,
+.search-box span,
+.filter-group h3,
+.experiment-board span,
+.mini-board span {
+  display: block;
+  color: var(--red);
+  font-size: 0.75rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.library-stamp strong,
+.reader-meta strong {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+
+.reader-source code,
+.paper-source-line code {
+  word-break: break-all;
+}
+
+.search-box {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.search-box input {
+  width: 100%;
+}
+
+.filter-group {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.filter-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 36px;
+  border: 1px solid color-mix(in oklch, var(--ink) 30%, var(--rule));
+  background: color-mix(in oklch, var(--paper) 92%, white);
+  color: var(--ink);
+  padding: 0.42rem 0.6rem;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 760;
+  text-align: left;
+  cursor: pointer;
+}
+
+.filter-chip:hover,
+.filter-chip:focus-visible {
+  border-color: var(--ink);
+  background: var(--paper-strong);
+}
+
+.filter-chip span {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.library-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: end;
+  margin-bottom: 1.25rem;
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 1rem;
+}
+
+.library-heading h2 {
+  font-size: clamp(2rem, 4vw, 4.2rem);
+}
+
+.library-heading p {
+  max-width: 760px;
+  margin: 0.8rem 0 0;
+  color: var(--muted);
+}
+
+.library-count {
+  min-width: 112px;
+  border: 2px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  padding: 0.8rem;
+  text-align: center;
+}
+
+.library-count strong {
+  display: block;
+  font-family: var(--serif);
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.library-count span {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.75rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.deep-paper-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.paper-deep-card {
+  border: 1px solid color-mix(in oklch, var(--ink) 38%, var(--rule));
+  background: color-mix(in oklch, var(--paper) 92%, white);
+}
+
+.paper-deep-card header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+  padding: 1rem;
+  border-bottom: 1px solid color-mix(in oklch, var(--rule) 80%, var(--ink));
+}
+
+.paper-deep-card h3 {
+  margin: 0;
+  font-size: clamp(1.15rem, 2vw, 1.55rem);
+  line-height: 1.25;
+}
+
+.paper-deep-card h3 a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.paper-source-line {
+  padding: 0.65rem 1rem;
+  color: var(--muted);
+  font-size: 0.86rem;
+  border-bottom: 1px solid color-mix(in oklch, var(--rule) 72%, transparent);
+}
+
+.paper-insight-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 1px;
+  background: color-mix(in oklch, var(--rule) 76%, var(--ink));
+}
+
+.paper-insight-grid > section {
+  background: color-mix(in oklch, var(--paper) 94%, white);
+  padding: 1rem;
+}
+
+.paper-insight-grid h4 {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.paper-insight-grid h4 span {
+  color: var(--red);
+  font-size: 0.75rem;
+}
+
+.paper-insight-grid p,
+.mini-board p,
+.paper-empty {
+  margin: 0;
+  color: color-mix(in oklch, var(--ink) 82%, var(--muted));
+  font-size: 0.94rem;
+}
+
+.mini-board {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.paper-deep-card details {
+  padding: 0.85rem 1rem;
+  border-top: 1px solid color-mix(in oklch, var(--rule) 72%, transparent);
+}
+
+.paper-deep-card summary {
+  cursor: pointer;
+  color: var(--blue);
+  font-weight: 800;
+}
+
+.reader-state {
+  width: min(var(--max), calc(100% - 32px));
+  margin: 0 auto;
+  padding: clamp(4rem, 10vw, 8rem) 0;
+}
+
+.reader-state h1,
+.reader-state h2 {
+  font-family: var(--serif);
+  font-size: clamp(2.2rem, 6vw, 5rem);
+}
+
+.reader-shell {
+  width: min(var(--max), calc(100% - 32px));
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(220px, 270px) minmax(0, 1fr);
+  gap: clamp(1.5rem, 5vw, 4rem);
+  padding: clamp(2.5rem, 6vw, 4.5rem) 0;
+}
+
+.reader-back {
+  color: var(--ink);
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.reader-main {
+  min-width: 0;
+}
+
+.reader-hero {
+  padding-bottom: clamp(2rem, 5vw, 3.5rem);
+  border-bottom: 2px solid var(--ink);
+  margin-bottom: clamp(2rem, 5vw, 3rem);
+}
+
+.reader-hero h1 {
+  max-width: 980px;
+  font-size: clamp(2rem, 5vw, 4.8rem);
+}
+
+.reader-lead {
+  max-width: 840px;
+  margin: 1.25rem 0 0;
+  color: color-mix(in oklch, var(--ink) 80%, var(--muted));
+  font-size: 1.05rem;
+}
+
+.reader-figure {
+  margin: 1.4rem 0 0;
+  border: 1px solid color-mix(in oklch, var(--ink) 35%, var(--rule));
+  background: white;
+  padding: 0.75rem;
+}
+
+.reader-figure img {
+  display: block;
+  width: 100%;
+  max-height: 620px;
+  object-fit: contain;
+}
+
+.reader-figure figcaption,
+.md-figure figcaption {
+  margin-top: 0.55rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.reading-section {
+  scroll-margin-top: 96px;
+  padding-bottom: clamp(2.4rem, 5vw, 4rem);
+  margin-bottom: clamp(2.4rem, 5vw, 4rem);
+  border-bottom: 1px solid color-mix(in oklch, var(--rule) 78%, transparent);
+}
+
+.reading-section-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.reading-section h2 {
+  font-size: clamp(1.7rem, 3vw, 3rem);
+}
+
+.experiment-board {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin: 1rem 0 1.5rem;
+  background: var(--ink);
+  border: 1px solid var(--ink);
+}
+
+.experiment-board article {
+  background: color-mix(in oklch, var(--paper) 92%, white);
+  padding: 1rem;
+}
+
+.experiment-board p {
+  margin: 0.45rem 0 0;
+  color: color-mix(in oklch, var(--ink) 84%, var(--muted));
+}
+
+.markdown-body {
+  max-width: 900px;
+}
+
+.markdown-body h3 {
+  margin: 1.8rem 0 0.75rem;
+  font-size: clamp(1.18rem, 2vw, 1.55rem);
+}
+
+.markdown-body p,
+.markdown-body li,
+.markdown-body td,
+.markdown-body th {
+  color: color-mix(in oklch, var(--ink) 84%, var(--muted));
+  font-size: 1rem;
+}
+
+.markdown-body p {
+  margin: 0.85rem 0;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  padding-left: 1.35rem;
+}
+
+.markdown-body li + li {
+  margin-top: 0.55rem;
+}
+
+.markdown-body pre {
+  overflow-x: auto;
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid color-mix(in oklch, var(--ink) 28%, var(--rule));
+  background: color-mix(in oklch, var(--ink) 92%, black);
+  color: var(--paper);
+  border-radius: var(--radius);
+  line-height: 1.55;
+}
+
+.markdown-body pre code {
+  display: block;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  white-space: pre;
+}
+
+.md-figure {
+  margin: 1rem 0;
+  padding: 0.75rem;
+  border: 1px solid color-mix(in oklch, var(--ink) 28%, var(--rule));
+  background: white;
+}
+
+.md-figure img {
+  display: block;
+  max-width: 100%;
+}
+
 @media (max-width: 860px) {
   .hero,
   .route-grid,
   .paper-grid,
   .env-grid,
   .split,
-  .detail-layout {
+  .detail-layout,
+  .library-shell,
+  .reader-shell,
+  .paper-insight-grid,
+  .experiment-board {
     grid-template-columns: 1fr;
   }
 
@@ -792,6 +1218,16 @@ code {
 
   .toc-panel {
     position: static;
+  }
+
+  .library-rail,
+  .reader-rail {
+    position: static;
+  }
+
+  .library-heading,
+  .reading-section-head {
+    display: block;
   }
 
   .pager {

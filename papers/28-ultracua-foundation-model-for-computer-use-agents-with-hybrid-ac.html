@@ -3,9 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>UltraCUA: Foundation Model for Computer Use Agents with Hybrid Action | GUI Agent RL 论文细读</title>
-  <meta name="description" content="UltraCUA: Foundation Model for Computer Use Agents with Hybrid Action 论文细读：问题、方法、训练、奖励、实验与局限。">
+  <title>UltraCUA: Foundation Model for Computer Use Agents with Hybrid Action (2025 - Yuhao Yang, Zhen Yang, Zi-Yi Dou et al.) | GUI Agent RL 论文精读</title>
+  <meta name="description" content="UltraCUA: Foundation Model for Computer Use Agents with Hybrid Action (2025 - Yuhao Yang, Zhen Yang, Zi-Yi Dou et al.)：由 docs Markdown 数据源驱动的文献详情页，完整渲染方法深度解析、实验数据看板、图文占位符与局限。">
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <link rel="stylesheet" href="../styles.css">
 </head>
 <body>
@@ -19,171 +20,17 @@
       </div>
     </nav>
   </header>
-  <main class="paper-detail">
-    <section class="detail-hero">
-      <p class="eyebrow">Paper 28 · 论文细读</p>
-      <h1>UltraCUA: Foundation Model for Computer Use Agents with Hybrid Action</h1>
-      <div class="tag-row"><span class="tag">Hybrid</span><span class="tag">OS/Desktop</span></div>
-      <p class="lead">纯 GUI 原子动作会形成脆弱长链，一次误点就级联失败；API agent 执行稳定但覆盖面不如 GUI。</p>
-      <div class="hero-actions">
-        <a class="primary-action" href="https://arxiv.org/abs/2510.17790" target="_blank" rel="noreferrer">打开论文</a>
-        <a class="secondary-action" href="https://arxiv.org/abs/2604.27955" target="_blank" rel="noreferrer">综述来源</a>
-      </div>
-    </section>
 
-    <article class="detail-layout">
-      <aside class="toc-panel" aria-label="本页目录">
-        <a href="#tldr">TL;DR</a>
-        <a href="#profile">定位卡</a>
-        <a href="#framework">框架图</a>
-        <a href="#problem">问题</a>
-        <a href="#form">任务形式</a>
-        <a href="#pipeline">闭环</a>
-        <a href="#method">方法拆解</a>
-        <a href="#training">训练与奖励</a>
-        <a href="#innovation">创新</a>
-        <a href="#experiment">实验</a>
-        <a href="#misread">误读</a>
-        <a href="#reproduce">复现</a>
-        <a href="#limits">局限</a>
-      </aside>
-      <div class="detail-content">
-        <section id="tldr">
-          <h2>TL;DR</h2>
-          <p>Hybrid action：统一低层 GUI primitive 和高层工具/API 调用。自动从软件文档和代码仓库抽取工具能力；用 synthetic engine 生成 17K+ 可验证任务；收集混合动作轨迹；SFT + online RL 学会在 GUI 和 API 间路由。 UltraCUA-7B/32B 在 OSWorld 平均相对提升 22%，执行快 11%；WindowsAgentArena 达 21.7%，超过 Windows-trained baseline。结论是 hybrid action 能减少误差传播和轨迹长度。</p>
-          <blockquote><p>⚠️ 数值主要按论文/技术报告/综述自报口径整理，未声明为第三方独立复现。</p></blockquote>
-        </section>
-        <section id="profile">
-          <h2>0. 论文定位卡</h2>
-          <table class="detail-table"><tbody><tr><th>路线</th><td>Hybrid / OS/Desktop</td></tr>
-<tr><th>环境</th><td>Desktop / OS / VM / VNC</td></tr>
-<tr><th>动作空间</th><td>mouse / keyboard / drag / hotkey / API or MCP tool</td></tr>
-<tr><th>奖励信号</th><td>任务完成 + 过程进展 + verifier</td></tr>
-<tr><th>优化方式</th><td>SFT warmup + RL/RFT 或系统级闭环优化</td></tr>
-<tr><th>读表口径</th><td>⚠️ 数值主要按论文/技术报告/综述自报口径整理，未声明为第三方独立复现。</td></tr></tbody></table>
-          <p>先看这张卡可以避免误读：GUI Agent RL 论文经常把“模型能力”“环境系统”“奖励设计”“数据生成”混在一起讨论。这里把它拆成环境、动作空间、奖励信号和优化方式四个轴，方便判断论文到底贡献在哪里。</p>
-        </section>
-        <section id="framework">
-          <h2>1. 框架图与读图指南</h2>
-          
-          <figure class="framework-figure">
-            <a href="../figures/28.png" target="_blank" rel="noreferrer">
-              <img src="../figures/28.png" alt="UltraCUA: Foundation Model for Computer Use Agents with Hybrid Action framework figure" loading="lazy">
-            </a>
-            <figcaption>Figure 2 · overview 图。图片已本地化到本站；<a href="https://arxiv.org/html/2510.17790v3/x3.png" target="_blank" rel="noreferrer">打开 arXiv HTML 原图</a></figcaption>
-          </figure>
-          <div class="figure-guide">
-            <h3>读图顺序</h3>
-            <ol><li>先看输入端：桌面截图、窗口状态、文件系统或应用状态，通常通过 VM/VNC/系统 API 获取。</li>
-<li>再看中间模块：再加入层级 planner、verifier、API/tool call、半在线修正或在线环境反馈。</li>
-<li>接着看反馈回路：检查文件、数据库、应用 UI、终端输出或系统状态是否达到任务要求，这一项如何回到策略、价值函数、reward model 或数据筛选器。</li>
-<li>最后看输出端：鼠标点击、键盘输入、拖拽、快捷键，以及部分 API/MCP/tool call；这决定论文结果到底是在单步 grounding、完整 trajectory 还是系统吞吐上成立。</li></ol>
-            <p>读这类图不要只看模块名，要沿着 observation → action → reward/update 的方向追踪数据流。只要能指出 reward 或 verifier 是在哪里产生的、又如何回到策略更新，就基本抓住了论文的核心。</p>
-          </div>
-        
-        </section>
-        <section id="problem">
-          <h2>2. 要解决的问题</h2>
-          <p>纯 GUI 原子动作会形成脆弱长链，一次误点就级联失败；API agent 执行稳定但覆盖面不如 GUI。</p>
-          <p>换成 GUI agent 的语言，这个问题通常落在三件事上：界面状态部分可观测、正确反馈稀疏且延迟、静态示范无法覆盖真实软件变化。论文的价值就在于把这些问题中的一个或多个转成可训练的闭环信号。</p>
-          <p>如果只用 SFT 或行为克隆，模型学到的是“在数据集截图上下一步该怎么点”；而 GUI Agent 真正部署时会遇到状态漂移、异步加载、误点回退、任务参数变化和界面版本变化。本文所属路线试图回答的是：如何让模型从环境反馈、可验证标签或合成轨迹里继续改进，而不是停留在一次性模仿。</p>
-        </section>
-        <section id="form">
-          <h2>3. 任务形式：输入、动作、奖励</h2>
-          <table class="detail-table"><tbody><tr><th>观察</th><td>桌面截图、窗口状态、文件系统或应用状态，通常通过 VM/VNC/系统 API 获取。</td></tr>
-<tr><th>动作</th><td>鼠标点击、键盘输入、拖拽、快捷键，以及部分 API/MCP/tool call。</td></tr>
-<tr><th>奖励</th><td>检查文件、数据库、应用 UI、终端输出或系统状态是否达到任务要求。</td></tr></tbody></table>
-          <p>这个表是读 GUI Agent RL 论文最重要的入口：只要弄清楚模型看到了什么、能做什么、奖励从哪里来，就能判断它是算法贡献、环境贡献、奖励贡献还是系统贡献。</p>
-        </section>
-        <section id="pipeline">
-          <h2>4. 训练闭环怎么跑</h2>
-          <ol><li>先用 SFT 或离线轨迹让模型学会基本动作格式和界面语义。</li>
-<li>再加入层级 planner、verifier、API/tool call、半在线修正或在线环境反馈。</li>
-<li>把长任务拆成子目标、状态检查和错误恢复，让每个模块都有可验证输出。</li>
-<li>最终在真实或半真实环境中检验整条 trajectory 的完成率，而不只看单步准确率。</li></ol>
-          <div class="flow-strip">
-            <span>任务/轨迹</span><span>策略采样</span><span>环境或 verifier</span><span>奖励/筛选</span><span>策略更新</span>
-          </div>
-          <p>这条闭环是理解论文的主线。无论它叫 GRPO、DPO、AEPO、MCTS、world model 还是 semi-online，最终都要把“模型输出的动作”转换成“可执行状态变化”，再把状态变化转换成“可训练信号”。</p>
-        </section>
-        <section id="method">
-          <h2>5. 方法与架构怎么跑</h2>
-          <div class="method-summary"><ol><li>UltraCUA 不把 computer use 限定在鼠标键盘。能用 API 或工具稳定完成的步骤，就让模型调用结构化工具；没有 API 的长尾软件再回退到视觉 GUI 操作。</li>
-<li>论文从软件文档和代码仓库中抽取工具/API 能力，再用 synthetic engine 生成可验证任务和混合动作轨迹。</li>
-<li>SFT 建立基础动作格式和工具调用语法，online RL 根据任务执行结果强化什么时候用 GUI、什么时候用 API。</li></ol></div>
-          <div class="method-block deep-method-block">
-              <h3>5.1 Hybrid action：GUI 和 API/tool call 统一</h3>
-              <p>UltraCUA 不把 computer use 限定在鼠标键盘。能用 API 或工具稳定完成的步骤，就让模型调用结构化工具；没有 API 的长尾软件再回退到视觉 GUI 操作。</p>
-<p>这减少了纯 GUI 长链条里的误点和级联失败，同时保留对闭源软件的覆盖。</p>
-            </div>
-<div class="method-block deep-method-block">
-              <h3>5.2 自动抽取工具能力和合成任务</h3>
-              <p>论文从软件文档和代码仓库中抽取工具/API 能力，再用 synthetic engine 生成可验证任务和混合动作轨迹。</p>
-<p>训练数据里既有 GUI primitive，也有高层 API/tool call，因此模型要学会选择动作通道，而不是只学点击。</p>
-            </div>
-<div class="method-block deep-method-block">
-              <h3>5.3 SFT + online RL 学路由</h3>
-              <p>SFT 建立基础动作格式和工具调用语法，online RL 根据任务执行结果强化什么时候用 GUI、什么时候用 API。</p>
-<p>这条路线和 UI-TARS-2 的 GUI-SDK 很接近，是实际 computer-use agent 的重要方向。</p>
-            </div>
-          <p>因此，这篇论文不是简单地“让大模型点屏幕”，而是围绕 observation-action-reward 契约重写训练闭环：先让动作可执行，再让反馈可验证，最后让策略能从成功和失败中更新。</p>
-          <h3>5.4 关键中间变量</h3>
-          <p>读方法时要特别盯住中间变量：轨迹是按 step 存、按 episode 存，还是按候选动作组存？奖励是只在终局出现，还是每一步都有 progress？模型更新时用的是整条轨迹的相对优势、单步坐标误差、偏好对，还是 value/Q head？这些细节决定了论文能否处理长任务和稀疏奖励。</p>
-          <h3>5.5 为什么这种设计能解决原问题</h3>
-          <p>核心逻辑是把原本不可微、不可直接监督的 GUI 成功条件拆成更接近训练信号的形式：要么用规则/verifier 把成功自动判出来，要么用 reward model 学过程进展，要么用世界模型/搜索生成更多成功轨迹，要么用层级结构把几十步任务拆成几个短子目标。</p>
-        </section>
-        <section id="training">
-          <h2>6. 训练、奖励与数据流</h2>
-          <ul><li>混合路线先用 SFT/offline 数据冷启动，再用在线反馈、分层规划、API-GUI 混合动作或 verifier 做二次强化。</li>
-<li>它的核心取舍是：离线数据给稳定性，在线环境给真实反馈，系统结构负责把两者接起来。</li></ul>
-          <p>读实验时要特别注意 reward 口径：有的论文评估单步坐标，有的评估整条任务成功，有的只报告系统吞吐或数据合成质量。不同口径不能直接相加或横向混算。</p>
-        </section>
-        <section id="innovation">
-          <h2>7. 关键设计与创新点</h2>
-          <ul><li>通过层级、验证器、工具/API 或半在线机制，把长任务拆成更可控的子问题。</li></ul>
-          <p>这些创新点的共同目标，是把 GUI 交互从一次性 prompt 调用变成可迭代优化的训练系统。</p>
-        </section>
-        <section id="experiment">
-          <h2>8. 实验怎么读</h2>
-          <p>UltraCUA-7B/32B 在 OSWorld 平均相对提升 22%，执行快 11%；WindowsAgentArena 达 21.7%，超过 Windows-trained baseline。结论是 hybrid action 能减少误差传播和轨迹长度。</p>
-          <table class="result-table">
-            <thead><tr><th>项目</th><th>口径</th><th>指标</th><th>结论/注意事项</th></tr></thead>
-            <tbody><tr><td>主 benchmark</td><td>OSWorld / desktop CUA benchmark</td><td>任务成功率 / grounding accuracy / 系统吞吐</td><td>UltraCUA-7B/32B 在 OSWorld 平均相对提升 22%，执行快 11%；WindowsAgentArena 达 21.7%，超过 Windows-trained baseline。结论是 hybrid action 能减少误差传播和轨迹长度。</td></tr>
-<tr><td>对照基线</td><td>SFT、BC、prompting、闭源 VLM 或同尺寸开源模型</td><td>相同任务口径下比较</td><td>不同论文的环境和任务集合不同，不能把数值直接跨表相加。</td></tr>
-<tr><td>可信度</td><td>作者自评或综述转述</td><td>⚠️ / 待核</td><td>⚠️ 数值主要按论文/技术报告/综述自报口径整理，未声明为第三方独立复现。</td></tr></tbody>
-          </table>
-          <p>这类实验通常需要同时看三组数字：第一是任务成功率或 grounding accuracy；第二是与 SFT、BC、prompting、GPT-4V/闭源模型或开源基线的对比；第三是环境成本，例如 rollout 速度、样本数量、标注成本和并行规模。</p>
-          <p>尤其要避免一个常见误读：ScreenSpot/grounding accuracy、WebArena success rate、AndroidWorld task success、OSWorld desktop success、world-model rollout speed 不是同一个指标。本文页面保留原论文或综述的原始口径，不把它们强行换算。</p>
-        </section>
-        <section id="misread">
-          <h2>9. 常见误读</h2>
-          <ul><li>不要把这篇工作当成单一算法改进；它可能主要贡献在系统、数据、环境或部署接口。</li>
-<li>读 UltraCUA: Foundation Model for Computer Use Agents with Hybrid Action 时，应先确认它报告的是作者自评、技术报告结果还是第三方 benchmark 结果。</li></ul>
-        </section>
-        <section id="reproduce">
-          <h2>10. 复现或落地时要准备什么</h2>
-          <ol><li>先固定 action schema，并写一个能把模型输出解析成真实 GUI 操作的 adapter。</li>
-<li>准备 verifier：至少要能判断终局成功；如果是 grounding 论文，还要能计算坐标/区域奖励。</li>
-<li>Desktop 任务需要 VM/VNC/截图通道，并把文件系统或应用状态检查写成可重复 verifier。</li></ol>
-          <p>如果只能先复现一小部分，建议优先复现 action schema、verifier 和一组可重置任务；没有这三件事，后续 RL 指标很难可信。</p>
-        </section>
-        <section id="limits">
-          <h2>11. 局限与读法</h2>
-          <ul><li>桌面任务环境重、状态复杂，评测结果容易受 VM 配置、软件版本和任务初始化影响。</li></ul>
-          <p>它属于系统融合路线：用层级结构、工具调用、验证器或半在线机制把真实 GUI 的长时序问题拆小。</p>
-          <p>和参考站的可信度规则一致，本页把作者自评、技术报告自报和综述转述都按 ⚠️ 处理；只有基准维护方统一评测或第三方复现才适合当作更强证据。</p>
-        </section>
-        <section id="sources">
-          <h2>来源</h2>
-          <p>本页依据 GUI Agent RL 综述、论文摘要/公开页面和站内总报告整理；数值优先保留论文自报口径，未做第三方复现实验。参考站体例来自具身智能学习站的论文细读页面，例如 RT-2 与 SimpleVLA-RL 细读。</p>
-          <div class="source-links"><a class="primary-action" href="https://arxiv.org/abs/2510.17790" target="_blank" rel="noreferrer">打开论文</a><a href="../index.html#refs">返回参考链接表</a></div>
-        </section>
-      </div>
-    </article>
-    <nav class="pager" aria-label="论文翻页"><a href="27-dynaweb-model-based-rl-of-web-agents.html">上一篇：DynaWeb: Model-Based RL of Web Agents</a><a href="29-computerrl-scaling-end-to-end-online-rl-for-computer-use-agents.html">下一篇：ComputerRL: Scaling End-to-End Online RL for Computer Use Agents</a></nav>
-  </main>
+  <literature-detail paper-id="28"></literature-detail>
+
   <footer class="site-footer">
     <p><a href="../index.html#papers">返回论文列表</a></p>
   </footer>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.7/dist/purify.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@14.1.2/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script type="module" src="../assets/js/literature-detail.js"></script>
 </body>
 </html>

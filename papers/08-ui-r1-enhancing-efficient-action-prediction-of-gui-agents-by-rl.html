@@ -3,9 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>UI-R1: Enhancing Efficient Action Prediction of GUI Agents by RL | GUI Agent RL 论文细读</title>
-  <meta name="description" content="UI-R1: Enhancing Efficient Action Prediction of GUI Agents by RL 论文细读：问题、方法、训练、奖励、实验与局限。">
+  <title>UI-R1: Enhancing Efficient Action Prediction of GUI Agents by RL (2025 - Zhengxi Lu, Yuxiang Chai, Yaxuan Guo et al.) | GUI Agent RL 论文精读</title>
+  <meta name="description" content="UI-R1: Enhancing Efficient Action Prediction of GUI Agents by RL (2025 - Zhengxi Lu, Yuxiang Chai, Yaxuan Guo et al.)：由 docs Markdown 数据源驱动的文献详情页，完整渲染方法深度解析、实验数据看板、图文占位符与局限。">
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <link rel="stylesheet" href="../styles.css">
 </head>
 <body>
@@ -19,173 +20,17 @@
       </div>
     </nav>
   </header>
-  <main class="paper-detail">
-    <section class="detail-hero">
-      <p class="eyebrow">Paper 08 · 论文细读</p>
-      <h1>UI-R1: Enhancing Efficient Action Prediction of GUI Agents by RL</h1>
-      <div class="tag-row"><span class="tag">Offline RL</span></div>
-      <p class="lead">规则奖励 RL 在文本推理中有效，但多模态 GUI action prediction 尚缺系统验证。GUI 动作需要同时满足语义、动作类型和坐标精度。</p>
-      <div class="hero-actions">
-        <a class="primary-action" href="https://arxiv.org/abs/2503.21620" target="_blank" rel="noreferrer">打开论文</a>
-        <a class="secondary-action" href="https://arxiv.org/abs/2604.27955" target="_blank" rel="noreferrer">综述来源</a>
-      </div>
-    </section>
 
-    <article class="detail-layout">
-      <aside class="toc-panel" aria-label="本页目录">
-        <a href="#tldr">TL;DR</a>
-        <a href="#profile">定位卡</a>
-        <a href="#framework">框架图</a>
-        <a href="#problem">问题</a>
-        <a href="#form">任务形式</a>
-        <a href="#pipeline">闭环</a>
-        <a href="#method">方法拆解</a>
-        <a href="#training">训练与奖励</a>
-        <a href="#innovation">创新</a>
-        <a href="#experiment">实验</a>
-        <a href="#misread">误读</a>
-        <a href="#reproduce">复现</a>
-        <a href="#limits">局限</a>
-      </aside>
-      <div class="detail-content">
-        <section id="tldr">
-          <h2>TL;DR</h2>
-          <p>UI-R1 设计 rule-based action reward，用 GRPO 等 policy optimization 训练 MLLM；数据只有 136 个挑战任务，覆盖手机端五类常见动作。后续 UI-R1-E 优化 grounding 效率与准确率。 UI-R1-3B 相比 Qwen2.5-VL-3B，在 ScreenSpot 平均 +22.1%，ScreenSpot-Pro +6.0%，AndroidControl +12.7%；并能和 OS-Atlas-7B 这类用 76K SFT 样本训练的大模型竞争。</p>
-          <blockquote><p>⚠️ 数值主要按论文/技术报告/综述自报口径整理，未声明为第三方独立复现。</p></blockquote>
-        </section>
-        <section id="profile">
-          <h2>0. 论文定位卡</h2>
-          <table class="detail-table"><tbody><tr><th>路线</th><td>Offline RL</td></tr>
-<tr><th>环境</th><td>Cross-platform GUI</td></tr>
-<tr><th>动作空间</th><td>统一 GUI action schema</td></tr>
-<tr><th>奖励信号</th><td>离线轨迹回报、偏好对、Q value 或规则标签</td></tr>
-<tr><th>优化方式</th><td>GRPO / RLVR</td></tr>
-<tr><th>读表口径</th><td>⚠️ 数值主要按论文/技术报告/综述自报口径整理，未声明为第三方独立复现。</td></tr></tbody></table>
-          <p>先看这张卡可以避免误读：GUI Agent RL 论文经常把“模型能力”“环境系统”“奖励设计”“数据生成”混在一起讨论。这里把它拆成环境、动作空间、奖励信号和优化方式四个轴，方便判断论文到底贡献在哪里。</p>
-        </section>
-        <section id="framework">
-          <h2>1. 框架图与读图指南</h2>
-          
-          <figure class="framework-figure">
-            <a href="../figures/08.png" target="_blank" rel="noreferrer">
-              <img src="../figures/08.png" alt="UI-R1: Enhancing Efficient Action Prediction of GUI Agents by RL framework figure" loading="lazy">
-            </a>
-            <figcaption>Figure 2 · framework 图。图片已本地化到本站；<a href="https://arxiv.org/html/2503.21620/x2.png" target="_blank" rel="noreferrer">打开 arXiv HTML 原图</a></figcaption>
-          </figure>
-          <div class="figure-guide">
-            <h3>读图顺序</h3>
-            <ol><li>先看输入端：当前 GUI 视觉状态、任务指令和必要的历史上下文。</li>
-<li>再看中间模块：把样本转成偏好对、Q-learning transition、规则奖励标签或 offline GRPO group。</li>
-<li>接着看反馈回路：由终局完成、过程进展、动作合法性、坐标定位或 verifier 判断组成，这一项如何回到策略、价值函数、reward model 或数据筛选器。</li>
-<li>最后看输出端：统一 GUI action schema，包括 click/type/scroll/swipe/back/finish 或工具调用；这决定论文结果到底是在单步 grounding、完整 trajectory 还是系统吞吐上成立。</li></ol>
-            <p>读这类图不要只看模块名，要沿着 observation → action → reward/update 的方向追踪数据流。只要能指出 reward 或 verifier 是在哪里产生的、又如何回到策略更新，就基本抓住了论文的核心。</p>
-          </div>
-        
-        </section>
-        <section id="problem">
-          <h2>2. 要解决的问题</h2>
-          <p>规则奖励 RL 在文本推理中有效，但多模态 GUI action prediction 尚缺系统验证。GUI 动作需要同时满足语义、动作类型和坐标精度。</p>
-          <p>换成 GUI agent 的语言，这个问题通常落在三件事上：界面状态部分可观测、正确反馈稀疏且延迟、静态示范无法覆盖真实软件变化。论文的价值就在于把这些问题中的一个或多个转成可训练的闭环信号。</p>
-          <p>如果只用 SFT 或行为克隆，模型学到的是“在数据集截图上下一步该怎么点”；而 GUI Agent 真正部署时会遇到状态漂移、异步加载、误点回退、任务参数变化和界面版本变化。本文所属路线试图回答的是：如何让模型从环境反馈、可验证标签或合成轨迹里继续改进，而不是停留在一次性模仿。</p>
-        </section>
-        <section id="form">
-          <h2>3. 任务形式：输入、动作、奖励</h2>
-          <table class="detail-table"><tbody><tr><th>观察</th><td>当前 GUI 视觉状态、任务指令和必要的历史上下文。</td></tr>
-<tr><th>动作</th><td>统一 GUI action schema，包括 click/type/scroll/swipe/back/finish 或工具调用。</td></tr>
-<tr><th>奖励</th><td>由终局完成、过程进展、动作合法性、坐标定位或 verifier 判断组成。</td></tr></tbody></table>
-          <p>这个表是读 GUI Agent RL 论文最重要的入口：只要弄清楚模型看到了什么、能做什么、奖励从哪里来，就能判断它是算法贡献、环境贡献、奖励贡献还是系统贡献。</p>
-        </section>
-        <section id="pipeline">
-          <h2>4. 训练闭环怎么跑</h2>
-          <ol><li>从示范轨迹、失败轨迹、候选动作或静态 benchmark 中构造可训练样本。</li>
-<li>把样本转成偏好对、Q-learning transition、规则奖励标签或 offline GRPO group。</li>
-<li>训练策略、value/Q head 或 reranker，使模型在不访问环境时也能区分好坏动作。</li>
-<li>推理时用训练后的策略直接行动，或生成多个候选后由 value/reward 模型重排。</li></ol>
-          <div class="flow-strip">
-            <span>任务/轨迹</span><span>策略采样</span><span>环境或 verifier</span><span>奖励/筛选</span><span>策略更新</span>
-          </div>
-          <p>这条闭环是理解论文的主线。无论它叫 GRPO、DPO、AEPO、MCTS、world model 还是 semi-online，最终都要把“模型输出的动作”转换成“可执行状态变化”，再把状态变化转换成“可训练信号”。</p>
-        </section>
-        <section id="method">
-          <h2>5. 方法与架构怎么跑</h2>
-          <div class="method-summary"><ol><li>UI-R1 和 GUI-R1 一样，主要训练静态截图上的下一步动作预测，而不是完整在线任务执行。输入是截图和指令，输出结构化 action 与坐标。</li>
-<li>UI-R1 的奖励不是一个模糊总分，而是逐项检查。格式错会被扣，动作类型错会被扣，点击坐标不在目标区域也会被扣。这样即使最终 action 没全对，模型也能知道是哪一部分错。</li>
-<li>UI-R1-E 关注另一个问题：模型为了输出坐标可能生成冗长 reasoning，推理慢且不一定更准。它通过效率导向的奖励压缩无效 token，让模型更快给出可靠动作。</li></ol></div>
-          <div class="method-block deep-method-block">
-              <h3>5.1 任务定位：低成本 GUI action prediction RFT</h3>
-              <p>UI-R1 和 GUI-R1 一样，主要训练静态截图上的下一步动作预测，而不是完整在线任务执行。输入是截图和指令，输出结构化 action 与坐标。</p>
-<p>它的目标是验证：很少的规则可验证样本能否让 Qwen2.5-VL 这类通用 VLM 获得更强 GUI 定位和动作预测能力。</p>
-            </div>
-<div class="method-block deep-method-block">
-              <h3>5.2 奖励拆分：格式、动作类型和坐标命中</h3>
-              <p>UI-R1 的奖励不是一个模糊总分，而是逐项检查。格式错会被扣，动作类型错会被扣，点击坐标不在目标区域也会被扣。这样即使最终 action 没全对，模型也能知道是哪一部分错。</p>
-<p>这种 reward 适合 grounding/action prediction，因为 ground truth bbox 和动作类型已经在数据集中存在，不需要真实环境执行。</p>
-            </div>
-<div class="method-block deep-method-block">
-              <h3>5.3 UI-R1-E：让 grounding 更高效</h3>
-              <p>UI-R1-E 关注另一个问题：模型为了输出坐标可能生成冗长 reasoning，推理慢且不一定更准。它通过效率导向的奖励压缩无效 token，让模型更快给出可靠动作。</p>
-<p>所以 UI-R1 系列的贡献主要在“用小样本规则 RFT 激活 GUI action model”，而不是构建完整 Android/OS/Web 在线训练系统。</p>
-            </div>
-          <p>因此，这篇论文不是简单地“让大模型点屏幕”，而是围绕 observation-action-reward 契约重写训练闭环：先让动作可执行，再让反馈可验证，最后让策略能从成功和失败中更新。</p>
-          <h3>5.4 关键中间变量</h3>
-          <p>读方法时要特别盯住中间变量：轨迹是按 step 存、按 episode 存，还是按候选动作组存？奖励是只在终局出现，还是每一步都有 progress？模型更新时用的是整条轨迹的相对优势、单步坐标误差、偏好对，还是 value/Q head？这些细节决定了论文能否处理长任务和稀疏奖励。</p>
-          <h3>5.5 为什么这种设计能解决原问题</h3>
-          <p>核心逻辑是把原本不可微、不可直接监督的 GUI 成功条件拆成更接近训练信号的形式：要么用规则/verifier 把成功自动判出来，要么用 reward model 学过程进展，要么用世界模型/搜索生成更多成功轨迹，要么用层级结构把几十步任务拆成几个短子目标。</p>
-        </section>
-        <section id="training">
-          <h2>6. 训练、奖励与数据流</h2>
-          <ul><li>离线阶段先从静态轨迹、成功/失败对或规则可验证样本中学习，优点是便宜、安全、可复现。</li>
-<li>优化通常用 DPO、offline GRPO、Q-learning、IQL/CQL 或 value reranking，重点是避免策略偏离数据分布后无人纠正。</li>
-<li>如果使用 GRPO/RLVR，模型会在同一状态采样多个候选动作，用相对奖励更新策略，避免训练单独 critic。</li></ul>
-          <p>读实验时要特别注意 reward 口径：有的论文评估单步坐标，有的评估整条任务成功，有的只报告系统吞吐或数据合成质量。不同口径不能直接相加或横向混算。</p>
-        </section>
-        <section id="innovation">
-          <h2>7. 关键设计与创新点</h2>
-          <ul><li>把 GUI 任务改造成可验证奖励问题，让策略优化不必依赖昂贵的逐步人工标注。</li>
-<li>在不访问真实环境的前提下利用轨迹、偏好或 value signal，降低安全风险和交互成本。</li></ul>
-          <p>这些创新点的共同目标，是把 GUI 交互从一次性 prompt 调用变成可迭代优化的训练系统。</p>
-        </section>
-        <section id="experiment">
-          <h2>8. 实验怎么读</h2>
-          <p>UI-R1-3B 相比 Qwen2.5-VL-3B，在 ScreenSpot 平均 +22.1%，ScreenSpot-Pro +6.0%，AndroidControl +12.7%；并能和 OS-Atlas-7B 这类用 76K SFT 样本训练的大模型竞争。</p>
-          <table class="result-table">
-            <thead><tr><th>项目</th><th>口径</th><th>指标</th><th>结论/注意事项</th></tr></thead>
-            <tbody><tr><td>主 benchmark</td><td>ScreenSpot / ScreenSpot-Pro</td><td>任务成功率 / grounding accuracy / 系统吞吐</td><td>UI-R1-3B 相比 Qwen2.5-VL-3B，在 ScreenSpot 平均 +22.1%，ScreenSpot-Pro +6.0%，AndroidControl +12.7%；并能和 OS-Atlas-7B 这类用 76K SFT 样本训练的大模型竞争。</td></tr>
-<tr><td>对照基线</td><td>SFT、BC、prompting、闭源 VLM 或同尺寸开源模型</td><td>相同任务口径下比较</td><td>不同论文的环境和任务集合不同，不能把数值直接跨表相加。</td></tr>
-<tr><td>可信度</td><td>作者自评或综述转述</td><td>⚠️ / 待核</td><td>⚠️ 数值主要按论文/技术报告/综述自报口径整理，未声明为第三方独立复现。</td></tr></tbody>
-          </table>
-          <p>这类实验通常需要同时看三组数字：第一是任务成功率或 grounding accuracy；第二是与 SFT、BC、prompting、GPT-4V/闭源模型或开源基线的对比；第三是环境成本，例如 rollout 速度、样本数量、标注成本和并行规模。</p>
-          <p>尤其要避免一个常见误读：ScreenSpot/grounding accuracy、WebArena success rate、AndroidWorld task success、OSWorld desktop success、world-model rollout speed 不是同一个指标。本文页面保留原论文或综述的原始口径，不把它们强行换算。</p>
-        </section>
-        <section id="misread">
-          <h2>9. 常见误读</h2>
-          <ul><li>不要把离线结果理解成“无需环境即可解决真实交互”；离线训练仍受轨迹覆盖和 OOD 状态限制。</li>
-<li>读 UI-R1: Enhancing Efficient Action Prediction of GUI Agents by RL 时，应先确认它报告的是作者自评、技术报告结果还是第三方 benchmark 结果。</li></ul>
-        </section>
-        <section id="reproduce">
-          <h2>10. 复现或落地时要准备什么</h2>
-          <ol><li>先固定 action schema，并写一个能把模型输出解析成真实 GUI 操作的 adapter。</li>
-<li>准备 verifier：至少要能判断终局成功；如果是 grounding 论文，还要能计算坐标/区域奖励。</li>
-<li>离线训练要检查轨迹覆盖和负样本质量，避免模型学到只在数据集状态里有效的捷径。</li></ol>
-          <p>如果只能先复现一小部分，建议优先复现 action schema、verifier 和一组可重置任务；没有这三件事，后续 RL 指标很难可信。</p>
-        </section>
-        <section id="limits">
-          <h2>11. 局限与读法</h2>
-          <ul><li>离线轨迹覆盖不到的状态仍是风险；模型一旦偏离专家路径，可能缺少纠正样本。</li></ul>
-          <p>它属于安全低成本路线：先尽量从已有轨迹和可验证标签中榨取价值，再决定是否进入在线环境。</p>
-          <p>和参考站的可信度规则一致，本页把作者自评、技术报告自报和综述转述都按 ⚠️ 处理；只有基准维护方统一评测或第三方复现才适合当作更强证据。</p>
-        </section>
-        <section id="sources">
-          <h2>来源</h2>
-          <p>本页依据 GUI Agent RL 综述、论文摘要/公开页面和站内总报告整理；数值优先保留论文自报口径，未做第三方复现实验。参考站体例来自具身智能学习站的论文细读页面，例如 RT-2 与 SimpleVLA-RL 细读。</p>
-          <div class="source-links"><a class="primary-action" href="https://arxiv.org/abs/2503.21620" target="_blank" rel="noreferrer">打开论文</a><a href="../index.html#refs">返回参考链接表</a></div>
-        </section>
-      </div>
-    </article>
-    <nav class="pager" aria-label="论文翻页"><a href="07-gui-r1-a-generalist-r1-style-vision-language-action-model-for-gu.html">上一篇：GUI-R1: A Generalist R1-Style Vision-Language Action Model for GUI Agents</a><a href="09-gui-g2-gaussian-reward-modeling-for-gui-grounding.html">下一篇：GUI-G2: Gaussian Reward Modeling for GUI Grounding</a></nav>
-  </main>
+  <literature-detail paper-id="08"></literature-detail>
+
   <footer class="site-footer">
     <p><a href="../index.html#papers">返回论文列表</a></p>
   </footer>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.7/dist/purify.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@14.1.2/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script type="module" src="../assets/js/literature-detail.js"></script>
 </body>
 </html>
