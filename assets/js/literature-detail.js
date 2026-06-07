@@ -6,7 +6,7 @@ import {
   mdSnippet,
   siteUrl,
 } from "./paper-data.js";
-import { hydrateMarkdown, renderMarkdown } from "./markdown-renderer.js";
+import { hydrateMarkdown, renderMarkdown, waitForMarkdownRuntime } from "./markdown-renderer.js";
 
 function escapeHtml(value = "") {
   return value
@@ -58,6 +58,7 @@ class LiteratureDetail extends HTMLElement {
       const paper = papers.find((item) => item.id === this.paperId) || papers[0];
       if (!paper) throw new Error("No paper metadata found.");
       const loaded = await loadPaperDocument(paper);
+      await waitForMarkdownRuntime();
       this.renderPaper(loaded.paper, loaded.document, papers);
     } catch (error) {
       this.renderError(error);
@@ -110,7 +111,7 @@ class LiteratureDetail extends HTMLElement {
           </div>
         </aside>
 
-        <main class="reader-main">
+        <div class="reader-main">
           <header class="reader-hero">
             <p class="eyebrow">Paper ${escapeHtml(paper.id)} · Markdown-driven Detail</p>
             <h1>${escapeHtml(document.title || paper.fullTitle || paper.title)}</h1>
@@ -157,7 +158,7 @@ class LiteratureDetail extends HTMLElement {
             ${prev ? `<a href="${escapeHtml(localDetailHref(prev.detailPath))}">上一篇：${escapeHtml(prev.title)}</a>` : "<span></span>"}
             ${next ? `<a href="${escapeHtml(localDetailHref(next.detailPath))}">下一篇：${escapeHtml(next.title)}</a>` : "<span></span>"}
           </nav>
-        </main>
+        </div>
       </article>
     `;
     hydrateMarkdown(this);

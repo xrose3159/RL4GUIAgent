@@ -6,7 +6,7 @@ import {
   mdSnippet,
   stripMarkdown,
 } from "./paper-data.js";
-import { hydrateMarkdown, renderMarkdown } from "./markdown-renderer.js";
+import { hydrateMarkdown, renderMarkdown, waitForMarkdownRuntime } from "./markdown-renderer.js";
 
 function escapeHtml(value = "") {
   return value
@@ -53,6 +53,7 @@ class LiteratureBrowser extends HTMLElement {
     this.innerHTML = `<section class="reader-state"><p class="eyebrow">Loading Markdown</p><h2>正在读取 41 篇 MD 文献...</h2></section>`;
     try {
       const manifest = await loadManifest();
+      await waitForMarkdownRuntime();
       const loaded = await Promise.all((manifest.papers || []).map((paper) => loadPaperDocument(paper)));
       this.items = loaded.map(({ paper, document }) => {
         const signals = deriveSignals(paper, document);

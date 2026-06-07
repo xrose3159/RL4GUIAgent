@@ -110,6 +110,11 @@ main {
   margin: 0 auto;
 }
 
+literature-browser,
+literature-detail {
+  display: block;
+}
+
 .hero {
   min-height: calc(100svh - 64px);
   display: grid;
@@ -1030,6 +1035,8 @@ code {
 
 .reader-main {
   min-width: 0;
+  width: 100%;
+  margin: 0;
 }
 
 .reader-hero {
@@ -1111,6 +1118,7 @@ code {
 
 .markdown-body {
   max-width: 900px;
+  min-width: 0;
 }
 
 .markdown-body h3 {
@@ -1148,6 +1156,29 @@ code {
   color: var(--paper);
   border-radius: var(--radius);
   line-height: 1.55;
+}
+
+.markdown-body .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.25rem 0;
+}
+
+.markdown-body > table,
+.markdown-body .result-table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  white-space: normal;
+}
+
+.markdown-body table th,
+.markdown-body table td {
+  min-width: 9rem;
+}
+
+.reader-main .pager {
+  width: 100%;
 }
 
 .markdown-body pre code {

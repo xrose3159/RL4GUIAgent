@@ -59,6 +59,20 @@ export function renderMarkdown(markdown = "") {
   });
 }
 
+export function waitForMarkdownRuntime(timeout = 5000) {
+  const started = Date.now();
+  return new Promise((resolve) => {
+    const tick = () => {
+      if (window.marked || Date.now() - started > timeout) {
+        resolve(Boolean(window.marked));
+        return;
+      }
+      window.setTimeout(tick, 30);
+    };
+    tick();
+  });
+}
+
 export function hydrateMarkdown(root) {
   root.querySelectorAll("table").forEach((table) => table.classList.add("result-table"));
   root.querySelectorAll("pre code").forEach((code) => {
