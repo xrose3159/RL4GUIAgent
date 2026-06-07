@@ -48,6 +48,29 @@ function experimentBoard(facts) {
   </div>`;
 }
 
+function figureHtml(paper, caption) {
+  if (!paper.figurePath) return "";
+  return `<figure class="reader-figure"><a href="${siteUrl(paper.figurePath)}" target="_blank" rel="noreferrer"><img src="${siteUrl(paper.figurePath)}" alt="${escapeHtml(paper.title)} framework figure" loading="lazy"></a><figcaption>${escapeHtml(caption)}</figcaption></figure>`;
+}
+
+function stripImagePlaceholders(markdown = "") {
+  return markdown
+    .split("\n")
+    .filter((line) => !/^!\[[^\]]*]\(\.\/images\//.test(line.trim()))
+    .join("\n")
+    .trim();
+}
+
+function visualGuideHtml(paper, visualGuides) {
+  const cleaned = stripImagePlaceholders(visualGuides);
+  const figure = figureHtml(paper, "论文框架图/关键图，已本地化到本站。");
+  const fallback = paper.figurePath
+    ? ""
+    : `<div class="visual-empty"><strong>框架图暂未本地化</strong><p>这篇论文的 MD 中只有占位图片路径，对应图片文件尚未放入站点。为了避免显示无效路径，页面已隐藏这些占位符。</p></div>`;
+  const notes = cleaned ? `<div class="markdown-body">${renderMarkdown(cleaned)}</div>` : "";
+  return `<div class="visual-guide-stack">${figure || fallback}${notes}</div>`;
+}
+
 class LiteratureDetail extends HTMLElement {
   async connectedCallback() {
     this.paperId = this.getAttribute("paper-id");
@@ -80,9 +103,7 @@ class LiteratureDetail extends HTMLElement {
     const visualGuides = document.sections.visualGuides?.content || "";
     const limitations = document.sections.limitations?.content || "";
     const facts = extractExperimentFacts(experiments);
-    const figure = paper.figurePath
-      ? `<figure class="reader-figure"><a href="${siteUrl(paper.figurePath)}" target="_blank" rel="noreferrer"><img src="${siteUrl(paper.figurePath)}" alt="${escapeHtml(paper.title)} framework figure" loading="lazy"></a><figcaption>论文框架图/关键图。正文的 Visual Guides 仍然来自 Markdown 第 3 部分。</figcaption></figure>`
-      : "";
+    const figure = figureHtml(paper, "论文框架图/关键图。下方图文材料区会优先展示本地化图片。");
     const index = papers.findIndex((item) => item.id === paper.id);
     const prev = papers[index - 1];
     const next = papers[index + 1];
@@ -98,7 +119,7 @@ class LiteratureDetail extends HTMLElement {
           <nav class="toc-panel" aria-label="文献详情目录">
             <a href="#methods">方法深度解析</a>
             <a href="#experiments">实验数据看板</a>
-            <a href="#visual-guides">图文占位符</a>
+            <a href="#visual-guides">图文材料</a>
             <a href="#limitations">局限方向</a>
           </nav>
           <div class="reader-meta">
@@ -141,9 +162,9 @@ class LiteratureDetail extends HTMLElement {
           <section class="reading-section" id="visual-guides">
             <div class="reading-section-head">
               <p class="eyebrow">From Markdown Section 3</p>
-              <h2>图文占位符</h2>
+              <h2>图文材料</h2>
             </div>
-            <div class="markdown-body">${renderMarkdown(visualGuides)}</div>
+            ${visualGuideHtml(paper, visualGuides)}
           </section>
 
           <section class="reading-section" id="limitations">
