@@ -55,12 +55,13 @@ class LiteratureBrowser extends HTMLElement {
       const manifest = await loadManifest();
       await waitForMarkdownRuntime();
       const loaded = await Promise.all((manifest.papers || []).map((paper) => loadPaperDocument(paper)));
-      this.items = loaded.map(({ paper, document }) => {
+      this.items = loaded.map(({ paper, document }, index) => {
         const signals = deriveSignals(paper, document);
         const methods = document.sections.methods?.content || "";
         const experiments = document.sections.experiments?.content || "";
         return {
           ...paper,
+          chronologicalNo: String(index + 1).padStart(2, "0"),
           document,
           signals,
           methods,
@@ -117,7 +118,7 @@ class LiteratureBrowser extends HTMLElement {
             <div>
               <p class="eyebrow">Markdown Corpus</p>
               <h2>41 篇文献精读库</h2>
-              <p>首页卡片的“方法深度解析”和“实验数据看板”来自对应 MD 的第 1、2 部分；详情页会完整渲染这两部分。</p>
+              <p>首页卡片按论文发布时间从先到后排列；“方法深度解析”和“实验数据看板”来自对应 MD 的第 1、2 部分，详情页会完整渲染这两部分。</p>
             </div>
             <div class="library-count"><strong id="library-count">41</strong><span>papers</span></div>
           </div>
@@ -157,9 +158,10 @@ class LiteratureBrowser extends HTMLElement {
   }
 
   renderCard(item) {
+    const chronologicalNo = item.chronologicalNo || item.id;
     return `<article class="paper-deep-card">
       <header>
-        <a class="paper-no" href="${escapeHtml(item.detailPath)}">${escapeHtml(item.id)}</a>
+        <a class="paper-no" href="${escapeHtml(item.detailPath)}">${escapeHtml(chronologicalNo)}</a>
         <div>
           <h3><a href="${escapeHtml(item.detailPath)}">${escapeHtml(item.title)}</a></h3>
           <div class="tag-row">
@@ -168,7 +170,7 @@ class LiteratureBrowser extends HTMLElement {
           </div>
         </div>
       </header>
-      <div class="paper-source-line">直接读取 <code>${escapeHtml(item.docPath)}</code></div>
+      <div class="paper-source-line">时间序号 ${escapeHtml(chronologicalNo)} · 原编号 ${escapeHtml(item.id)} · 直接读取 <code>${escapeHtml(item.docPath)}</code></div>
       <div class="paper-insight-grid">
         <section>
           <h4>方法深度解析 <span>MD §1</span></h4>

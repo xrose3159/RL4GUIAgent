@@ -105,6 +105,7 @@ class LiteratureDetail extends HTMLElement {
     const facts = extractExperimentFacts(experiments);
     const figure = figureHtml(paper, "论文框架图/关键图。下方图文材料区会优先展示本地化图片。");
     const index = papers.findIndex((item) => item.id === paper.id);
+    const chronologicalNo = String(index + 1).padStart(2, "0");
     const prev = papers[index - 1];
     const next = papers[index + 1];
 
@@ -134,7 +135,7 @@ class LiteratureDetail extends HTMLElement {
 
         <div class="reader-main">
           <header class="reader-hero">
-            <p class="eyebrow">Paper ${escapeHtml(paper.id)} · Markdown-driven Detail</p>
+            <p class="eyebrow">Paper ${escapeHtml(chronologicalNo)} · 原编号 ${escapeHtml(paper.id)} · Markdown-driven Detail</p>
             <h1>${escapeHtml(document.title || paper.fullTitle || paper.title)}</h1>
             <div class="tag-row">${chipList([...paper.tags, signals.methodFamily, ...signals.environment])}</div>
             <p class="reader-lead">${escapeHtml(mdSnippet(methods, 280))}</p>

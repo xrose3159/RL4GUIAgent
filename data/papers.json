@@ -1,6 +1,28 @@
 {
   "papers": [
     {
+      "id": "41",
+      "title": "OS-Copilot / FRIDAY",
+      "fullTitle": "OS-Copilot / FRIDAY (2024 - Zhiyong Wu, Chengcheng Han, Zichen Ding et al.)",
+      "docPath": "docs/41-os-copilot-friday.md",
+      "detailPath": "papers/41-os-copilot-friday.html",
+      "figurePath": null,
+      "tags": [
+        "OS/Desktop"
+      ],
+      "environment": [
+        "Web",
+        "Desktop / OS"
+      ],
+      "methodFamily": "LLM-based Agent",
+      "links": [
+        {
+          "label": "论文链接",
+          "url": "https://arxiv.org/abs/2402.07456"
+        }
+      ]
+    },
+    {
       "id": "01",
       "title": "DigiRL: Training In-The-Wild Device-Control Agents with Autonomous Reinforcement Learning",
       "fullTitle": "DigiRL: Training In-The-Wild Device-Control Agents with Autonomous Reinforcement Learning (2024 - Hao Bai, Yifei Zhou, Mert Cemri, Jiayi Pan, Alane Suhr, Sergey Levine, Aviral Kumar)",
@@ -20,28 +42,6 @@
         {
           "label": "论文链接",
           "url": "https://arxiv.org/abs/2406.11896"
-        }
-      ]
-    },
-    {
-      "id": "02",
-      "title": "Digi-Q: Learning Q-Value Functions for Training Device-Control Agents",
-      "fullTitle": "Digi-Q: Learning Q-Value Functions for Training Device-Control Agents (2025 - Hao Bai, Yifei Zhou, Li Erran Li, Sergey Levine, Aviral Kumar)",
-      "docPath": "docs/02-digi-q.md",
-      "detailPath": "papers/02-digi-q-learning-q-value-functions-for-training-device-control-ag.html",
-      "figurePath": "figures/02.png",
-      "tags": [
-        "Offline RL",
-        "Mobile"
-      ],
-      "environment": [
-        "Android / Mobile"
-      ],
-      "methodFamily": "Offline RFT / Offline RL",
-      "links": [
-        {
-          "label": "论文链接",
-          "url": "https://arxiv.org/abs/2502.15760"
         }
       ]
     },
@@ -91,6 +91,28 @@
       ]
     },
     {
+      "id": "40",
+      "title": "AgentTrek: Trajectory Synthesis via Web Tutorials",
+      "fullTitle": "AgentTrek: Trajectory Synthesis via Web Tutorials (2024 - Yiheng Xu, Dunjie Lu, Zhennan Shen et al.)",
+      "docPath": "docs/40-agenttrek-trajectory-synthesis-via-web-tutorials.md",
+      "detailPath": "papers/40-agenttrek-trajectory-synthesis-via-web-tutorials.html",
+      "figurePath": null,
+      "tags": [
+        "Data",
+        "Web"
+      ],
+      "environment": [
+        "Web"
+      ],
+      "methodFamily": "Data Synthesis / Self-Evolution",
+      "links": [
+        {
+          "label": "论文链接",
+          "url": "https://arxiv.org/abs/2412.09605"
+        }
+      ]
+    },
+    {
       "id": "05",
       "title": "UI-TARS / ARPO: End-to-End Policy Optimization for GUI Agents with Experience Replay",
       "fullTitle": "UI-TARS / ARPO: Native GUI Agents and Agentic Replay Policy Optimization (2025 - UI-TARS Team; Xinyu Chen et al.)",
@@ -113,203 +135,6 @@
         {
           "label": "论文链接",
           "url": "https://arxiv.org/abs/2505.16282"
-        }
-      ]
-    },
-    {
-      "id": "06",
-      "title": "UI-TARS-2: Advancing GUI Agent with Multi-Turn Reinforcement Learning",
-      "fullTitle": "UI-TARS-2: Advancing GUI Agent with Multi-Turn Reinforcement Learning (2025 - UI-TARS Team)",
-      "docPath": "docs/06-ui-tars-2.md",
-      "detailPath": "papers/06-ui-tars-2-advancing-gui-agent-with-multi-turn-reinforcement-lear.html",
-      "figurePath": "figures/06.png",
-      "tags": [
-        "Online RL"
-      ],
-      "environment": [
-        "Web",
-        "Android / Mobile",
-        "Desktop / OS"
-      ],
-      "methodFamily": "Online RL",
-      "links": [
-        {
-          "label": "论文链接",
-          "url": "https://arxiv.org/abs/2509.02544"
-        }
-      ]
-    },
-    {
-      "id": "07",
-      "title": "GUI-R1: A Generalist R1-Style Vision-Language Action Model for GUI Agents",
-      "fullTitle": "GUI-R1: A Generalist R1-Style Vision-Language Action Model for GUI Agents (2025 - Run Luo, Lu Wang, Wanwei He et al.)",
-      "docPath": "docs/07-gui-r1-a-generalist-r1-style-vision-language-action-model-for-gu.md",
-      "detailPath": "papers/07-gui-r1-a-generalist-r1-style-vision-language-action-model-for-gu.html",
-      "figurePath": "figures/07.png",
-      "tags": [
-        "Offline RL"
-      ],
-      "environment": [
-        "Web",
-        "Android / Mobile",
-        "Desktop / OS"
-      ],
-      "methodFamily": "Offline RFT / Offline RL",
-      "links": [
-        {
-          "label": "论文链接",
-          "url": "https://arxiv.org/abs/2504.10458"
-        }
-      ]
-    },
-    {
-      "id": "08",
-      "title": "UI-R1: Enhancing Efficient Action Prediction of GUI Agents by RL",
-      "fullTitle": "UI-R1: Enhancing Efficient Action Prediction of GUI Agents by RL (2025 - Zhengxi Lu, Yuxiang Chai, Yaxuan Guo et al.)",
-      "docPath": "docs/08-ui-r1-enhancing-efficient-action-prediction-of-gui-agents-by-rl.md",
-      "detailPath": "papers/08-ui-r1-enhancing-efficient-action-prediction-of-gui-agents-by-rl.html",
-      "figurePath": "figures/08.png",
-      "tags": [
-        "Offline RL"
-      ],
-      "environment": [
-        "Web",
-        "Android / Mobile"
-      ],
-      "methodFamily": "Offline RFT / Offline RL",
-      "links": [
-        {
-          "label": "论文链接",
-          "url": "https://arxiv.org/abs/2503.21620"
-        }
-      ]
-    },
-    {
-      "id": "09",
-      "title": "GUI-G2: Gaussian Reward Modeling for GUI Grounding",
-      "fullTitle": "GUI-G2: Gaussian Reward Modeling for GUI Grounding (2025 - Fei Tang, Zhangxuan Gu, Zhengxi Lu et al.)",
-      "docPath": "docs/09-gui-g2-gaussian-reward-modeling-for-gui-grounding.md",
-      "detailPath": "papers/09-gui-g2-gaussian-reward-modeling-for-gui-grounding.html",
-      "figurePath": "figures/09.png",
-      "tags": [
-        "Grounding",
-        "Reward"
-      ],
-      "environment": [
-        "Web",
-        "Android / Mobile",
-        "Desktop / OS"
-      ],
-      "methodFamily": "Reward Modeling",
-      "links": [
-        {
-          "label": "论文链接",
-          "url": "https://arxiv.org/abs/2507.15846"
-        }
-      ]
-    },
-    {
-      "id": "10",
-      "title": "SE-GUI: Enhancing Visual Grounding via Self-Evolutionary RL",
-      "fullTitle": "SE-GUI: Enhancing Visual Grounding via Self-Evolutionary RL (2025 - Xinbin Yuan, Jian Zhang, Kaixin Li et al.)",
-      "docPath": "docs/10-se-gui-enhancing-visual-grounding-via-self-evolutionary-rl.md",
-      "detailPath": "papers/10-se-gui-enhancing-visual-grounding-via-self-evolutionary-rl.html",
-      "figurePath": "figures/10.png",
-      "tags": [
-        "Grounding"
-      ],
-      "environment": [
-        "Web"
-      ],
-      "methodFamily": "Grounding RL",
-      "links": [
-        {
-          "label": "论文链接",
-          "url": "https://arxiv.org/abs/2505.12370"
-        }
-      ]
-    },
-    {
-      "id": "11",
-      "title": "InfiGUI-G1: Adaptive Exploration Policy Optimization for GUI Grounding",
-      "fullTitle": "InfiGUI-G1: Adaptive Exploration Policy Optimization for GUI Grounding (2025 - Yuhang Liu, Zeyu Liu, Shuanghe Zhu et al.)",
-      "docPath": "docs/11-infigui-g1-adaptive-exploration-policy-optimization-for-gui-grou.md",
-      "detailPath": "papers/11-infigui-g1-adaptive-exploration-policy-optimization-for-gui-grou.html",
-      "figurePath": null,
-      "tags": [
-        "Grounding"
-      ],
-      "environment": [
-        "Web"
-      ],
-      "methodFamily": "Grounding RL",
-      "links": [
-        {
-          "label": "论文链接",
-          "url": "https://arxiv.org/abs/2508.05731"
-        }
-      ]
-    },
-    {
-      "id": "12",
-      "title": "UI-AGILE: Effective RL and Precise Inference-Time Grounding",
-      "fullTitle": "UI-AGILE: Effective RL and Precise Inference-Time Grounding (2025 - Shuquan Lian, Yuhang Wu, Jia Ma et al.)",
-      "docPath": "docs/12-ui-agile-effective-rl-and-precise-inference-time-grounding.md",
-      "detailPath": "papers/12-ui-agile-effective-rl-and-precise-inference-time-grounding.html",
-      "figurePath": "figures/12.png",
-      "tags": [
-        "Grounding"
-      ],
-      "environment": [
-        "Web"
-      ],
-      "methodFamily": "Grounding RL",
-      "links": [
-        {
-          "label": "论文链接",
-          "url": "https://arxiv.org/abs/2507.22025"
-        }
-      ]
-    },
-    {
-      "id": "13",
-      "title": "InfiGUI-R1: Reactive Actors to Deliberative Reasoners",
-      "fullTitle": "InfiGUI-R1: Reactive Actors to Deliberative Reasoners (2025 - Yuhang Liu, Pengxiang Li, Congkai Xie et al.)",
-      "docPath": "docs/13-infigui-r1-reactive-actors-to-deliberative-reasoners.md",
-      "detailPath": "papers/13-infigui-r1-reactive-actors-to-deliberative-reasoners.html",
-      "figurePath": "figures/13.png",
-      "tags": [
-        "Grounding"
-      ],
-      "environment": [
-        "Web"
-      ],
-      "methodFamily": "Grounding RL",
-      "links": [
-        {
-          "label": "论文链接",
-          "url": "https://arxiv.org/abs/2504.14239"
-        }
-      ]
-    },
-    {
-      "id": "14",
-      "title": "BacktrackAgent: Error Detection and Backtracking Mechanism",
-      "fullTitle": "BacktrackAgent: Error Detection and Backtracking Mechanism (2025 - Qinzhuo Wu, Pengzhi Gao, Wei Liu et al.)",
-      "docPath": "docs/14-backtrackagent-error-detection-and-backtracking-mechanism.md",
-      "detailPath": "papers/14-backtrackagent-error-detection-and-backtracking-mechanism.html",
-      "figurePath": null,
-      "tags": [
-        "Hybrid"
-      ],
-      "environment": [
-        "Web"
-      ],
-      "methodFamily": "Hybrid Agent",
-      "links": [
-        {
-          "label": "论文链接",
-          "url": "https://arxiv.org/abs/2505.20660"
         }
       ]
     },
@@ -358,6 +183,337 @@
       ]
     },
     {
+      "id": "02",
+      "title": "Digi-Q: Learning Q-Value Functions for Training Device-Control Agents",
+      "fullTitle": "Digi-Q: Learning Q-Value Functions for Training Device-Control Agents (2025 - Hao Bai, Yifei Zhou, Li Erran Li, Sergey Levine, Aviral Kumar)",
+      "docPath": "docs/02-digi-q.md",
+      "detailPath": "papers/02-digi-q-learning-q-value-functions-for-training-device-control-ag.html",
+      "figurePath": "figures/02.png",
+      "tags": [
+        "Offline RL",
+        "Mobile"
+      ],
+      "environment": [
+        "Android / Mobile"
+      ],
+      "methodFamily": "Offline RFT / Offline RL",
+      "links": [
+        {
+          "label": "论文链接",
+          "url": "https://arxiv.org/abs/2502.15760"
+        }
+      ]
+    },
+    {
+      "id": "08",
+      "title": "UI-R1: Enhancing Efficient Action Prediction of GUI Agents by RL",
+      "fullTitle": "UI-R1: Enhancing Efficient Action Prediction of GUI Agents by RL (2025 - Zhengxi Lu, Yuxiang Chai, Yaxuan Guo et al.)",
+      "docPath": "docs/08-ui-r1-enhancing-efficient-action-prediction-of-gui-agents-by-rl.md",
+      "detailPath": "papers/08-ui-r1-enhancing-efficient-action-prediction-of-gui-agents-by-rl.html",
+      "figurePath": "figures/08.png",
+      "tags": [
+        "Offline RL"
+      ],
+      "environment": [
+        "Web",
+        "Android / Mobile"
+      ],
+      "methodFamily": "Offline RFT / Offline RL",
+      "links": [
+        {
+          "label": "论文链接",
+          "url": "https://arxiv.org/abs/2503.21620"
+        }
+      ]
+    },
+    {
+      "id": "07",
+      "title": "GUI-R1: A Generalist R1-Style Vision-Language Action Model for GUI Agents",
+      "fullTitle": "GUI-R1: A Generalist R1-Style Vision-Language Action Model for GUI Agents (2025 - Run Luo, Lu Wang, Wanwei He et al.)",
+      "docPath": "docs/07-gui-r1-a-generalist-r1-style-vision-language-action-model-for-gu.md",
+      "detailPath": "papers/07-gui-r1-a-generalist-r1-style-vision-language-action-model-for-gu.html",
+      "figurePath": "figures/07.png",
+      "tags": [
+        "Offline RL"
+      ],
+      "environment": [
+        "Web",
+        "Android / Mobile",
+        "Desktop / OS"
+      ],
+      "methodFamily": "Offline RFT / Offline RL",
+      "links": [
+        {
+          "label": "论文链接",
+          "url": "https://arxiv.org/abs/2504.10458"
+        }
+      ]
+    },
+    {
+      "id": "13",
+      "title": "InfiGUI-R1: Reactive Actors to Deliberative Reasoners",
+      "fullTitle": "InfiGUI-R1: Reactive Actors to Deliberative Reasoners (2025 - Yuhang Liu, Pengxiang Li, Congkai Xie et al.)",
+      "docPath": "docs/13-infigui-r1-reactive-actors-to-deliberative-reasoners.md",
+      "detailPath": "papers/13-infigui-r1-reactive-actors-to-deliberative-reasoners.html",
+      "figurePath": "figures/13.png",
+      "tags": [
+        "Grounding"
+      ],
+      "environment": [
+        "Web"
+      ],
+      "methodFamily": "Grounding RL",
+      "links": [
+        {
+          "label": "论文链接",
+          "url": "https://arxiv.org/abs/2504.14239"
+        }
+      ]
+    },
+    {
+      "id": "10",
+      "title": "SE-GUI: Enhancing Visual Grounding via Self-Evolutionary RL",
+      "fullTitle": "SE-GUI: Enhancing Visual Grounding via Self-Evolutionary RL (2025 - Xinbin Yuan, Jian Zhang, Kaixin Li et al.)",
+      "docPath": "docs/10-se-gui-enhancing-visual-grounding-via-self-evolutionary-rl.md",
+      "detailPath": "papers/10-se-gui-enhancing-visual-grounding-via-self-evolutionary-rl.html",
+      "figurePath": "figures/10.png",
+      "tags": [
+        "Grounding"
+      ],
+      "environment": [
+        "Web"
+      ],
+      "methodFamily": "Grounding RL",
+      "links": [
+        {
+          "label": "论文链接",
+          "url": "https://arxiv.org/abs/2505.12370"
+        }
+      ]
+    },
+    {
+      "id": "20",
+      "title": "WebAgent-R1: End-to-End Multi-Turn RL for Web Agents",
+      "fullTitle": "WebAgent-R1: End-to-End Multi-Turn RL for Web Agents (2025 - Zhepei Wei, Wenlin Yao, Yao Liu et al.)",
+      "docPath": "docs/20-webagent-r1-end-to-end-multi-turn-rl-for-web-agents.md",
+      "detailPath": "papers/20-webagent-r1-end-to-end-multi-turn-rl-for-web-agents.html",
+      "figurePath": null,
+      "tags": [
+        "Online RL",
+        "Web"
+      ],
+      "environment": [
+        "Web"
+      ],
+      "methodFamily": "Online RL",
+      "links": [
+        {
+          "label": "论文",
+          "url": "https://arxiv.org/abs/2505.16421"
+        }
+      ]
+    },
+    {
+      "id": "31",
+      "title": "ProgRM: Build Better GUI Agents with Progress Rewards",
+      "fullTitle": "ProgRM: Build Better GUI Agents with Progress Rewards (2025 - Danyang Zhang, Situo Zhang, Ziyue Yang et al.)",
+      "docPath": "docs/31-progrm-build-better-gui-agents-with-progress-rewards.md",
+      "detailPath": "papers/31-progrm-build-better-gui-agents-with-progress-rewards.html",
+      "figurePath": null,
+      "tags": [
+        "Reward"
+      ],
+      "environment": [
+        "Web"
+      ],
+      "methodFamily": "Reward Modeling",
+      "links": [
+        {
+          "label": "论文链接",
+          "url": "https://arxiv.org/abs/2505.18121"
+        }
+      ]
+    },
+    {
+      "id": "14",
+      "title": "BacktrackAgent: Error Detection and Backtracking Mechanism",
+      "fullTitle": "BacktrackAgent: Error Detection and Backtracking Mechanism (2025 - Qinzhuo Wu, Pengzhi Gao, Wei Liu et al.)",
+      "docPath": "docs/14-backtrackagent-error-detection-and-backtracking-mechanism.md",
+      "detailPath": "papers/14-backtrackagent-error-detection-and-backtracking-mechanism.html",
+      "figurePath": null,
+      "tags": [
+        "Hybrid"
+      ],
+      "environment": [
+        "Web"
+      ],
+      "methodFamily": "Hybrid Agent",
+      "links": [
+        {
+          "label": "论文链接",
+          "url": "https://arxiv.org/abs/2505.20660"
+        }
+      ]
+    },
+    {
+      "id": "30",
+      "title": "ZeroGUI: Online GUI Learning at Zero Human Cost",
+      "fullTitle": "ZeroGUI: Online GUI Learning at Zero Human Cost (2025 - Chenyu Yang, Shiqian Su, Shi Liu et al.)",
+      "docPath": "docs/30-zerogui-online-gui-learning-at-zero-human-cost.md",
+      "detailPath": "papers/30-zerogui-online-gui-learning-at-zero-human-cost.html",
+      "figurePath": null,
+      "tags": [
+        "Online RL",
+        "Reward"
+      ],
+      "environment": [
+        "Web",
+        "Android / Mobile",
+        "Desktop / OS"
+      ],
+      "methodFamily": "Online RL",
+      "links": [
+        {
+          "label": "论文链接",
+          "url": "https://arxiv.org/abs/2505.23762"
+        }
+      ]
+    },
+    {
+      "id": "35",
+      "title": "WebSynthesis: World-Model-Guided MCTS for WebUI Trajectory Synthesis",
+      "fullTitle": "WebSynthesis: World-Model-Guided MCTS for WebUI Trajectory Synthesis (2025 - Yifei Gao, Junhong Ye, Jiaqi Wang et al.)",
+      "docPath": "docs/35-websynthesis-world-model-guided-mcts-for-webui-trajectory-synthe.md",
+      "detailPath": "papers/35-websynthesis-world-model-guided-mcts-for-webui-trajectory-synthe.html",
+      "figurePath": "figures/35.jpg",
+      "tags": [
+        "World Model",
+        "Web"
+      ],
+      "environment": [
+        "Web"
+      ],
+      "methodFamily": "World Model / Synthetic RL",
+      "links": [
+        {
+          "label": "论文链接",
+          "url": "https://arxiv.org/abs/2507.04370"
+        }
+      ]
+    },
+    {
+      "id": "09",
+      "title": "GUI-G2: Gaussian Reward Modeling for GUI Grounding",
+      "fullTitle": "GUI-G2: Gaussian Reward Modeling for GUI Grounding (2025 - Fei Tang, Zhangxuan Gu, Zhengxi Lu et al.)",
+      "docPath": "docs/09-gui-g2-gaussian-reward-modeling-for-gui-grounding.md",
+      "detailPath": "papers/09-gui-g2-gaussian-reward-modeling-for-gui-grounding.html",
+      "figurePath": "figures/09.png",
+      "tags": [
+        "Grounding",
+        "Reward"
+      ],
+      "environment": [
+        "Web",
+        "Android / Mobile",
+        "Desktop / OS"
+      ],
+      "methodFamily": "Reward Modeling",
+      "links": [
+        {
+          "label": "论文链接",
+          "url": "https://arxiv.org/abs/2507.15846"
+        }
+      ]
+    },
+    {
+      "id": "12",
+      "title": "UI-AGILE: Effective RL and Precise Inference-Time Grounding",
+      "fullTitle": "UI-AGILE: Effective RL and Precise Inference-Time Grounding (2025 - Shuquan Lian, Yuhang Wu, Jia Ma et al.)",
+      "docPath": "docs/12-ui-agile-effective-rl-and-precise-inference-time-grounding.md",
+      "detailPath": "papers/12-ui-agile-effective-rl-and-precise-inference-time-grounding.html",
+      "figurePath": "figures/12.png",
+      "tags": [
+        "Grounding"
+      ],
+      "environment": [
+        "Web"
+      ],
+      "methodFamily": "Grounding RL",
+      "links": [
+        {
+          "label": "论文链接",
+          "url": "https://arxiv.org/abs/2507.22025"
+        }
+      ]
+    },
+    {
+      "id": "11",
+      "title": "InfiGUI-G1: Adaptive Exploration Policy Optimization for GUI Grounding",
+      "fullTitle": "InfiGUI-G1: Adaptive Exploration Policy Optimization for GUI Grounding (2025 - Yuhang Liu, Zeyu Liu, Shuanghe Zhu et al.)",
+      "docPath": "docs/11-infigui-g1-adaptive-exploration-policy-optimization-for-gui-grou.md",
+      "detailPath": "papers/11-infigui-g1-adaptive-exploration-policy-optimization-for-gui-grou.html",
+      "figurePath": null,
+      "tags": [
+        "Grounding"
+      ],
+      "environment": [
+        "Web"
+      ],
+      "methodFamily": "Grounding RL",
+      "links": [
+        {
+          "label": "论文链接",
+          "url": "https://arxiv.org/abs/2508.05731"
+        }
+      ]
+    },
+    {
+      "id": "29",
+      "title": "ComputerRL: Scaling End-to-End Online RL for Computer Use Agents",
+      "fullTitle": "ComputerRL: Scaling End-to-End Online RL for Computer Use Agents (2025 - Hanyu Lai, Xiao Liu, Yanxiao Zhao et al.)",
+      "docPath": "docs/29-computerrl-scaling-end-to-end-online-rl-for-computer-use-agents.md",
+      "detailPath": "papers/29-computerrl-scaling-end-to-end-online-rl-for-computer-use-agents.html",
+      "figurePath": "figures/29.png",
+      "tags": [
+        "Online RL",
+        "OS/Desktop"
+      ],
+      "environment": [
+        "Web",
+        "Desktop / OS"
+      ],
+      "methodFamily": "Online RL",
+      "links": [
+        {
+          "label": "论文链接",
+          "url": "https://arxiv.org/abs/2508.14040"
+        }
+      ]
+    },
+    {
+      "id": "06",
+      "title": "UI-TARS-2: Advancing GUI Agent with Multi-Turn Reinforcement Learning",
+      "fullTitle": "UI-TARS-2: Advancing GUI Agent with Multi-Turn Reinforcement Learning (2025 - UI-TARS Team)",
+      "docPath": "docs/06-ui-tars-2.md",
+      "detailPath": "papers/06-ui-tars-2-advancing-gui-agent-with-multi-turn-reinforcement-lear.html",
+      "figurePath": "figures/06.png",
+      "tags": [
+        "Online RL"
+      ],
+      "environment": [
+        "Web",
+        "Android / Mobile",
+        "Desktop / OS"
+      ],
+      "methodFamily": "Online RL",
+      "links": [
+        {
+          "label": "论文链接",
+          "url": "https://arxiv.org/abs/2509.02544"
+        }
+      ]
+    },
+    {
       "id": "17",
       "title": "UI-S1: Semi-online Reinforcement Learning",
       "fullTitle": "UI-S1: Semi-online Reinforcement Learning (2025 - Zhengxi Lu, Jiabo Ye, Fei Tang et al.)",
@@ -379,25 +535,24 @@
       ]
     },
     {
-      "id": "18",
-      "title": "Hi-Agent: Hierarchical Vision-Language Agents for Mobile Device Control",
-      "fullTitle": "Hi-Agent: Hierarchical Vision-Language Agents for Mobile Device Control (2025 - Zhe Wu, Hongjin Lu, Junliang Xing et al.)",
-      "docPath": "docs/18-hi-agent-hierarchical-vision-language-agents-for-mobile-device-c.md",
-      "detailPath": "papers/18-hi-agent-hierarchical-vision-language-agents-for-mobile-device-c.html",
-      "figurePath": "figures/18.png",
+      "id": "22",
+      "title": "Mano Technical Report",
+      "fullTitle": "Mano Technical Report (2025 - Tianyu Fu, Anyang Su, Chenxu Zhao et al.)",
+      "docPath": "docs/22-mano-technical-report.md",
+      "detailPath": "papers/22-mano-technical-report.html",
+      "figurePath": "figures/22.png",
       "tags": [
-        "Hybrid",
-        "Mobile"
+        "Hybrid"
       ],
       "environment": [
         "Web",
-        "Android / Mobile"
+        "Desktop / OS"
       ],
       "methodFamily": "Hybrid Agent",
       "links": [
         {
           "label": "论文链接",
-          "url": "https://arxiv.org/abs/2510.14388"
+          "url": "https://arxiv.org/abs/2509.17336"
         }
       ]
     },
@@ -425,28 +580,6 @@
       ]
     },
     {
-      "id": "20",
-      "title": "WebAgent-R1: End-to-End Multi-Turn RL for Web Agents",
-      "fullTitle": "WebAgent-R1: End-to-End Multi-Turn RL for Web Agents (2025 - Zhepei Wei, Wenlin Yao, Yao Liu et al.)",
-      "docPath": "docs/20-webagent-r1-end-to-end-multi-turn-rl-for-web-agents.md",
-      "detailPath": "papers/20-webagent-r1-end-to-end-multi-turn-rl-for-web-agents.html",
-      "figurePath": null,
-      "tags": [
-        "Online RL",
-        "Web"
-      ],
-      "environment": [
-        "Web"
-      ],
-      "methodFamily": "Online RL",
-      "links": [
-        {
-          "label": "论文",
-          "url": "https://arxiv.org/abs/2505.16421"
-        }
-      ]
-    },
-    {
       "id": "21",
       "title": "DART-GUI: Decoupled Training and Adaptive Data Curation",
       "fullTitle": "DART-GUI: Decoupled Training and Adaptive Data Curation (2025 - Pengxiang Li, Zechen Hu, Zirui Shang et al.)",
@@ -470,14 +603,59 @@
       ]
     },
     {
-      "id": "22",
-      "title": "Mano Technical Report",
-      "fullTitle": "Mano Technical Report (2025 - Tianyu Fu, Anyang Su, Chenxu Zhao et al.)",
-      "docPath": "docs/22-mano-technical-report.md",
-      "detailPath": "papers/22-mano-technical-report.html",
-      "figurePath": "figures/22.png",
+      "id": "18",
+      "title": "Hi-Agent: Hierarchical Vision-Language Agents for Mobile Device Control",
+      "fullTitle": "Hi-Agent: Hierarchical Vision-Language Agents for Mobile Device Control (2025 - Zhe Wu, Hongjin Lu, Junliang Xing et al.)",
+      "docPath": "docs/18-hi-agent-hierarchical-vision-language-agents-for-mobile-device-c.md",
+      "detailPath": "papers/18-hi-agent-hierarchical-vision-language-agents-for-mobile-device-c.html",
+      "figurePath": "figures/18.png",
       "tags": [
-        "Hybrid"
+        "Hybrid",
+        "Mobile"
+      ],
+      "environment": [
+        "Web",
+        "Android / Mobile"
+      ],
+      "methodFamily": "Hybrid Agent",
+      "links": [
+        {
+          "label": "论文链接",
+          "url": "https://arxiv.org/abs/2510.14388"
+        }
+      ]
+    },
+    {
+      "id": "33",
+      "title": "AEBPO: Agentic Entropy-Balanced Policy Optimization",
+      "fullTitle": "AEBPO: Agentic Entropy-Balanced Policy Optimization (2025 - Guanting Dong, Licheng Bao, Zhongyuan Wang et al.)",
+      "docPath": "docs/33-aebpo-agentic-entropy-balanced-policy-optimization.md",
+      "detailPath": "papers/33-aebpo-agentic-entropy-balanced-policy-optimization.html",
+      "figurePath": "figures/33.png",
+      "tags": [
+        "Offline RL"
+      ],
+      "environment": [
+        "Web"
+      ],
+      "methodFamily": "Offline RFT / Offline RL",
+      "links": [
+        {
+          "label": "论文链接",
+          "url": "https://arxiv.org/abs/2510.14545"
+        }
+      ]
+    },
+    {
+      "id": "28",
+      "title": "UltraCUA: Foundation Model for Computer Use Agents with Hybrid Action",
+      "fullTitle": "UltraCUA: Foundation Model for Computer Use Agents with Hybrid Action (2025 - Yuhao Yang, Zhen Yang, Zi-Yi Dou et al.)",
+      "docPath": "docs/28-ultracua-foundation-model-for-computer-use-agents-with-hybrid-ac.md",
+      "detailPath": "papers/28-ultracua-foundation-model-for-computer-use-agents-with-hybrid-ac.html",
+      "figurePath": "figures/28.png",
+      "tags": [
+        "Hybrid",
+        "OS/Desktop"
       ],
       "environment": [
         "Web",
@@ -487,7 +665,28 @@
       "links": [
         {
           "label": "论文链接",
-          "url": "https://arxiv.org/abs/2509.17336"
+          "url": "https://arxiv.org/abs/2510.17790"
+        }
+      ]
+    },
+    {
+      "id": "32",
+      "title": "Co-EPG: Co-Evolution of Planning and Grounding",
+      "fullTitle": "Co-EPG: Co-Evolution of Planning and Grounding (2025 - Yuan Zhao, Hualei Zhu, Tingyu Jiang et al.)",
+      "docPath": "docs/32-co-epg-co-evolution-of-planning-and-grounding.md",
+      "detailPath": "papers/32-co-epg-co-evolution-of-planning-and-grounding.html",
+      "figurePath": "figures/32.png",
+      "tags": [
+        "Hybrid"
+      ],
+      "environment": [
+        "Web"
+      ],
+      "methodFamily": "Hybrid Agent",
+      "links": [
+        {
+          "label": "论文链接",
+          "url": "https://arxiv.org/abs/2511.10705"
         }
       ]
     },
@@ -561,6 +760,28 @@
       ]
     },
     {
+      "id": "34",
+      "title": "Nested Browser-Use Learning / NestBrowse",
+      "fullTitle": "Nested Browser-Use Learning / NestBrowse (2025 - Baixuan Li, Jialong Wu, Wenbiao Yin et al.)",
+      "docPath": "docs/34-nested-browser-use-learning-nestbrowse.md",
+      "detailPath": "papers/34-nested-browser-use-learning-nestbrowse.html",
+      "figurePath": "figures/34.png",
+      "tags": [
+        "Data",
+        "Web"
+      ],
+      "environment": [
+        "Web"
+      ],
+      "methodFamily": "Data Synthesis / Self-Evolution",
+      "links": [
+        {
+          "label": "论文链接",
+          "url": "https://arxiv.org/abs/2512.23647"
+        }
+      ]
+    },
+    {
       "id": "26",
       "title": "GUI-Eyes: Tool-Augmented Perception for Visual Grounding",
       "fullTitle": "GUI-Eyes: Tool-Augmented Perception for Visual Grounding (2026 - Chen Chen, Jiawei Shao, Dakuan Lu et al.)",
@@ -604,201 +825,23 @@
       ]
     },
     {
-      "id": "28",
-      "title": "UltraCUA: Foundation Model for Computer Use Agents with Hybrid Action",
-      "fullTitle": "UltraCUA: Foundation Model for Computer Use Agents with Hybrid Action (2025 - Yuhao Yang, Zhen Yang, Zi-Yi Dou et al.)",
-      "docPath": "docs/28-ultracua-foundation-model-for-computer-use-agents-with-hybrid-ac.md",
-      "detailPath": "papers/28-ultracua-foundation-model-for-computer-use-agents-with-hybrid-ac.html",
-      "figurePath": "figures/28.png",
+      "id": "38",
+      "title": "AgentCPM-Explore",
+      "fullTitle": "AgentCPM-Explore (2026 - Haotian Chen, Xin Cong, Shengda Fan et al.)",
+      "docPath": "docs/38-agentcpm-explore.md",
+      "detailPath": "papers/38-agentcpm-explore.html",
+      "figurePath": "figures/38.png",
       "tags": [
-        "Hybrid",
-        "OS/Desktop"
+        "Online RL"
       ],
       "environment": [
-        "Web",
-        "Desktop / OS"
-      ],
-      "methodFamily": "Hybrid Agent",
-      "links": [
-        {
-          "label": "论文链接",
-          "url": "https://arxiv.org/abs/2510.17790"
-        }
-      ]
-    },
-    {
-      "id": "29",
-      "title": "ComputerRL: Scaling End-to-End Online RL for Computer Use Agents",
-      "fullTitle": "ComputerRL: Scaling End-to-End Online RL for Computer Use Agents (2025 - Hanyu Lai, Xiao Liu, Yanxiao Zhao et al.)",
-      "docPath": "docs/29-computerrl-scaling-end-to-end-online-rl-for-computer-use-agents.md",
-      "detailPath": "papers/29-computerrl-scaling-end-to-end-online-rl-for-computer-use-agents.html",
-      "figurePath": "figures/29.png",
-      "tags": [
-        "Online RL",
-        "OS/Desktop"
-      ],
-      "environment": [
-        "Web",
-        "Desktop / OS"
+        "Web"
       ],
       "methodFamily": "Online RL",
       "links": [
         {
           "label": "论文链接",
-          "url": "https://arxiv.org/abs/2508.14040"
-        }
-      ]
-    },
-    {
-      "id": "30",
-      "title": "ZeroGUI: Online GUI Learning at Zero Human Cost",
-      "fullTitle": "ZeroGUI: Online GUI Learning at Zero Human Cost (2025 - Chenyu Yang, Shiqian Su, Shi Liu et al.)",
-      "docPath": "docs/30-zerogui-online-gui-learning-at-zero-human-cost.md",
-      "detailPath": "papers/30-zerogui-online-gui-learning-at-zero-human-cost.html",
-      "figurePath": null,
-      "tags": [
-        "Online RL",
-        "Reward"
-      ],
-      "environment": [
-        "Web",
-        "Android / Mobile",
-        "Desktop / OS"
-      ],
-      "methodFamily": "Online RL",
-      "links": [
-        {
-          "label": "论文链接",
-          "url": "https://arxiv.org/abs/2505.23762"
-        }
-      ]
-    },
-    {
-      "id": "31",
-      "title": "ProgRM: Build Better GUI Agents with Progress Rewards",
-      "fullTitle": "ProgRM: Build Better GUI Agents with Progress Rewards (2025 - Danyang Zhang, Situo Zhang, Ziyue Yang et al.)",
-      "docPath": "docs/31-progrm-build-better-gui-agents-with-progress-rewards.md",
-      "detailPath": "papers/31-progrm-build-better-gui-agents-with-progress-rewards.html",
-      "figurePath": null,
-      "tags": [
-        "Reward"
-      ],
-      "environment": [
-        "Web"
-      ],
-      "methodFamily": "Reward Modeling",
-      "links": [
-        {
-          "label": "论文链接",
-          "url": "https://arxiv.org/abs/2505.18121"
-        }
-      ]
-    },
-    {
-      "id": "32",
-      "title": "Co-EPG: Co-Evolution of Planning and Grounding",
-      "fullTitle": "Co-EPG: Co-Evolution of Planning and Grounding (2025 - Yuan Zhao, Hualei Zhu, Tingyu Jiang et al.)",
-      "docPath": "docs/32-co-epg-co-evolution-of-planning-and-grounding.md",
-      "detailPath": "papers/32-co-epg-co-evolution-of-planning-and-grounding.html",
-      "figurePath": "figures/32.png",
-      "tags": [
-        "Hybrid"
-      ],
-      "environment": [
-        "Web"
-      ],
-      "methodFamily": "Hybrid Agent",
-      "links": [
-        {
-          "label": "论文链接",
-          "url": "https://arxiv.org/abs/2511.10705"
-        }
-      ]
-    },
-    {
-      "id": "33",
-      "title": "AEBPO: Agentic Entropy-Balanced Policy Optimization",
-      "fullTitle": "AEBPO: Agentic Entropy-Balanced Policy Optimization (2025 - Guanting Dong, Licheng Bao, Zhongyuan Wang et al.)",
-      "docPath": "docs/33-aebpo-agentic-entropy-balanced-policy-optimization.md",
-      "detailPath": "papers/33-aebpo-agentic-entropy-balanced-policy-optimization.html",
-      "figurePath": "figures/33.png",
-      "tags": [
-        "Offline RL"
-      ],
-      "environment": [
-        "Web"
-      ],
-      "methodFamily": "Offline RFT / Offline RL",
-      "links": [
-        {
-          "label": "论文链接",
-          "url": "https://arxiv.org/abs/2510.14545"
-        }
-      ]
-    },
-    {
-      "id": "34",
-      "title": "Nested Browser-Use Learning / NestBrowse",
-      "fullTitle": "Nested Browser-Use Learning / NestBrowse (2025 - Baixuan Li, Jialong Wu, Wenbiao Yin et al.)",
-      "docPath": "docs/34-nested-browser-use-learning-nestbrowse.md",
-      "detailPath": "papers/34-nested-browser-use-learning-nestbrowse.html",
-      "figurePath": "figures/34.png",
-      "tags": [
-        "Data",
-        "Web"
-      ],
-      "environment": [
-        "Web"
-      ],
-      "methodFamily": "Data Synthesis / Self-Evolution",
-      "links": [
-        {
-          "label": "论文链接",
-          "url": "https://arxiv.org/abs/2512.23647"
-        }
-      ]
-    },
-    {
-      "id": "35",
-      "title": "WebSynthesis: World-Model-Guided MCTS for WebUI Trajectory Synthesis",
-      "fullTitle": "WebSynthesis: World-Model-Guided MCTS for WebUI Trajectory Synthesis (2025 - Yifei Gao, Junhong Ye, Jiaqi Wang et al.)",
-      "docPath": "docs/35-websynthesis-world-model-guided-mcts-for-webui-trajectory-synthe.md",
-      "detailPath": "papers/35-websynthesis-world-model-guided-mcts-for-webui-trajectory-synthe.html",
-      "figurePath": "figures/35.jpg",
-      "tags": [
-        "World Model",
-        "Web"
-      ],
-      "environment": [
-        "Web"
-      ],
-      "methodFamily": "World Model / Synthetic RL",
-      "links": [
-        {
-          "label": "论文链接",
-          "url": "https://arxiv.org/abs/2507.04370"
-        }
-      ]
-    },
-    {
-      "id": "36",
-      "title": "WebWorld: Large-Scale World Model for Web Agent Training",
-      "fullTitle": "WebWorld: Large-Scale World Model for Web Agent Training (2026 - Zikai Xiao, Jianhong Tu, Chuhang Zou et al.)",
-      "docPath": "docs/36-webworld-large-scale-world-model-for-web-agent-training.md",
-      "detailPath": "papers/36-webworld-large-scale-world-model-for-web-agent-training.html",
-      "figurePath": "figures/36.png",
-      "tags": [
-        "World Model",
-        "Web"
-      ],
-      "environment": [
-        "Web"
-      ],
-      "methodFamily": "World Model / Synthetic RL",
-      "links": [
-        {
-          "label": "论文链接",
-          "url": "https://arxiv.org/abs/2602.14721"
+          "url": "https://arxiv.org/abs/2602.06485"
         }
       ]
     },
@@ -825,23 +868,24 @@
       ]
     },
     {
-      "id": "38",
-      "title": "AgentCPM-Explore",
-      "fullTitle": "AgentCPM-Explore (2026 - Haotian Chen, Xin Cong, Shengda Fan et al.)",
-      "docPath": "docs/38-agentcpm-explore.md",
-      "detailPath": "papers/38-agentcpm-explore.html",
-      "figurePath": "figures/38.png",
+      "id": "36",
+      "title": "WebWorld: Large-Scale World Model for Web Agent Training",
+      "fullTitle": "WebWorld: Large-Scale World Model for Web Agent Training (2026 - Zikai Xiao, Jianhong Tu, Chuhang Zou et al.)",
+      "docPath": "docs/36-webworld-large-scale-world-model-for-web-agent-training.md",
+      "detailPath": "papers/36-webworld-large-scale-world-model-for-web-agent-training.html",
+      "figurePath": "figures/36.png",
       "tags": [
-        "Online RL"
+        "World Model",
+        "Web"
       ],
       "environment": [
         "Web"
       ],
-      "methodFamily": "Online RL",
+      "methodFamily": "World Model / Synthetic RL",
       "links": [
         {
           "label": "论文链接",
-          "url": "https://arxiv.org/abs/2602.06485"
+          "url": "https://arxiv.org/abs/2602.14721"
         }
       ]
     },
@@ -864,50 +908,6 @@
         {
           "label": "论文链接",
           "url": "https://arxiv.org/abs/2604.11784"
-        }
-      ]
-    },
-    {
-      "id": "40",
-      "title": "AgentTrek: Trajectory Synthesis via Web Tutorials",
-      "fullTitle": "AgentTrek: Trajectory Synthesis via Web Tutorials (2024 - Yiheng Xu, Dunjie Lu, Zhennan Shen et al.)",
-      "docPath": "docs/40-agenttrek-trajectory-synthesis-via-web-tutorials.md",
-      "detailPath": "papers/40-agenttrek-trajectory-synthesis-via-web-tutorials.html",
-      "figurePath": null,
-      "tags": [
-        "Data",
-        "Web"
-      ],
-      "environment": [
-        "Web"
-      ],
-      "methodFamily": "Data Synthesis / Self-Evolution",
-      "links": [
-        {
-          "label": "论文链接",
-          "url": "https://arxiv.org/abs/2412.09605"
-        }
-      ]
-    },
-    {
-      "id": "41",
-      "title": "OS-Copilot / FRIDAY",
-      "fullTitle": "OS-Copilot / FRIDAY (2024 - Zhiyong Wu, Chengcheng Han, Zichen Ding et al.)",
-      "docPath": "docs/41-os-copilot-friday.md",
-      "detailPath": "papers/41-os-copilot-friday.html",
-      "figurePath": null,
-      "tags": [
-        "OS/Desktop"
-      ],
-      "environment": [
-        "Web",
-        "Desktop / OS"
-      ],
-      "methodFamily": "LLM-based Agent",
-      "links": [
-        {
-          "label": "论文链接",
-          "url": "https://arxiv.org/abs/2402.07456"
         }
       ]
     }
