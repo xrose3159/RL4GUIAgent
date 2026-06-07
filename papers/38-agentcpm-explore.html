@@ -108,34 +108,28 @@
         </section>
         <section id="method">
           <h2>5. 方法与架构怎么跑</h2>
-          <div class="method-summary"><ol><li>AgentCPM-Explore 面向小模型深度探索，目标是在有限参数下学会长任务工具使用和网页/GUI 决策。</li>
-<li>parameter-space fusion 缓解 SFT 后的能力遗忘，reward denoising 降低环境反馈噪声，context refinement 压缩长历史。</li>
-<li>训练强调 deep exploration：让模型在任务空间里找到成功路径，再用成功/失败信号改进策略。</li>
-<li>它说明 GUI/Web agent 并不一定只能靠超大模型，小模型也能通过更好的探索和奖励清洗获得竞争力。</li></ol></div>
-          <div class="method-block">
-              <h3>5.1 关键步骤 1</h3>
-              <p>AgentCPM-Explore 面向小模型深度探索，目标是在有限参数下学会长任务工具使用和网页/GUI 决策。</p>
-              <p>这一层通常对应论文的核心设定：先把原本散乱的 GUI 交互整理成模型可以学习的输入/输出契约。读者需要问清楚：状态从哪里来，动作怎样被编码，哪些输出会被判为非法。</p>
+          <div class="method-summary"><ol><li>AgentCPM-Explore 面向 4B 级边缘模型，目标是在有限参数下学会长任务工具使用和网页/GUI 决策，而不是完全依赖超大闭源模型。</li>
+<li>parameter-space model fusion 缓解 SFT 后的能力遗忘，把不同训练阶段的优势融合；reward signal denoising 降低环境反馈噪声；contextual information refinement 压缩冗余历史，减少长上下文干扰。</li>
+<li>它说明 GUI/Web agent 不一定只能靠巨大模型，小模型如果有好的探索、奖励清洗和上下文管理，也能获得竞争力。</li></ol></div>
+          <div class="method-block deep-method-block">
+              <h3>5.1 小模型 deep exploration</h3>
+              <p>AgentCPM-Explore 面向 4B 级边缘模型，目标是在有限参数下学会长任务工具使用和网页/GUI 决策，而不是完全依赖超大闭源模型。</p>
+<p>训练强调 deep exploration：让模型在任务空间中寻找成功路径，再从成功/失败信号中更新。</p>
             </div>
-<div class="method-block">
-              <h3>5.2 关键步骤 2</h3>
-              <p>parameter-space fusion 缓解 SFT 后的能力遗忘，reward denoising 降低环境反馈噪声，context refinement 压缩长历史。</p>
-              <p>这一层对应实际运行路径：策略不是在抽象 benchmark 上打分，而是要进入浏览器、Android emulator、桌面 VM 或世界模型中执行。执行后产生的新状态会决定下一步 observation，也决定 reward 能不能被正确计算。</p>
+<div class="method-block deep-method-block">
+              <h3>5.2 三项稳定化设计</h3>
+              <p>parameter-space model fusion 缓解 SFT 后的能力遗忘，把不同训练阶段的优势融合；reward signal denoising 降低环境反馈噪声；contextual information refinement 压缩冗余历史，减少长上下文干扰。</p>
+<p>这些设计都是为了让小模型在 agent RL 中不被噪声、遗忘和上下文膨胀拖垮。</p>
             </div>
-<div class="method-block">
-              <h3>5.3 训练强调 deep exploration</h3>
-              <p>训练强调 deep exploration：让模型在任务空间里找到成功路径，再用成功/失败信号改进策略。</p>
-              <p>这一层是学习信号来源。GUI RL 的难点在于很多任务只有最终成功/失败；论文若能把环境状态、坐标误差、过程进展或候选轨迹质量转成稳定 reward，就能显著改善 credit assignment。</p>
-            </div>
-<div class="method-block">
-              <h3>5.4 关键步骤 4</h3>
-              <p>它说明 GUI/Web agent 并不一定只能靠超大模型，小模型也能通过更好的探索和奖励清洗获得竞争力。</p>
-              <p>这一层通常是稳定性或效率设计：课程学习、replay、过滤、重采样、异步 rollout、上下文压缩、工具调用或层级拆分，目的都是减少无效探索和系统等待。</p>
+<div class="method-block deep-method-block">
+              <h3>5.3 方法意义</h3>
+              <p>它说明 GUI/Web agent 不一定只能靠巨大模型，小模型如果有好的探索、奖励清洗和上下文管理，也能获得竞争力。</p>
+<p>对部署侧很重要，因为端侧/边缘模型更关心成本和延迟。</p>
             </div>
           <p>因此，这篇论文不是简单地“让大模型点屏幕”，而是围绕 observation-action-reward 契约重写训练闭环：先让动作可执行，再让反馈可验证，最后让策略能从成功和失败中更新。</p>
-          <h3>5.5 关键中间变量</h3>
+          <h3>5.4 关键中间变量</h3>
           <p>读方法时要特别盯住中间变量：轨迹是按 step 存、按 episode 存，还是按候选动作组存？奖励是只在终局出现，还是每一步都有 progress？模型更新时用的是整条轨迹的相对优势、单步坐标误差、偏好对，还是 value/Q head？这些细节决定了论文能否处理长任务和稀疏奖励。</p>
-          <h3>5.6 为什么这种设计能解决原问题</h3>
+          <h3>5.5 为什么这种设计能解决原问题</h3>
           <p>核心逻辑是把原本不可微、不可直接监督的 GUI 成功条件拆成更接近训练信号的形式：要么用规则/verifier 把成功自动判出来，要么用 reward model 学过程进展，要么用世界模型/搜索生成更多成功轨迹，要么用层级结构把几十步任务拆成几个短子目标。</p>
         </section>
         <section id="training">

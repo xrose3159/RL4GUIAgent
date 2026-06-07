@@ -108,29 +108,29 @@
         </section>
         <section id="method">
           <h2>5. 方法与架构怎么跑</h2>
-          <div class="method-summary"><ol><li>核心不是让策略在线试错，而是学一个动作价值函数 Q(s,a)：给定当前屏幕和候选动作，估计这个动作未来能否完成任务。</li>
-<li>VLM 主干大多冻结，只在中间表示上接轻量 Q head，离线 TD 学习用轨迹中的后续成功/失败信号回传到前面动作。</li>
-<li>推理时策略先生成多个候选动作，Q head 对候选做 rerank，选择长期价值最高的动作；这相当于用推理计算换掉昂贵的真实环境 rollout。</li>
-<li>这种方法适合真实手机、企业软件、账号系统等不能频繁试错的场景，因为训练只需要静态轨迹和可回放状态。</li></ol></div>
-          <div class="method-block">
-              <h3>5.1 核心不是让策略在线试错，而是学一个动作价值函数 Q(s,a)</h3>
-              <p>核心不是让策略在线试错，而是学一个动作价值函数 Q(s,a)：给定当前屏幕和候选动作，估计这个动作未来能否完成任务。</p>
-              <p>这一层通常对应论文的核心设定：先把原本散乱的 GUI 交互整理成模型可以学习的输入/输出契约。读者需要问清楚：状态从哪里来，动作怎样被编码，哪些输出会被判为非法。</p>
+          <div class="method-summary"><ol><li>Digi-Q 的训练数据是一批已有 device-control 轨迹，每条轨迹包含任务、连续截图状态 s_t、执行动作 a_t、下一截图 s_{t+1} 和最终成功/失败。训练时模型不会进入 Android emulator 试新动作，所以它是 offline RL。</li>
+<li>Digi-Q 不从零训练一个视觉模型，而是利用已经会看 GUI 的 VLM。当前截图、任务文本和候选动作文本被组织成 VLM 输入，VLM 内部会形成多层 hidden states；论文在这些中间/末层表征上接轻量 Q head 和 V head。</li>
+<li>训练 Q 时，目标不是模仿数据中的动作，而是满足 Bellman 关系：Q(s_t,a_t) 接近 r_t + γ V(s_{t+1})。GUI 任务中中间 reward 多数为 0，只有终局成功才有明显 reward；TD learning 会把最后成功的价值通过 V(s_{t+1}) 一步步传回前面的点击和输入。</li>
+<li>推理时，当前策略先根据截图生成 N 个候选动作；Digi-Q 对每个候选计算 Q(s,a)，再选择价值最高的动作执行。这相当于不在线训练策略，而是在推理时用 Q 函数做 reranker。</li></ol></div>
+          <div class="method-block deep-method-block">
+              <h3>5.1 问题建模：把手机控制变成离线 Q/V 学习</h3>
+              <p>Digi-Q 的训练数据是一批已有 device-control 轨迹，每条轨迹包含任务、连续截图状态 s_t、执行动作 a_t、下一截图 s_{t+1} 和最终成功/失败。训练时模型不会进入 Android emulator 试新动作，所以它是 offline RL。</p>
+<p>它学习 Q(s,a)：当前截图状态 s 下执行候选动作 a 后，未来完成任务的价值有多大；同时学习 V(s)：只看当前状态，未来完成任务的期望价值。Q 依赖动作，V 不依赖动作，两者共同给出 advantage = Q(s,a) - V(s)。</p>
             </div>
-<div class="method-block">
-              <h3>5.2 关键步骤 2</h3>
-              <p>VLM 主干大多冻结，只在中间表示上接轻量 Q head，离线 TD 学习用轨迹中的后续成功/失败信号回传到前面动作。</p>
-              <p>这一层对应实际运行路径：策略不是在抽象 benchmark 上打分，而是要进入浏览器、Android emulator、桌面 VM 或世界模型中执行。执行后产生的新状态会决定下一步 observation，也决定 reward 能不能被正确计算。</p>
+<div class="method-block deep-method-block">
+              <h3>5.2 特征怎么来：冻结 VLM，把状态和动作一起喂给模型</h3>
+              <p>Digi-Q 不从零训练一个视觉模型，而是利用已经会看 GUI 的 VLM。当前截图、任务文本和候选动作文本被组织成 VLM 输入，VLM 内部会形成多层 hidden states；论文在这些中间/末层表征上接轻量 Q head 和 V head。</p>
+<p>动作 embedding 不是额外手写一个向量表，而是动作也以文本/结构化 action token 的形式进入 VLM，让 VLM 自己把“点击搜索框”“输入 Beijing”这类动作和截图区域、任务语义对齐。Q head 读到的是包含状态和候选动作语义的 VLM 表征。</p>
             </div>
-<div class="method-block">
-              <h3>5.3 关键步骤 3</h3>
-              <p>推理时策略先生成多个候选动作，Q head 对候选做 rerank，选择长期价值最高的动作；这相当于用推理计算换掉昂贵的真实环境 rollout。</p>
-              <p>这一层是学习信号来源。GUI RL 的难点在于很多任务只有最终成功/失败；论文若能把环境状态、坐标误差、过程进展或候选轨迹质量转成稳定 reward，就能显著改善 credit assignment。</p>
+<div class="method-block deep-method-block">
+              <h3>5.3 offline TD learning：成功信号如何往前传</h3>
+              <p>训练 Q 时，目标不是模仿数据中的动作，而是满足 Bellman 关系：Q(s_t,a_t) 接近 r_t + γ V(s_{t+1})。GUI 任务中中间 reward 多数为 0，只有终局成功才有明显 reward；TD learning 会把最后成功的价值通过 V(s_{t+1}) 一步步传回前面的点击和输入。</p>
+<p>V head 则学习当前状态的期望回报。由于 Q 和 V 都是小 head，VLM 主干大多冻结，训练更稳定、成本低，也降低了用稀疏终局 reward 微调整个大模型导致崩溃的风险。</p>
             </div>
-<div class="method-block">
-              <h3>5.4 关键步骤 4</h3>
-              <p>这种方法适合真实手机、企业软件、账号系统等不能频繁试错的场景，因为训练只需要静态轨迹和可回放状态。</p>
-              <p>这一层通常是稳定性或效率设计：课程学习、replay、过滤、重采样、异步 rollout、上下文压缩、工具调用或层级拆分，目的都是减少无效探索和系统等待。</p>
+<div class="method-block deep-method-block">
+              <h3>5.4 推理：Best-of-N 候选重排，而不是直接让 Q 控制环境</h3>
+              <p>推理时，当前策略先根据截图生成 N 个候选动作；Digi-Q 对每个候选计算 Q(s,a)，再选择价值最高的动作执行。这相当于不在线训练策略，而是在推理时用 Q 函数做 reranker。</p>
+<p>这种设计适合真实手机和账号类任务，因为训练阶段不需要危险试错；限制也很明确：如果策略根本采不出正确候选，Q head 只能在坏候选里挑相对不坏的一个。</p>
             </div>
           <p>因此，这篇论文不是简单地“让大模型点屏幕”，而是围绕 observation-action-reward 契约重写训练闭环：先让动作可执行，再让反馈可验证，最后让策略能从成功和失败中更新。</p>
           <h3>5.5 关键中间变量</h3>

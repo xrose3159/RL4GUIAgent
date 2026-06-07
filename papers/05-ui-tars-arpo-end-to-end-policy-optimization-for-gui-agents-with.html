@@ -23,7 +23,7 @@
     <section class="detail-hero">
       <p class="eyebrow">Paper 05 · 论文细读</p>
       <h1>UI-TARS / ARPO: End-to-End Policy Optimization for GUI Agents with Experience Replay</h1>
-      <div class="tag-row"><span class="tag">Offline RL</span></div>
+      <div class="tag-row"><span class="tag">Online RL</span></div>
       <p class="lead">跨平台 GUI agent 任务是长时序稀疏奖励，直接 GRPO/策略优化容易整批失败、没有梯度信号。</p>
       <div class="hero-actions">
         <a class="primary-action" href="https://arxiv.org/abs/2501.12326" target="_blank" rel="noreferrer">打开论文</a><a class="primary-action" href="https://arxiv.org/abs/2505.16282" target="_blank" rel="noreferrer">打开论文</a>
@@ -55,10 +55,10 @@
         </section>
         <section id="profile">
           <h2>0. 论文定位卡</h2>
-          <table class="detail-table"><tbody><tr><th>路线</th><td>Offline RL</td></tr>
+          <table class="detail-table"><tbody><tr><th>路线</th><td>Online RL</td></tr>
 <tr><th>环境</th><td>Cross-platform GUI</td></tr>
 <tr><th>动作空间</th><td>统一 GUI action schema</td></tr>
-<tr><th>奖励信号</th><td>离线轨迹回报、偏好对、Q value 或规则标签</td></tr>
+<tr><th>奖励信号</th><td>环境终局成功、verifier/VLM judge、replay 中的成功轨迹</td></tr>
 <tr><th>优化方式</th><td>GRPO / RLVR</td></tr>
 <tr><th>读表口径</th><td>⚠️ 数值主要按论文/技术报告/综述自报口径整理，未声明为第三方独立复现。</td></tr></tbody></table>
           <p>先看这张卡可以避免误读：GUI Agent RL 论文经常把“模型能力”“环境系统”“奖励设计”“数据生成”混在一起讨论。这里把它拆成环境、动作空间、奖励信号和优化方式四个轴，方便判断论文到底贡献在哪里。</p>
@@ -75,7 +75,7 @@
           <div class="figure-guide">
             <h3>读图顺序</h3>
             <ol><li>先看输入端：当前 GUI 视觉状态、任务指令和必要的历史上下文。</li>
-<li>再看中间模块：把样本转成偏好对、Q-learning transition、规则奖励标签或 offline GRPO group。</li>
+<li>再看中间模块：rollout worker 在浏览器、VM 或 Android emulator 中执行策略，记录截图、动作、状态和终局结果。</li>
 <li>接着看反馈回路：由终局完成、过程进展、动作合法性、坐标定位或 verifier 判断组成，这一项如何回到策略、价值函数、reward model 或数据筛选器。</li>
 <li>最后看输出端：统一 GUI action schema，包括 click/type/scroll/swipe/back/finish 或工具调用；这决定论文结果到底是在单步 grounding、完整 trajectory 还是系统吞吐上成立。</li></ol>
             <p>读这类图不要只看模块名，要沿着 observation → action → reward/update 的方向追踪数据流。只要能指出 reward 或 verifier 是在哪里产生的、又如何回到策略更新，就基本抓住了论文的核心。</p>
@@ -97,10 +97,10 @@
         </section>
         <section id="pipeline">
           <h2>4. 训练闭环怎么跑</h2>
-          <ol><li>从示范轨迹、失败轨迹、候选动作或静态 benchmark 中构造可训练样本。</li>
-<li>把样本转成偏好对、Q-learning transition、规则奖励标签或 offline GRPO group。</li>
-<li>训练策略、value/Q head 或 reranker，使模型在不访问环境时也能区分好坏动作。</li>
-<li>推理时用训练后的策略直接行动，或生成多个候选后由 value/reward 模型重排。</li></ol>
+          <ol><li>任务采样器选择一批当前模型有机会学会的 GUI/Web/Mobile 任务。</li>
+<li>rollout worker 在浏览器、VM 或 Android emulator 中执行策略，记录截图、动作、状态和终局结果。</li>
+<li>verifier / reward model / 环境脚本把轨迹转成成功、失败或过程进展信号。</li>
+<li>trainer 用 GRPO/AWR/PPO/自定义策略优化更新模型，同时 replay/filtering 保留稀有成功轨迹。</li></ol>
           <div class="flow-strip">
             <span>任务/轨迹</span><span>策略采样</span><span>环境或 verifier</span><span>奖励/筛选</span><span>策略更新</span>
           </div>
@@ -108,47 +108,41 @@
         </section>
         <section id="method">
           <h2>5. 方法与架构怎么跑</h2>
-          <div class="method-summary"><ol><li>UI-TARS 把 GUI 交互统一成截图输入和动作 token 输出，不依赖某个平台独有 DOM，因此能覆盖桌面、网页和移动端。</li>
-<li>ARPO 在 GRPO 基础上加入 experience replay：如果当前 batch 全失败，训练仍可从 replay buffer 取成功轨迹形成有效梯度。</li>
-<li>任务选择器会筛掉 baseline 已经稳定解决的简单任务，也避免长期完全不可解任务拖慢训练；训练集中在稀疏奖励下仍有学习信号的任务。</li>
-<li>这篇的工程重点是把端到端 VLM policy optimization 真正接到多轮 GUI 环境，而不是只做静态 grounding。</li></ol></div>
-          <div class="method-block">
-              <h3>5.1 关键步骤 1</h3>
-              <p>UI-TARS 把 GUI 交互统一成截图输入和动作 token 输出，不依赖某个平台独有 DOM，因此能覆盖桌面、网页和移动端。</p>
-              <p>这一层通常对应论文的核心设定：先把原本散乱的 GUI 交互整理成模型可以学习的输入/输出契约。读者需要问清楚：状态从哪里来，动作怎样被编码，哪些输出会被判为非法。</p>
+          <div class="method-summary"><ol><li>UI-TARS 把 GUI agent 建成一个原生 VLM policy：输入任务、当前截图和最近历史，输出 thought + action。它不依赖 DOM 或 accessibility tree，因此同一模型能覆盖桌面、网页和移动端。</li>
+<li>GUI 多轮 RL 经常出现一个 batch 里所有轨迹都失败，GRPO/PPO 这时几乎没有有效正向信号。ARPO 的关键是 experience replay：保存历史成功或高质量轨迹，当前 batch 零奖励时可以把 replay 里的成功经验拉回来参与更新。</li>
+<li>ARPO 还会筛任务：已经被 baseline 稳定解决的任务学习价值低，长期完全失败的任务没有梯度，二者都不适合占用 rollout。训练重点放在当前模型有机会从失败变成功的任务区间。</li></ol></div>
+          <div class="method-block deep-method-block">
+              <h3>5.1 UI-TARS 的底座：原生 screenshot-to-action agent</h3>
+              <p>UI-TARS 把 GUI agent 建成一个原生 VLM policy：输入任务、当前截图和最近历史，输出 thought + action。它不依赖 DOM 或 accessibility tree，因此同一模型能覆盖桌面、网页和移动端。</p>
+<p>训练前期大量依赖 GUI perception、grounding、action trace、tutorial reasoning 和 reflection 数据，让模型先有看懂界面、定位元素和按统一动作格式输出的能力。</p>
             </div>
-<div class="method-block">
-              <h3>5.2 关键步骤 2</h3>
-              <p>ARPO 在 GRPO 基础上加入 experience replay：如果当前 batch 全失败，训练仍可从 replay buffer 取成功轨迹形成有效梯度。</p>
-              <p>这一层对应实际运行路径：策略不是在抽象 benchmark 上打分，而是要进入浏览器、Android emulator、桌面 VM 或世界模型中执行。执行后产生的新状态会决定下一步 observation，也决定 reward 能不能被正确计算。</p>
+<div class="method-block deep-method-block">
+              <h3>5.2 ARPO 解决稀疏奖励下整批失败的问题</h3>
+              <p>GUI 多轮 RL 经常出现一个 batch 里所有轨迹都失败，GRPO/PPO 这时几乎没有有效正向信号。ARPO 的关键是 experience replay：保存历史成功或高质量轨迹，当前 batch 零奖励时可以把 replay 里的成功经验拉回来参与更新。</p>
+<p>这样做不是简单重复旧数据，而是让策略在稀疏奖励环境中始终能看到“成功动作序列长什么样”，避免训练早期完全被失败样本主导。</p>
             </div>
-<div class="method-block">
-              <h3>5.3 关键步骤 3</h3>
-              <p>任务选择器会筛掉 baseline 已经稳定解决的简单任务，也避免长期完全不可解任务拖慢训练；训练集中在稀疏奖励下仍有学习信号的任务。</p>
-              <p>这一层是学习信号来源。GUI RL 的难点在于很多任务只有最终成功/失败；论文若能把环境状态、坐标误差、过程进展或候选轨迹质量转成稳定 reward，就能显著改善 credit assignment。</p>
-            </div>
-<div class="method-block">
-              <h3>5.4 关键步骤 4</h3>
-              <p>这篇的工程重点是把端到端 VLM policy optimization 真正接到多轮 GUI 环境，而不是只做静态 grounding。</p>
-              <p>这一层通常是稳定性或效率设计：课程学习、replay、过滤、重采样、异步 rollout、上下文压缩、工具调用或层级拆分，目的都是减少无效探索和系统等待。</p>
+<div class="method-block deep-method-block">
+              <h3>5.3 Task selection：训练集中在有学习信号的任务</h3>
+              <p>ARPO 还会筛任务：已经被 baseline 稳定解决的任务学习价值低，长期完全失败的任务没有梯度，二者都不适合占用 rollout。训练重点放在当前模型有机会从失败变成功的任务区间。</p>
+<p>这和 DigiRL/MobileRL 的课程思想相似：GUI RL 的关键不是多跑，而是把昂贵的环境交互花在最能产生学习信号的任务上。</p>
             </div>
           <p>因此，这篇论文不是简单地“让大模型点屏幕”，而是围绕 observation-action-reward 契约重写训练闭环：先让动作可执行，再让反馈可验证，最后让策略能从成功和失败中更新。</p>
-          <h3>5.5 关键中间变量</h3>
+          <h3>5.4 关键中间变量</h3>
           <p>读方法时要特别盯住中间变量：轨迹是按 step 存、按 episode 存，还是按候选动作组存？奖励是只在终局出现，还是每一步都有 progress？模型更新时用的是整条轨迹的相对优势、单步坐标误差、偏好对，还是 value/Q head？这些细节决定了论文能否处理长任务和稀疏奖励。</p>
-          <h3>5.6 为什么这种设计能解决原问题</h3>
+          <h3>5.5 为什么这种设计能解决原问题</h3>
           <p>核心逻辑是把原本不可微、不可直接监督的 GUI 成功条件拆成更接近训练信号的形式：要么用规则/verifier 把成功自动判出来，要么用 reward model 学过程进展，要么用世界模型/搜索生成更多成功轨迹，要么用层级结构把几十步任务拆成几个短子目标。</p>
         </section>
         <section id="training">
           <h2>6. 训练、奖励与数据流</h2>
-          <ul><li>离线阶段先从静态轨迹、成功/失败对或规则可验证样本中学习，优点是便宜、安全、可复现。</li>
-<li>优化通常用 DPO、offline GRPO、Q-learning、IQL/CQL 或 value reranking，重点是避免策略偏离数据分布后无人纠正。</li>
+          <ul><li>在线阶段让当前策略真实或半真实地执行任务，把环境返回的成功/失败和过程状态写入 replay buffer。</li>
+<li>训练一般需要课程学习、positive replay、任务过滤和异步 rollout，否则大量失败轨迹会吞掉训练信号。</li>
 <li>如果使用 GRPO/RLVR，模型会在同一状态采样多个候选动作，用相对奖励更新策略，避免训练单独 critic。</li></ul>
           <p>读实验时要特别注意 reward 口径：有的论文评估单步坐标，有的评估整条任务成功，有的只报告系统吞吐或数据合成质量。不同口径不能直接相加或横向混算。</p>
         </section>
         <section id="innovation">
           <h2>7. 关键设计与创新点</h2>
           <ul><li>把 GUI 任务改造成可验证奖励问题，让策略优化不必依赖昂贵的逐步人工标注。</li>
-<li>在不访问真实环境的前提下利用轨迹、偏好或 value signal，降低安全风险和交互成本。</li></ul>
+<li>把环境交互纳入训练闭环，直接优化真实多轮成功率，而不是只优化离线动作匹配。</li></ul>
           <p>这些创新点的共同目标，是把 GUI 交互从一次性 prompt 调用变成可迭代优化的训练系统。</p>
         </section>
         <section id="experiment">
@@ -165,20 +159,21 @@
         </section>
         <section id="misread">
           <h2>9. 常见误读</h2>
-          <ul><li>不要把离线结果理解成“无需环境即可解决真实交互”；离线训练仍受轨迹覆盖和 OOD 状态限制。</li>
+          <ul><li>不要只看最终成功率，还要看 rollout 成本和 verifier 可靠性；在线 RL 的有效性高度依赖环境吞吐。</li>
 <li>读 UI-TARS / ARPO: End-to-End Policy Optimization for GUI Agents with Experience Replay 时，应先确认它报告的是作者自评、技术报告结果还是第三方 benchmark 结果。</li></ul>
         </section>
         <section id="reproduce">
           <h2>10. 复现或落地时要准备什么</h2>
           <ol><li>先固定 action schema，并写一个能把模型输出解析成真实 GUI 操作的 adapter。</li>
 <li>准备 verifier：至少要能判断终局成功；如果是 grounding 论文，还要能计算坐标/区域奖励。</li>
-<li>离线训练要检查轨迹覆盖和负样本质量，避免模型学到只在数据集状态里有效的捷径。</li></ol>
+<li>在线训练要异步化 rollout 与 learner，并维护 replay/filtering，否则失败轨迹会占满 batch。</li></ol>
           <p>如果只能先复现一小部分，建议优先复现 action schema、verifier 和一组可重置任务；没有这三件事，后续 RL 指标很难可信。</p>
         </section>
         <section id="limits">
           <h2>11. 局限与读法</h2>
-          <ul><li>离线轨迹覆盖不到的状态仍是风险；模型一旦偏离专家路径，可能缺少纠正样本。</li></ul>
-          <p>它属于安全低成本路线：先尽量从已有轨迹和可验证标签中榨取价值，再决定是否进入在线环境。</p>
+          <ul><li>在线 rollout 成本高，浏览器、VM、ADB 和截图 I/O 往往限制可扩展性。</li>
+<li>自动 verifier 或 VLM judge 一旦误判，策略可能学习 reward hacking。</li></ul>
+          <p>它属于闭环自我改进路线：让 agent 在环境里行动、失败、修正，而不是停留在离线示范模仿。</p>
           <p>和参考站的可信度规则一致，本页把作者自评、技术报告自报和综述转述都按 ⚠️ 处理；只有基准维护方统一评测或第三方复现才适合当作更强证据。</p>
         </section>
         <section id="sources">

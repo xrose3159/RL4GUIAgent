@@ -108,34 +108,28 @@
         </section>
         <section id="method">
           <h2>5. 方法与架构怎么跑</h2>
-          <div class="method-summary"><ol><li>VSC-RL 把长任务拆成可学习的 subgoal：先让 VLM 或 planner 生成中间目标，再训练策略在每个子目标条件下行动。</li>
-<li>SubGoal Evidence Lower Bound 把最终成功、子目标可达性和与参考策略的偏差放进同一个优化目标。</li>
-<li>这样做的好处是 reward 不必从终局一次性回传几十步，模型可以在“到达某个中间界面”时得到更短程的学习信号。</li>
-<li>它是层级 RL 在 GUI/Web/Mobile 任务中的自然落地，尤其适合搜索、填写、确认这种多阶段流程。</li></ol></div>
-          <div class="method-block">
-              <h3>5.1 VSC-RL 把长任务拆成可学习的 subgoal</h3>
-              <p>VSC-RL 把长任务拆成可学习的 subgoal：先让 VLM 或 planner 生成中间目标，再训练策略在每个子目标条件下行动。</p>
-              <p>这一层通常对应论文的核心设定：先把原本散乱的 GUI 交互整理成模型可以学习的输入/输出契约。读者需要问清楚：状态从哪里来，动作怎样被编码，哪些输出会被判为非法。</p>
+          <div class="method-summary"><ol><li>VSC-RL 认为视觉语言 agent 的长任务 reward 太稀疏，需要把最终目标分解成若干 subgoal。比如“购买商品”可以拆成搜索、打开商品页、加入购物车、结算。</li>
+<li>论文把 subgoal 当作潜变量，优化一个类似 variational lower bound 的目标：既希望 subgoal-conditioned policy 能获得高 return，也约束它不要偏离参考策略太远。</li>
+<li>它不是只让 LLM 写计划再执行，而是把子目标放进 RL 目标里联合优化。subgoal 是否好，要看低层策略在环境中是否真的能完成。</li></ol></div>
+          <div class="method-block deep-method-block">
+              <h3>5.1 把长任务拆成可达子目标</h3>
+              <p>VSC-RL 认为视觉语言 agent 的长任务 reward 太稀疏，需要把最终目标分解成若干 subgoal。比如“购买商品”可以拆成搜索、打开商品页、加入购物车、结算。</p>
+<p>每个子目标条件下，策略面对的是更短、更明确的控制问题，credit assignment 难度下降。</p>
             </div>
-<div class="method-block">
-              <h3>5.2 关键步骤 2</h3>
-              <p>SubGoal Evidence Lower Bound 把最终成功、子目标可达性和与参考策略的偏差放进同一个优化目标。</p>
-              <p>这一层对应实际运行路径：策略不是在抽象 benchmark 上打分，而是要进入浏览器、Android emulator、桌面 VM 或世界模型中执行。执行后产生的新状态会决定下一步 observation，也决定 reward 能不能被正确计算。</p>
+<div class="method-block deep-method-block">
+              <h3>5.2 SubGoal Evidence Lower Bound</h3>
+              <p>论文把 subgoal 当作潜变量，优化一个类似 variational lower bound 的目标：既希望 subgoal-conditioned policy 能获得高 return，也约束它不要偏离参考策略太远。</p>
+<p>这个目标让模型既能探索有效子目标，又不至于生成不可执行或脱离任务的中间目标。</p>
             </div>
-<div class="method-block">
-              <h3>5.3 关键步骤 3</h3>
-              <p>这样做的好处是 reward 不必从终局一次性回传几十步，模型可以在“到达某个中间界面”时得到更短程的学习信号。</p>
-              <p>这一层是学习信号来源。GUI RL 的难点在于很多任务只有最终成功/失败；论文若能把环境状态、坐标误差、过程进展或候选轨迹质量转成稳定 reward，就能显著改善 credit assignment。</p>
-            </div>
-<div class="method-block">
-              <h3>5.4 关键步骤 4</h3>
-              <p>它是层级 RL 在 GUI/Web/Mobile 任务中的自然落地，尤其适合搜索、填写、确认这种多阶段流程。</p>
-              <p>这一层通常是稳定性或效率设计：课程学习、replay、过滤、重采样、异步 rollout、上下文压缩、工具调用或层级拆分，目的都是减少无效探索和系统等待。</p>
+<div class="method-block deep-method-block">
+              <h3>5.3 和普通 planner 的区别</h3>
+              <p>它不是只让 LLM 写计划再执行，而是把子目标放进 RL 目标里联合优化。subgoal 是否好，要看低层策略在环境中是否真的能完成。</p>
+<p>因此它属于层级 RL，而不是单纯 prompt planning。</p>
             </div>
           <p>因此，这篇论文不是简单地“让大模型点屏幕”，而是围绕 observation-action-reward 契约重写训练闭环：先让动作可执行，再让反馈可验证，最后让策略能从成功和失败中更新。</p>
-          <h3>5.5 关键中间变量</h3>
+          <h3>5.4 关键中间变量</h3>
           <p>读方法时要特别盯住中间变量：轨迹是按 step 存、按 episode 存，还是按候选动作组存？奖励是只在终局出现，还是每一步都有 progress？模型更新时用的是整条轨迹的相对优势、单步坐标误差、偏好对，还是 value/Q head？这些细节决定了论文能否处理长任务和稀疏奖励。</p>
-          <h3>5.6 为什么这种设计能解决原问题</h3>
+          <h3>5.5 为什么这种设计能解决原问题</h3>
           <p>核心逻辑是把原本不可微、不可直接监督的 GUI 成功条件拆成更接近训练信号的形式：要么用规则/verifier 把成功自动判出来，要么用 reward model 学过程进展，要么用世界模型/搜索生成更多成功轨迹，要么用层级结构把几十步任务拆成几个短子目标。</p>
         </section>
         <section id="training">

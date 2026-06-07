@@ -108,29 +108,29 @@
         </section>
         <section id="method">
           <h2>5. 方法与架构怎么跑</h2>
-          <div class="method-summary"><ol><li>GUI-R1 借鉴 R1/RLVR 思路，把 GUI 动作格式设计成可规则验证：动作类型、坐标、文本参数都能被自动检查。</li>
-<li>训练数据很小但质量高，覆盖 mobile/desktop/web；每条样本都能产生格式奖励、动作类型奖励和坐标命中奖励。</li>
-<li>GRPO 不需要额外 critic，模型在同一状态下采样多个动作，用相对奖励区分哪一个更接近正确元素。</li>
-<li>最重要的现象是模型出现类似“先看布局再定位”的推理模式，说明 GUI 中只要奖励足够明确，不一定需要显式写满 reasoning 模板。</li></ol></div>
-          <div class="method-block">
-              <h3>5.1 关键步骤 1</h3>
-              <p>GUI-R1 借鉴 R1/RLVR 思路，把 GUI 动作格式设计成可规则验证：动作类型、坐标、文本参数都能被自动检查。</p>
-              <p>这一层通常对应论文的核心设定：先把原本散乱的 GUI 交互整理成模型可以学习的输入/输出契约。读者需要问清楚：状态从哪里来，动作怎样被编码，哪些输出会被判为非法。</p>
+          <div class="method-summary"><ol><li>GUI-R1 的输入是高层任务 Q、当前截图 I 和历史 H，输出下一步动作：action type、click point 和 input text。训练时它不会真的点击环境，也不会得到新截图；它是在已有 benchmark/标注样本上做 rule-based reinforcement fine-tuning。</li>
+<li>GUI-R1 把动作统一成 complete、close/delete、press home、click、press back、type、select、scroll、enter。最终答案固定为 action、point、input text 三个字段，并要求模型用 &lt;think&gt; 和 &lt;answer&gt; 标签输出。</li>
+<li>对每个样本，模型生成 N 个候选回答 o_i，每个候选得到 reward r_i。优势不是 Q-V，也不是 GAE，而是 A_i = (r_i - mean(r_1...r_N)) / std(r_1...r_N)。高于组平均的回答概率上升，低于组平均的回答概率下降。</li>
+<li>作者先从约 14M grounding/low-level 数据和约 30K high-level 数据出发，用 Qwen2.5-VL-7B 对每个样本生成 10 个回答，再用规则 reward 打分。全 0 的样本太难或标注不清，全 1 的样本太简单，都被过滤。</li></ol></div>
+          <div class="method-block deep-method-block">
+              <h3>5.1 任务不是在线执行，而是静态下一步 action prediction</h3>
+              <p>GUI-R1 的输入是高层任务 Q、当前截图 I 和历史 H，输出下一步动作：action type、click point 和 input text。训练时它不会真的点击环境，也不会得到新截图；它是在已有 benchmark/标注样本上做 rule-based reinforcement fine-tuning。</p>
+<p>因此它的“RL”是 non-interactive RFT：模型对同一输入生成多个候选回答，规则 reward 和 ground truth 比较后打分，GRPO 根据组内相对分数更新策略。</p>
             </div>
-<div class="method-block">
-              <h3>5.2 训练数据很小但质量高，覆盖 mobile/desktop/web</h3>
-              <p>训练数据很小但质量高，覆盖 mobile/desktop/web；每条样本都能产生格式奖励、动作类型奖励和坐标命中奖励。</p>
-              <p>这一层对应实际运行路径：策略不是在抽象 benchmark 上打分，而是要进入浏览器、Android emulator、桌面 VM 或世界模型中执行。执行后产生的新状态会决定下一步 observation，也决定 reward 能不能被正确计算。</p>
+<div class="method-block deep-method-block">
+              <h3>5.2 统一动作空间：把跨平台动作压成可检查格式</h3>
+              <p>GUI-R1 把动作统一成 complete、close/delete、press home、click、press back、type、select、scroll、enter。最终答案固定为 action、point、input text 三个字段，并要求模型用 &lt;think&gt; 和 &lt;answer&gt; 标签输出。</p>
+<p>这个统一格式解决了 Android、Web、Desktop 数据动作定义不一致的问题，也让 reward 可以写成简单规则：动作类型是否相等、点击点是否落在 bbox 内、输入文本是否匹配。</p>
             </div>
-<div class="method-block">
-              <h3>5.3 关键步骤 3</h3>
-              <p>GRPO 不需要额外 critic，模型在同一状态下采样多个动作，用相对奖励区分哪一个更接近正确元素。</p>
-              <p>这一层是学习信号来源。GUI RL 的难点在于很多任务只有最终成功/失败；论文若能把环境状态、坐标误差、过程进展或候选轨迹质量转成稳定 reward，就能显著改善 credit assignment。</p>
+<div class="method-block deep-method-block">
+              <h3>5.3 GRPO 训练：不训 critic，用组内相对奖励</h3>
+              <p>对每个样本，模型生成 N 个候选回答 o_i，每个候选得到 reward r_i。优势不是 Q-V，也不是 GAE，而是 A_i = (r_i - mean(r_1...r_N)) / std(r_1...r_N)。高于组平均的回答概率上升，低于组平均的回答概率下降。</p>
+<p>reward 分为格式奖励 R_f 和准确性奖励 R_acc，最终 R_o = αR_f + βR_acc。R_acc = R_act + R_point + R_text：动作类型 exact match，点击坐标落入 GT bbox，文本 F1 超过阈值。</p>
             </div>
-<div class="method-block">
-              <h3>5.4 关键步骤 4</h3>
-              <p>最重要的现象是模型出现类似“先看布局再定位”的推理模式，说明 GUI 中只要奖励足够明确，不一定需要显式写满 reasoning 模板。</p>
-              <p>这一层通常是稳定性或效率设计：课程学习、replay、过滤、重采样、异步 rollout、上下文压缩、工具调用或层级拆分，目的都是减少无效探索和系统等待。</p>
+<div class="method-block deep-method-block">
+              <h3>5.4 GUI-R1-3K：保留中等难度样本</h3>
+              <p>作者先从约 14M grounding/low-level 数据和约 30K high-level 数据出发，用 Qwen2.5-VL-7B 对每个样本生成 10 个回答，再用规则 reward 打分。全 0 的样本太难或标注不清，全 1 的样本太简单，都被过滤。</p>
+<p>最后保留约 1.5K high-level 和随机采样 1.5K low-level，组成 3K 训练集。GUI-R1-3B 是从 Qwen2.5-VL-3B-Instruct 直接做 RFT/GRPO，不是先在 GUI-R1-3K 上 SFT 再 RL；带星号的 QwenVL2.5-3B* 才是同数据 SFT baseline。</p>
             </div>
           <p>因此，这篇论文不是简单地“让大模型点屏幕”，而是围绕 observation-action-reward 契约重写训练闭环：先让动作可执行，再让反馈可验证，最后让策略能从成功和失败中更新。</p>
           <h3>5.5 关键中间变量</h3>

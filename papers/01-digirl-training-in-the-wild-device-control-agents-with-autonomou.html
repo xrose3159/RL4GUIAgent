@@ -108,29 +108,29 @@
         </section>
         <section id="method">
           <h2>5. 方法与架构怎么跑</h2>
-          <div class="method-summary"><ol><li>训练不是直接从零在线探索，而是先把 AitW 等人类轨迹转成可执行的 device-control 经验，让模型学会基本动作格式和界面语义。</li>
-<li>在线阶段把 Android 任务参数化后并行运行，策略每一步看截图和指令，输出 tap/type/swipe/back 等动作；环境执行动作后返回新截图。</li>
-<li>奖励来自任务完成判定和 VLM evaluator：如果界面状态与目标语义一致，整条轨迹得到终局奖励；训练再用 advantage-weighted 更新把成功轨迹的关键动作权重放大。</li>
-<li>课程学习负责控制难度：过易任务不再占用采样，长期失败任务降低采样比例，模型主要在“刚好可学”的任务上迭代。</li></ol></div>
-          <div class="method-block">
-              <h3>5.1 关键步骤 1</h3>
-              <p>训练不是直接从零在线探索，而是先把 AitW 等人类轨迹转成可执行的 device-control 经验，让模型学会基本动作格式和界面语义。</p>
-              <p>这一层通常对应论文的核心设定：先把原本散乱的 GUI 交互整理成模型可以学习的输入/输出契约。读者需要问清楚：状态从哪里来，动作怎样被编码，哪些输出会被判为非法。</p>
+          <div class="method-summary"><ol><li>DigiRL 不是一开始就把未训练模型丢进手机里乱试。第一阶段用 AitW 等已有手机控制轨迹做离线 warm-up，让 AutoUI-Base 这类策略先学会截图输入、动作格式、基本 app 语义和常见控件操作。这样 online 阶段开始时，模型至少能打开 app、点击输入框、输入文本、返回和结束任务。</li>
+<li>DigiRL 的 value 不是 Digi-Q 那种 Q(s,a)。它更强调 task-level value 和 step-level value。task-level value 估计某个任务对当前策略是否可学、是否值得继续采样；step-level value 估计某个状态相对任务目标是否更接近成功。</li>
+<li>拿到新轨迹后，DigiRL 会把轨迹放进 replay buffer，更新 value model，再用 value 判断哪些任务和哪些步骤值得训练。直觉上，如果执行动作后 V_step(s_{t+1}) 明显高于 V_step(s_t)，说明这步动作让状态更接近目标，策略更新时这类动作权重更高。</li>
+<li>移动 GUI 任务难度差异很大。太简单的任务模型已经会，继续采样浪费；太难的任务长期失败，给不出学习信号。DigiRL 用自动 curriculum 根据历史成功率调整任务采样，把训练集中在当前模型“刚好可能学会”的任务上。</li></ol></div>
+          <div class="method-block deep-method-block">
+              <h3>5.1 两阶段训练：先离线冷启动，再进入 Android 环境在线学习</h3>
+              <p>DigiRL 不是一开始就把未训练模型丢进手机里乱试。第一阶段用 AitW 等已有手机控制轨迹做离线 warm-up，让 AutoUI-Base 这类策略先学会截图输入、动作格式、基本 app 语义和常见控件操作。这样 online 阶段开始时，模型至少能打开 app、点击输入框、输入文本、返回和结束任务。</p>
+<p>第二阶段才是 offline-to-online：当前策略进入 Android emulator 执行参数化任务，每一步根据当前截图和任务指令输出 tap/type/swipe/back/finish 等动作。环境真实执行动作并返回下一张截图，直到任务结束、超步数或 evaluator 判定完成。</p>
             </div>
-<div class="method-block">
-              <h3>5.2 关键步骤 2</h3>
-              <p>在线阶段把 Android 任务参数化后并行运行，策略每一步看截图和指令，输出 tap/type/swipe/back 等动作；环境执行动作后返回新截图。</p>
-              <p>这一层对应实际运行路径：策略不是在抽象 benchmark 上打分，而是要进入浏览器、Android emulator、桌面 VM 或世界模型中执行。执行后产生的新状态会决定下一步 observation，也决定 reward 能不能被正确计算。</p>
+<div class="method-block deep-method-block">
+              <h3>5.2 两个 value：一个管任务难度，一个管步骤进展</h3>
+              <p>DigiRL 的 value 不是 Digi-Q 那种 Q(s,a)。它更强调 task-level value 和 step-level value。task-level value 估计某个任务对当前策略是否可学、是否值得继续采样；step-level value 估计某个状态相对任务目标是否更接近成功。</p>
+<p>online rollout 后，整条轨迹会被 evaluator 打成成功或失败，错误轨迹也不是全部丢掉。失败轨迹里的前缀可能仍然有价值，例如已经正确打开目标 app、进入正确页面，只是在最后一步失败；step-level value 可以从这些前缀里学习“哪些动作确实推进了任务”。</p>
             </div>
-<div class="method-block">
-              <h3>5.3 奖励来自任务完成判定和 VLM evaluator</h3>
-              <p>奖励来自任务完成判定和 VLM evaluator：如果界面状态与目标语义一致，整条轨迹得到终局奖励；训练再用 advantage-weighted 更新把成功轨迹的关键动作权重放大。</p>
-              <p>这一层是学习信号来源。GUI RL 的难点在于很多任务只有最终成功/失败；论文若能把环境状态、坐标误差、过程进展或候选轨迹质量转成稳定 reward，就能显著改善 credit assignment。</p>
+<div class="method-block deep-method-block">
+              <h3>5.3 策略更新：不是简单 BC，而是用 value 过滤和加权动作</h3>
+              <p>拿到新轨迹后，DigiRL 会把轨迹放进 replay buffer，更新 value model，再用 value 判断哪些任务和哪些步骤值得训练。直觉上，如果执行动作后 V_step(s_{t+1}) 明显高于 V_step(s_t)，说明这步动作让状态更接近目标，策略更新时这类动作权重更高。</p>
+<p>它的训练更像 value-guided weighted imitation / advantage-weighted update，而不是标准 PPO。论文的重点是让 online 收集到的成功、失败和部分成功轨迹都变成可利用信号，减少只靠终局 success/fail 带来的稀疏奖励问题。</p>
             </div>
-<div class="method-block">
-              <h3>5.4 课程学习负责控制难度</h3>
-              <p>课程学习负责控制难度：过易任务不再占用采样，长期失败任务降低采样比例，模型主要在“刚好可学”的任务上迭代。</p>
-              <p>这一层通常是稳定性或效率设计：课程学习、replay、过滤、重采样、异步 rollout、上下文压缩、工具调用或层级拆分，目的都是减少无效探索和系统等待。</p>
+<div class="method-block deep-method-block">
+              <h3>5.4 课程学习：控制 online 阶段不要被垃圾轨迹淹没</h3>
+              <p>移动 GUI 任务难度差异很大。太简单的任务模型已经会，继续采样浪费；太难的任务长期失败，给不出学习信号。DigiRL 用自动 curriculum 根据历史成功率调整任务采样，把训练集中在当前模型“刚好可能学会”的任务上。</p>
+<p>这也是它和纯离线 Digi-Q 的核心差别：Digi-Q 固定读历史数据，DigiRL 会让当前策略不断产生新状态分布，并通过课程学习控制这些新数据的质量。</p>
             </div>
           <p>因此，这篇论文不是简单地“让大模型点屏幕”，而是围绕 observation-action-reward 契约重写训练闭环：先让动作可执行，再让反馈可验证，最后让策略能从成功和失败中更新。</p>
           <h3>5.5 关键中间变量</h3>

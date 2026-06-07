@@ -108,34 +108,28 @@
         </section>
         <section id="method">
           <h2>5. 方法与架构怎么跑</h2>
-          <div class="method-summary"><ol><li>AEBPO 关注多轮 agent RL 的 entropy collapse：策略训练后过早收敛到少数动作，探索能力下降。</li>
-<li>Entropy-balanced 的思想是在不同阶段动态调节探索强度：既不能一直高熵乱试，也不能太早低熵僵化。</li>
-<li>它虽是更通用的 agent RL 算法，但对 Web/GUI 任务重要，因为长任务早期需要探索，后期需要稳定执行。</li>
-<li>论文结果说明少量 RL samples 如果配合好的熵控制，也能显著提升工具使用和网页任务能力。</li></ol></div>
-          <div class="method-block">
-              <h3>5.1 关键步骤 1</h3>
-              <p>AEBPO 关注多轮 agent RL 的 entropy collapse：策略训练后过早收敛到少数动作，探索能力下降。</p>
-              <p>这一层通常对应论文的核心设定：先把原本散乱的 GUI 交互整理成模型可以学习的输入/输出契约。读者需要问清楚：状态从哪里来，动作怎样被编码，哪些输出会被判为非法。</p>
+          <div class="method-summary"><ol><li>多轮网页/工具 agent 早期需要探索，后期需要稳定执行。普通 entropy bonus 要么让模型一直乱试，要么训练后期过早塌缩到少数动作。</li>
+<li>它先监测不同步骤的 entropy，把采样预算分给更需要探索的分支；对于连续高熵 tool-call step 加 branch penalty，避免分支数量爆炸。</li>
+<li>训练目标中加入 entropy-aware advantage 和高熵 clipping 设计，让模型重点学习高不确定但有价值的 token。</li></ol></div>
+          <div class="method-block deep-method-block">
+              <h3>5.1 问题：agent RL 中的 entropy collapse 和分支爆炸</h3>
+              <p>多轮网页/工具 agent 早期需要探索，后期需要稳定执行。普通 entropy bonus 要么让模型一直乱试，要么训练后期过早塌缩到少数动作。</p>
+<p>AEBPO 关注的是如何平衡探索和收敛，尤其是长时序 tool-call / web agent 场景。</p>
             </div>
-<div class="method-block">
-              <h3>5.2 Entropy-balanced 的思想是在不同阶段动态调节探索强度</h3>
-              <p>Entropy-balanced 的思想是在不同阶段动态调节探索强度：既不能一直高熵乱试，也不能太早低熵僵化。</p>
-              <p>这一层对应实际运行路径：策略不是在抽象 benchmark 上打分，而是要进入浏览器、Android emulator、桌面 VM 或世界模型中执行。执行后产生的新状态会决定下一步 observation，也决定 reward 能不能被正确计算。</p>
+<div class="method-block deep-method-block">
+              <h3>5.2 Dynamic entropy-balanced rollout</h3>
+              <p>它先监测不同步骤的 entropy，把采样预算分给更需要探索的分支；对于连续高熵 tool-call step 加 branch penalty，避免分支数量爆炸。</p>
+<p>这让 rollout 既覆盖不确定决策点，又不被无效探索拖垮。</p>
             </div>
-<div class="method-block">
-              <h3>5.3 关键步骤 3</h3>
-              <p>它虽是更通用的 agent RL 算法，但对 Web/GUI 任务重要，因为长任务早期需要探索，后期需要稳定执行。</p>
-              <p>这一层是学习信号来源。GUI RL 的难点在于很多任务只有最终成功/失败；论文若能把环境状态、坐标误差、过程进展或候选轨迹质量转成稳定 reward，就能显著改善 credit assignment。</p>
-            </div>
-<div class="method-block">
-              <h3>5.4 关键步骤 4</h3>
-              <p>论文结果说明少量 RL samples 如果配合好的熵控制，也能显著提升工具使用和网页任务能力。</p>
-              <p>这一层通常是稳定性或效率设计：课程学习、replay、过滤、重采样、异步 rollout、上下文压缩、工具调用或层级拆分，目的都是减少无效探索和系统等待。</p>
+<div class="method-block deep-method-block">
+              <h3>5.3 Entropy-aware policy optimization</h3>
+              <p>训练目标中加入 entropy-aware advantage 和高熵 clipping 设计，让模型重点学习高不确定但有价值的 token。</p>
+<p>虽然它不是纯 GUI 论文，但对 Web/GUI agent 很重要，因为环境动作分支和工具调用都会放大探索问题。</p>
             </div>
           <p>因此，这篇论文不是简单地“让大模型点屏幕”，而是围绕 observation-action-reward 契约重写训练闭环：先让动作可执行，再让反馈可验证，最后让策略能从成功和失败中更新。</p>
-          <h3>5.5 关键中间变量</h3>
+          <h3>5.4 关键中间变量</h3>
           <p>读方法时要特别盯住中间变量：轨迹是按 step 存、按 episode 存，还是按候选动作组存？奖励是只在终局出现，还是每一步都有 progress？模型更新时用的是整条轨迹的相对优势、单步坐标误差、偏好对，还是 value/Q head？这些细节决定了论文能否处理长任务和稀疏奖励。</p>
-          <h3>5.6 为什么这种设计能解决原问题</h3>
+          <h3>5.5 为什么这种设计能解决原问题</h3>
           <p>核心逻辑是把原本不可微、不可直接监督的 GUI 成功条件拆成更接近训练信号的形式：要么用规则/verifier 把成功自动判出来，要么用 reward model 学过程进展，要么用世界模型/搜索生成更多成功轨迹，要么用层级结构把几十步任务拆成几个短子目标。</p>
         </section>
         <section id="training">

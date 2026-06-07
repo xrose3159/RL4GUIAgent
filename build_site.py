@@ -276,9 +276,991 @@ METHOD_NOTES = {
 }
 
 
+DETAILED_METHOD_BLOCKS = {
+    "DigiRL": [
+        (
+            "两阶段训练：先离线冷启动，再进入 Android 环境在线学习",
+            [
+                "DigiRL 不是一开始就把未训练模型丢进手机里乱试。第一阶段用 AitW 等已有手机控制轨迹做离线 warm-up，让 AutoUI-Base 这类策略先学会截图输入、动作格式、基本 app 语义和常见控件操作。这样 online 阶段开始时，模型至少能打开 app、点击输入框、输入文本、返回和结束任务。",
+                "第二阶段才是 offline-to-online：当前策略进入 Android emulator 执行参数化任务，每一步根据当前截图和任务指令输出 tap/type/swipe/back/finish 等动作。环境真实执行动作并返回下一张截图，直到任务结束、超步数或 evaluator 判定完成。",
+            ],
+        ),
+        (
+            "两个 value：一个管任务难度，一个管步骤进展",
+            [
+                "DigiRL 的 value 不是 Digi-Q 那种 Q(s,a)。它更强调 task-level value 和 step-level value。task-level value 估计某个任务对当前策略是否可学、是否值得继续采样；step-level value 估计某个状态相对任务目标是否更接近成功。",
+                "online rollout 后，整条轨迹会被 evaluator 打成成功或失败，错误轨迹也不是全部丢掉。失败轨迹里的前缀可能仍然有价值，例如已经正确打开目标 app、进入正确页面，只是在最后一步失败；step-level value 可以从这些前缀里学习“哪些动作确实推进了任务”。",
+            ],
+        ),
+        (
+            "策略更新：不是简单 BC，而是用 value 过滤和加权动作",
+            [
+                "拿到新轨迹后，DigiRL 会把轨迹放进 replay buffer，更新 value model，再用 value 判断哪些任务和哪些步骤值得训练。直觉上，如果执行动作后 V_step(s_{t+1}) 明显高于 V_step(s_t)，说明这步动作让状态更接近目标，策略更新时这类动作权重更高。",
+                "它的训练更像 value-guided weighted imitation / advantage-weighted update，而不是标准 PPO。论文的重点是让 online 收集到的成功、失败和部分成功轨迹都变成可利用信号，减少只靠终局 success/fail 带来的稀疏奖励问题。",
+            ],
+        ),
+        (
+            "课程学习：控制 online 阶段不要被垃圾轨迹淹没",
+            [
+                "移动 GUI 任务难度差异很大。太简单的任务模型已经会，继续采样浪费；太难的任务长期失败，给不出学习信号。DigiRL 用自动 curriculum 根据历史成功率调整任务采样，把训练集中在当前模型“刚好可能学会”的任务上。",
+                "这也是它和纯离线 Digi-Q 的核心差别：Digi-Q 固定读历史数据，DigiRL 会让当前策略不断产生新状态分布，并通过课程学习控制这些新数据的质量。",
+            ],
+        ),
+    ],
+    "Digi-Q": [
+        (
+            "问题建模：把手机控制变成离线 Q/V 学习",
+            [
+                "Digi-Q 的训练数据是一批已有 device-control 轨迹，每条轨迹包含任务、连续截图状态 s_t、执行动作 a_t、下一截图 s_{t+1} 和最终成功/失败。训练时模型不会进入 Android emulator 试新动作，所以它是 offline RL。",
+                "它学习 Q(s,a)：当前截图状态 s 下执行候选动作 a 后，未来完成任务的价值有多大；同时学习 V(s)：只看当前状态，未来完成任务的期望价值。Q 依赖动作，V 不依赖动作，两者共同给出 advantage = Q(s,a) - V(s)。",
+            ],
+        ),
+        (
+            "特征怎么来：冻结 VLM，把状态和动作一起喂给模型",
+            [
+                "Digi-Q 不从零训练一个视觉模型，而是利用已经会看 GUI 的 VLM。当前截图、任务文本和候选动作文本被组织成 VLM 输入，VLM 内部会形成多层 hidden states；论文在这些中间/末层表征上接轻量 Q head 和 V head。",
+                "动作 embedding 不是额外手写一个向量表，而是动作也以文本/结构化 action token 的形式进入 VLM，让 VLM 自己把“点击搜索框”“输入 Beijing”这类动作和截图区域、任务语义对齐。Q head 读到的是包含状态和候选动作语义的 VLM 表征。",
+            ],
+        ),
+        (
+            "offline TD learning：成功信号如何往前传",
+            [
+                "训练 Q 时，目标不是模仿数据中的动作，而是满足 Bellman 关系：Q(s_t,a_t) 接近 r_t + γ V(s_{t+1})。GUI 任务中中间 reward 多数为 0，只有终局成功才有明显 reward；TD learning 会把最后成功的价值通过 V(s_{t+1}) 一步步传回前面的点击和输入。",
+                "V head 则学习当前状态的期望回报。由于 Q 和 V 都是小 head，VLM 主干大多冻结，训练更稳定、成本低，也降低了用稀疏终局 reward 微调整个大模型导致崩溃的风险。",
+            ],
+        ),
+        (
+            "推理：Best-of-N 候选重排，而不是直接让 Q 控制环境",
+            [
+                "推理时，当前策略先根据截图生成 N 个候选动作；Digi-Q 对每个候选计算 Q(s,a)，再选择价值最高的动作执行。这相当于不在线训练策略，而是在推理时用 Q 函数做 reranker。",
+                "这种设计适合真实手机和账号类任务，因为训练阶段不需要危险试错；限制也很明确：如果策略根本采不出正确候选，Q head 只能在坏候选里挑相对不坏的一个。",
+            ],
+        ),
+    ],
+    "Agent Q": [
+        (
+            "把网页任务写成搜索树",
+            [
+                "Agent Q 的状态 h 不是单张截图，而是到当前为止的网页历史：任务指令、页面观察、已执行动作和中间思考。每个候选动作 a 会把 agent 带到一个新的网页状态，所以整条任务可以看作一棵搜索树。",
+                "guided MCTS 在这棵树上做 lookahead：先从当前状态扩展若干候选动作，用价值模型估计哪些分支更可能成功，再优先模拟这些分支。这样比随机探索或单步 greedy 更容易找到长任务里的成功路径。",
+            ],
+        ),
+        (
+            "Q_feedback 是对候选分支的反馈，不是传统环境 reward",
+            [
+                "你之前问到的 Q_feedback(h,a)，可以理解为：在历史 h 下选择动作 a 后，这条分支从任务角度看好不好。它通常来自搜索结果、value model、自我 critique 或最终成功/失败轨迹，而不是环境直接在每一步返回一个数。",
+                "如果某个动作打开了正确页面、减少了任务不确定性、最终导向成功轨迹，它会得到更高反馈；如果动作把页面带偏、重复无效点击或导致任务无法完成，它会成为负例。",
+            ],
+        ),
+        (
+            "off-policy DPO：用搜索产生 chosen/rejected 轨迹",
+            [
+                "Agent Q 的训练重点不是在线 PPO，而是把搜索得到的好坏路径转成偏好对。成功路径或高价值路径作为 chosen，失败路径或低价值路径作为 rejected，然后用 DPO 提高 chosen 动作序列概率、降低 rejected 概率。",
+                "这也是它和普通 SFT 的区别：SFT 只告诉模型“专家这么做”，Agent Q 还告诉模型“这条看似合理但失败的路径为什么不该选”。这种负反馈对网页长任务很关键。",
+            ],
+        ),
+        (
+            "训练后仍可搜索：策略能力和推理时计算叠加",
+            [
+                "Agent Q 有两个层面的提升：第一，DPO 后的 policy 本身更会选动作；第二，推理时仍可以加 guided MCTS 做搜索。论文报告的高成功率往往来自训练后的策略再配合搜索。",
+                "因此读它的实验要区分 policy-only 和 policy+search。前者说明模型参数学到了什么，后者说明推理时额外计算能把多步任务成功率推多高。",
+            ],
+        ),
+    ],
+    "WebRL": [
+        (
+            "核心循环：失败驱动的在线课程",
+            [
+                "WebRL 面向开放网页任务。它不是固定刷一批人工任务，而是让当前模型执行任务，收集失败模式，再根据失败生成更适合当前能力的新任务。这个过程叫 self-evolving online curriculum。",
+                "例如模型经常在表单提交前找不到确认按钮，系统就会生成更多包含相似确认流程但难度略低的任务，让模型先学会可迁移的网页操作子技能。",
+            ],
+        ),
+        (
+            "Reward：只看最终 outcome，减少逐步标注",
+            [
+                "WebRL 训练 Outcome-Supervised Reward Model，只判断最终网页状态是否满足任务目标，而不是给每一步人工标注。网页任务的终局可以由页面状态、URL、DOM、数据库或 reward model 判断。",
+                "这种 reward 稀疏但可扩展。它适合 WebArena 这类环境，因为很多任务最终状态是可检查的，比如购物车内容、论坛帖子、GitLab issue 状态。",
+            ],
+        ),
+        (
+            "Replay 和 filtering 控制策略漂移",
+            [
+                "在线网页训练容易产生大量失败轨迹。WebRL 会过滤明显无效、过旧或重复轨迹，保留近期成功和接近成功样本，避免新一轮训练被低质量 rollout 淹没。",
+                "它的实质是把 curriculum、reward model 和 replay buffer 合在一起：课程负责给任务，reward model 负责验收，replay 负责稳定学习。",
+            ],
+        ),
+    ],
+    "UI-TARS / ARPO": [
+        (
+            "UI-TARS 的底座：原生 screenshot-to-action agent",
+            [
+                "UI-TARS 把 GUI agent 建成一个原生 VLM policy：输入任务、当前截图和最近历史，输出 thought + action。它不依赖 DOM 或 accessibility tree，因此同一模型能覆盖桌面、网页和移动端。",
+                "训练前期大量依赖 GUI perception、grounding、action trace、tutorial reasoning 和 reflection 数据，让模型先有看懂界面、定位元素和按统一动作格式输出的能力。",
+            ],
+        ),
+        (
+            "ARPO 解决稀疏奖励下整批失败的问题",
+            [
+                "GUI 多轮 RL 经常出现一个 batch 里所有轨迹都失败，GRPO/PPO 这时几乎没有有效正向信号。ARPO 的关键是 experience replay：保存历史成功或高质量轨迹，当前 batch 零奖励时可以把 replay 里的成功经验拉回来参与更新。",
+                "这样做不是简单重复旧数据，而是让策略在稀疏奖励环境中始终能看到“成功动作序列长什么样”，避免训练早期完全被失败样本主导。",
+            ],
+        ),
+        (
+            "Task selection：训练集中在有学习信号的任务",
+            [
+                "ARPO 还会筛任务：已经被 baseline 稳定解决的任务学习价值低，长期完全失败的任务没有梯度，二者都不适合占用 rollout。训练重点放在当前模型有机会从失败变成功的任务区间。",
+                "这和 DigiRL/MobileRL 的课程思想相似：GUI RL 的关键不是多跑，而是把昂贵的环境交互花在最能产生学习信号的任务上。",
+            ],
+        ),
+    ],
+    "UI-TARS-2": [
+        (
+            "从 GUI model 升级为 all-in-one computer-use agent",
+            [
+                "UI-TARS-2 的动作不只包括 click/type/scroll 等 GUI primitive，还允许 GUI-SDK：终端命令、文件系统、代码工具和 MCP/tool call。它的目标不是纯鼠标键盘模型，而是以 GUI 为中心的通用 computer-use agent。",
+                "环境层面对应 All-in-One GUI Sandbox：Windows、Ubuntu、Android 用云 VM/ADB/PyAutoGUI/VNC，网页和小游戏用 browser sandbox/CDP/Playwright，多轮任务通过 session id 保持状态，浏览器下载的文件和 terminal 共享同一文件系统。",
+            ],
+        ),
+        (
+            "Data Flywheel：CT、SFT、RL 循环互相喂数据",
+            [
+                "UI-TARS-2 从 Seed-thinking-1.6 出发，用数据飞轮持续迭代。当前 RL 模型产生新轨迹后，验证通过的高质量轨迹进入 SFT 数据，质量较低但仍含知识的样本进入 CT 数据，然后再经过 CT、SFT、RL 顺序训练。",
+                "CT 数据包括 GUI tutorial、instructional video、互联网演示和 in-situ think-aloud 标注；SFT 数据通过 interactive annotation 收集，标注者在模型真实 rollout 状态里接受或改写模型动作，所以数据更接近 on-policy 分布。",
+            ],
+        ),
+        (
+            "Multi-turn RL：真实环境 rollout + PPO",
+            [
+                "RL 任务分 GUI-Browsing、GUI-General 和 Gameplay。GUI-Browsing 有标准答案或 LLM-as-Judge；Gameplay 用 JS verifier 读取 score/level/lives；GUI-General 没有形式化答案时，用 UI-TARS-2 作为 generative ORM，根据完整文本历史和最近五张截图给成功分数。",
+                "训练算法是 PPO，不是新发明的 RL 算法。为了长轨迹稳定，它加入 reward shaping、Decoupled GAE、Length-Adaptive GAE、Value Pretraining 和不对称 Clip Higher。Value Pretraining 先固定 SFT policy 采样轨迹，用 Monte Carlo return 训练 value model，避免 PPO 一开始 advantage 被错误 V 带偏。",
+            ],
+        ),
+        (
+            "系统实现：异步 rollout 和参数插值合并垂直 agent",
+            [
+                "长 GUI 任务有长尾，有些任务很快结束，有些拖很久。UI-TARS-2 用 policy server、environment server、reward server 和 partially-filled rollout pool，完成的轨迹达到 batch 阈值就先训练，未完成轨迹留在池里继续跑。",
+                "多领域联合 RL 很贵且不稳，所以它从同一个 SFT 初始化分别训练 GUI-Browsing、GUI-General、Game、GUI-SDK 等垂直 agent，再用参数插值 θ_merge = Σ α_k θ_k 合并能力。这个设计是系统工程贡献，不是单个 reward 公式。",
+            ],
+        ),
+    ],
+    "GUI-R1": [
+        (
+            "任务不是在线执行，而是静态下一步 action prediction",
+            [
+                "GUI-R1 的输入是高层任务 Q、当前截图 I 和历史 H，输出下一步动作：action type、click point 和 input text。训练时它不会真的点击环境，也不会得到新截图；它是在已有 benchmark/标注样本上做 rule-based reinforcement fine-tuning。",
+                "因此它的“RL”是 non-interactive RFT：模型对同一输入生成多个候选回答，规则 reward 和 ground truth 比较后打分，GRPO 根据组内相对分数更新策略。",
+            ],
+        ),
+        (
+            "统一动作空间：把跨平台动作压成可检查格式",
+            [
+                "GUI-R1 把动作统一成 complete、close/delete、press home、click、press back、type、select、scroll、enter。最终答案固定为 action、point、input text 三个字段，并要求模型用 <think> 和 <answer> 标签输出。",
+                "这个统一格式解决了 Android、Web、Desktop 数据动作定义不一致的问题，也让 reward 可以写成简单规则：动作类型是否相等、点击点是否落在 bbox 内、输入文本是否匹配。",
+            ],
+        ),
+        (
+            "GRPO 训练：不训 critic，用组内相对奖励",
+            [
+                "对每个样本，模型生成 N 个候选回答 o_i，每个候选得到 reward r_i。优势不是 Q-V，也不是 GAE，而是 A_i = (r_i - mean(r_1...r_N)) / std(r_1...r_N)。高于组平均的回答概率上升，低于组平均的回答概率下降。",
+                "reward 分为格式奖励 R_f 和准确性奖励 R_acc，最终 R_o = αR_f + βR_acc。R_acc = R_act + R_point + R_text：动作类型 exact match，点击坐标落入 GT bbox，文本 F1 超过阈值。",
+            ],
+        ),
+        (
+            "GUI-R1-3K：保留中等难度样本",
+            [
+                "作者先从约 14M grounding/low-level 数据和约 30K high-level 数据出发，用 Qwen2.5-VL-7B 对每个样本生成 10 个回答，再用规则 reward 打分。全 0 的样本太难或标注不清，全 1 的样本太简单，都被过滤。",
+                "最后保留约 1.5K high-level 和随机采样 1.5K low-level，组成 3K 训练集。GUI-R1-3B 是从 Qwen2.5-VL-3B-Instruct 直接做 RFT/GRPO，不是先在 GUI-R1-3K 上 SFT 再 RL；带星号的 QwenVL2.5-3B* 才是同数据 SFT baseline。",
+            ],
+        ),
+    ],
+    "UI-R1": [
+        (
+            "任务定位：低成本 GUI action prediction RFT",
+            [
+                "UI-R1 和 GUI-R1 一样，主要训练静态截图上的下一步动作预测，而不是完整在线任务执行。输入是截图和指令，输出结构化 action 与坐标。",
+                "它的目标是验证：很少的规则可验证样本能否让 Qwen2.5-VL 这类通用 VLM 获得更强 GUI 定位和动作预测能力。",
+            ],
+        ),
+        (
+            "奖励拆分：格式、动作类型和坐标命中",
+            [
+                "UI-R1 的奖励不是一个模糊总分，而是逐项检查。格式错会被扣，动作类型错会被扣，点击坐标不在目标区域也会被扣。这样即使最终 action 没全对，模型也能知道是哪一部分错。",
+                "这种 reward 适合 grounding/action prediction，因为 ground truth bbox 和动作类型已经在数据集中存在，不需要真实环境执行。",
+            ],
+        ),
+        (
+            "UI-R1-E：让 grounding 更高效",
+            [
+                "UI-R1-E 关注另一个问题：模型为了输出坐标可能生成冗长 reasoning，推理慢且不一定更准。它通过效率导向的奖励压缩无效 token，让模型更快给出可靠动作。",
+                "所以 UI-R1 系列的贡献主要在“用小样本规则 RFT 激活 GUI action model”，而不是构建完整 Android/OS/Web 在线训练系统。",
+            ],
+        ),
+    ],
+    "GUI-G2": [
+        (
+            "把点击奖励从硬命中改成连续地形",
+            [
+                "传统 grounding reward 是二值的：点在目标框里就是 1，不在就是 0。GUI-G2 认为这对点击任务太粗糙，因为离按钮边缘差几个像素和点到完全无关区域不应该得到同样反馈。",
+                "它把目标元素建模成二维高斯分布，中心附近 reward 高，离中心越远指数衰减。这样模型每次预测都能得到“差多少”的连续反馈。",
+            ],
+        ),
+        (
+            "point reward 和 coverage reward 分工",
+            [
+                "point reward 评价预测点离目标中心多近，coverage reward 评价预测分布和真实元素区域覆盖得如何。元素大时容忍范围大，元素小时奖励更尖锐，这比固定阈值更贴合真实 UI 控件。",
+                "这种设计直接服务 RL/RFT：坐标错一点不会完全没有梯度，模型能逐步把点从附近区域推向目标中心。",
+            ],
+        ),
+        (
+            "适用边界",
+            [
+                "GUI-G2 主要解决单步视觉定位，不解决多轮规划。它可以作为 UI-R1/GUI-R1/GUI-Eyes 等 grounding RFT 的奖励模块，也可以迁移到 tap、drag 起点和菜单项定位。",
+                "读它的实验时要注意：ScreenSpot 系列上的提升说明定位更准，但不能直接等价于 AndroidWorld/OSWorld 的完整任务成功率。",
+            ],
+        ),
+    ],
+    "SE-GUI": [
+        (
+            "从 seed data 开始自进化",
+            [
+                "SE-GUI 不靠巨量 SFT 数据，而是先筛一小批高质量 GUI grounding seed data。模型在这些样本上训练后，会产生自己的预测、注意力图和错误模式。",
+                "自进化的关键是把模型当前状态也变成数据筛选器：哪些样本对模型有帮助、哪些注意力区域和目标元素对齐、哪些预测可作为下一轮训练信号。",
+            ],
+        ),
+        (
+            "Dense policy gradient 给坐标误差连续反馈",
+            [
+                "普通 hit/miss reward 太稀疏。SE-GUI 把坐标偏差转成 dense policy gradient，让模型知道预测点离目标有多远、该往哪个方向修正。",
+                "这在高分辨率专业软件里尤其重要，因为很多按钮和图标很小，纯二值奖励会导致训练长期没有有效梯度。",
+            ],
+        ),
+        (
+            "为什么 attention map 有用",
+            [
+                "attention map 不是最终答案，但能反映模型看哪里。SE-GUI 用它辅助筛选和修正伪监督，让训练不只盯最终坐标，而是改善中间视觉对齐。",
+                "因此它属于 grounding 自迭代路线：用少量人工 seed 撬动模型自身产生更多、更贴近当前错误的训练信号。",
+            ],
+        ),
+    ],
+    "InfiGUI-G1": [
+        (
+            "问题：坐标任务也需要探索",
+            [
+                "在一张 GUI 截图里，经常有多个相似按钮、重复列表项或同名控件。模型只生成一个点时，很容易卡在外观相似但语义错误的元素上。",
+                "InfiGUI-G1 让模型生成多个候选答案，再用 reward 区分哪些探索有用，核心是提升 grounding 中的语义探索效率。",
+            ],
+        ),
+        (
+            "AEPO：用 useful/cost 衡量探索效率",
+            [
+                "AEPO 不鼓励无限长 reasoning 或大量重复候选。它定义探索效率 η = U/C，U 表示候选带来的有效信息或正确性提升，C 表示生成成本、冗余和无效探索。",
+                "高效候选得到更高权重；冗长但没定位到目标的 CoT 会被压低。这就是它为什么强调强制长 CoT 可能伤害坐标任务。",
+            ],
+        ),
+        (
+            "最终学到什么",
+            [
+                "模型要学的不只是“这个像按钮”，而是“哪个按钮满足当前任务语义”。比如多个 Add 按钮里，要根据列表项文字、位置关系和任务目标选择正确一项。",
+                "所以 InfiGUI-G1 介于纯 grounding 和语义 reasoning 之间，目标是让坐标预测不只依赖外观相似性。",
+            ],
+        ),
+    ],
+    "UI-AGILE": [
+        (
+            "训练和推理两端同时改",
+            [
+                "UI-AGILE 认为 GUI grounding 的失败不只来自训练算法，也来自推理时小控件被整图缩放吞掉。它把问题拆成训练侧 RL 信号和推理侧高分辨率定位策略。",
+                "训练侧用连续奖励、Simple Thinking reward 和 cropping-based resampling；推理侧用分块、候选区域选择和局部精定位。",
+            ],
+        ),
+        (
+            "Simple Thinking reward 的作用",
+            [
+                "它不鼓励模型生成很长的空泛解释，而是奖励简洁、必要、和视觉定位相关的思考。对于坐标任务，过长语言推理可能挤占视觉信息处理和输出稳定性。",
+                "这个设计和 InfiGUI-G1 的观点一致：GUI grounding 需要推理，但推理必须服务定位，不是越长越好。",
+            ],
+        ),
+        (
+            "裁剪重采样和分块推理",
+            [
+                "训练时 cropping-based resampling 让模型多看难定位区域；推理时先在整图找可能区域，再在局部高分辨率图里输出精确坐标。",
+                "这解释了为什么 UI-AGILE 不只是一个 RL reward 论文，而是把视觉输入分辨率和候选区域选择也纳入方法。",
+            ],
+        ),
+    ],
+    "InfiGUI-R1": [
+        (
+            "从 reactive actor 到 deliberative reasoner",
+            [
+                "InfiGUI-R1 关注的是模型为什么要点这里。普通 reactive actor 直接从截图到动作，复杂布局、错误恢复和空间关系任务上容易失败。",
+                "它希望模型先形成中间推理：目标在哪个区域、和其他元素是什么关系、当前处在任务哪个阶段，然后再输出动作。",
+            ],
+        ),
+        (
+            "Actor2Reasoner 两阶段",
+            [
+                "第一阶段是 Reasoning Injection，用 teacher 生成的跨模态空间推理教模型理解 UI 关系，例如“左侧菜单第二项”“表格第三列对应按钮”。",
+                "第二阶段是 Deliberation Enhancement，用 RL 强化那些真正能带来正确动作的中间思考，同时压制空泛、冗长但无用的 reasoning。",
+            ],
+        ),
+        (
+            "适合的任务类型",
+            [
+                "它尤其适合复杂界面和多步 trajectory：模型不仅要点准，还要知道为什么当前步骤应该进入哪个子目标。",
+                "因此它和 GUI-G2/UI-AGILE 的区别是：后者更偏坐标 reward，InfiGUI-R1 更偏 System-2 reasoning 能力塑造。",
+            ],
+        ),
+    ],
+    "BacktrackAgent": [
+        (
+            "把动作后页面纳入训练对象",
+            [
+                "BacktrackAgent 不把动作发出去就结束，而是看 action execution 后的新页面是否符合预期。它的训练样本包含执行前状态、动作、执行后 outcome page 和是否偏离目标的判断。",
+                "这使模型能学习“点完以后发生了什么”，而不只是静态预测下一步。",
+            ],
+        ),
+        (
+            "Verifier、Judger、Reflector 三模块",
+            [
+                "verifier 检查状态是否前进或满足子目标；judger 根据 verifier 结果判断是否需要回退；reflector 分析错误原因并生成修正动作。",
+                "如果误入错误页面，agent 不再继续沿错误状态盲走，而是执行 back、重新点击或换策略。这是长任务里非常实用的错误恢复结构。",
+            ],
+        ),
+        (
+            "训练目标",
+            [
+                "它训练的是执行-检查-回退-重试闭环。奖励不只看单步动作是否和专家相同，还看动作后状态是否真的靠近任务目标。",
+                "因此它适合补足很多 GUI agent 的短板：一次误点后没有恢复能力。",
+            ],
+        ),
+    ],
+    "VSC-RL": [
+        (
+            "把长任务拆成可达子目标",
+            [
+                "VSC-RL 认为视觉语言 agent 的长任务 reward 太稀疏，需要把最终目标分解成若干 subgoal。比如“购买商品”可以拆成搜索、打开商品页、加入购物车、结算。",
+                "每个子目标条件下，策略面对的是更短、更明确的控制问题，credit assignment 难度下降。",
+            ],
+        ),
+        (
+            "SubGoal Evidence Lower Bound",
+            [
+                "论文把 subgoal 当作潜变量，优化一个类似 variational lower bound 的目标：既希望 subgoal-conditioned policy 能获得高 return，也约束它不要偏离参考策略太远。",
+                "这个目标让模型既能探索有效子目标，又不至于生成不可执行或脱离任务的中间目标。",
+            ],
+        ),
+        (
+            "和普通 planner 的区别",
+            [
+                "它不是只让 LLM 写计划再执行，而是把子目标放进 RL 目标里联合优化。subgoal 是否好，要看低层策略在环境中是否真的能完成。",
+                "因此它属于层级 RL，而不是单纯 prompt planning。",
+            ],
+        ),
+    ],
+    "Explorer": [
+        (
+            "环境探索先于任务标注",
+            [
+                "Explorer 的思路是：不要先等人写任务，再让 agent 执行；而是先在网页中探索可点击元素、页面跳转和表单行为，发现可执行路径。",
+                "每条成功或可复现路径再由 annotator / 模型反向生成自然语言任务描述，这样轨迹和任务天然匹配。",
+            ],
+        ),
+        (
+            "轨迹筛选",
+            [
+                "探索会产生大量噪声：死链、登录墙、不可复现页面、重复路径和语义不清目标。Explorer 需要过滤这些样本，只保留能从初始状态复现到终局的轨迹。",
+                "最终数据包括 URL、截图、web elements、动作序列和任务文本，可用于 SFT、offline RFT 或后续 online curriculum。",
+            ],
+        ),
+        (
+            "贡献位置",
+            [
+                "它不是 RL 算法，而是数据工厂。它解决的是 web agent 缺少大规模多模态成功轨迹的问题。",
+                "对 RL 的价值在于：没有足够轨迹，DPO、offline RL、world model 和 reward model 都很难训练。",
+            ],
+        ),
+    ],
+    "UI-S1": [
+        (
+            "半在线：在离线轨迹里模拟当前策略偏离",
+            [
+                "UI-S1 不真正访问环境，但也不只是静态 BC。它在离线专家轨迹中让当前模型 rollout，观察模型动作会怎样偏离专家路径。",
+                "问题是离线数据没有偏离后真实下一状态，所以 UI-S1 引入 Patch Module，把偏离动作对应的 OOD 状态修补回可训练状态。",
+            ],
+        ),
+        (
+            "Patch Module 的作用",
+            [
+                "如果模型在某一步点错，真实 online 环境会进入新页面；离线数据里没有这个页面。Patch Module 尝试根据已有轨迹和任务结构构造一个可继续训练的状态，使半在线 rollout 不会立刻断掉。",
+                "这样模型能学习“如果自己偏离了专家，该如何回到正确路径附近”，比纯离线行为克隆更接近部署。",
+            ],
+        ),
+        (
+            "三层奖励",
+            [
+                "UI-S1 同时用 discounted future return、step-level advantage 和 episode-level advantage。step 信号判断当前动作是否推进，episode 信号判断整条轨迹是否好。",
+                "SOP 指标用于估计 semi-online 训练质量，帮助在没有真实 online 环境的情况下选择模型。",
+            ],
+        ),
+    ],
+    "Hi-Agent": [
+        (
+            "高层规划和低层执行分开",
+            [
+                "Hi-Agent 把移动 GUI 控制拆成两层。高层 reasoning model 理解任务、拆子目标、决定下一阶段；低层 action model 根据当前截图和子目标输出 tap/type/swipe 等具体动作。",
+                "例如高层说“进入账号安全设置”，低层才负责在当前屏幕上点哪个按钮、是否滚动、输入什么文本。",
+            ],
+        ),
+        (
+            "为什么层级有用",
+            [
+                "长手机任务中，单一模型既要记全局目标又要精确点控件，容易丢失上下文。层级结构让高层处理语义和规划，低层处理视觉定位和动作执行。",
+                "这也降低 credit assignment 难度：高层错误和低层错误可以分开分析。",
+            ],
+        ),
+        (
+            "训练和协同",
+            [
+                "训练通常先用示范轨迹让两层对齐，再用 RL 或反馈强化协同。高层目标如果不可执行，低层会失败；低层误点也会破坏高层计划。",
+                "所以 Hi-Agent 的重点不是单个 reward 公式，而是移动 GUI 任务的层级控制范式。",
+            ],
+        ),
+    ],
+    "MobileRL": [
+        (
+            "面向真实 Android online RL",
+            [
+                "MobileRL 让模型在 Android emulator 中真实执行任务，观察截图变化并收集当前策略的新轨迹。它解决的是 online mobile RL 里任务难度重尾和失败轨迹过多的问题。",
+                "动作空间是手机原子操作：tap、type、swipe/scroll、back/home、finish。reward 由任务成功检查、路径长度和历史成功率共同影响。",
+            ],
+        ),
+        (
+            "Difficulty-Adaptive GRPO",
+            [
+                "普通 GRPO 会被简单任务主导，困难任务又全失败没有信号。MobileRL 根据每个任务的历史成功率调权：太简单的降低权重，当前模型刚好有机会学会的提高权重，长期失败的先过滤。",
+                "这让有限 emulator 资源用于最有训练价值的任务，而不是平均撒到所有任务上。",
+            ],
+        ),
+        (
+            "Positive replay 和最短路径惩罚",
+            [
+                "困难任务的成功轨迹很稀有，positive replay 会把这些成功样本保存下来，避免下一批全失败时梯度消失。",
+                "Shortest-Path Reward Adjustment 惩罚绕路和无效操作，防止模型通过拖长轨迹或碰巧成功来获得不健康策略。",
+            ],
+        ),
+    ],
+    "WebAgent-R1": [
+        (
+            "优化单位从 step 变成完整 trajectory",
+            [
+                "WebAgent-R1 认为网页任务的正确动作常常短期没收益，例如先打开搜索页、筛选条件、进入详情页，reward 只在最后出现。单步动作预测无法学到这种 delayed gratification。",
+                "因此它用 Multi-Turn GRPO，把同一任务的多条完整交互轨迹作为一组，按终局和过程表现计算相对优势，再更新整段动作序列。",
+            ],
+        ),
+        (
+            "动态上下文压缩",
+            [
+                "网页任务历史很长，直接把所有截图、DOM 和动作塞进上下文会爆掉。WebAgent-R1 让 agent 每步写 observation summary，把页面关键信息压缩进短文本。",
+                "后续决策使用压缩摘要加当前观察，既保留任务进展，又降低上下文长度。",
+            ],
+        ),
+        (
+            "自生成轨迹的价值",
+            [
+                "论文强调 self-generated trajectories 可以超过固定人类示范，因为模型会探索到适合自己能力和当前策略分布的路径。",
+                "它代表 web agent 从离线下一步预测走向端到端多轮 RL。",
+            ],
+        ),
+    ],
+    "DART-GUI": [
+        (
+            "核心贡献是系统解耦，不是新 reward",
+            [
+                "DART-GUI 认为 GUI RL 最大瓶颈常在环境 I/O：浏览器、VM、模拟器、截图和状态检查都很慢。把模型训练和环境 rollout 绑在一起会让 GPU 等环境。",
+                "它把系统拆成 environment cluster、rollout service、data manager 和 trainer 四个异步模块。",
+            ],
+        ),
+        (
+            "Adaptive data curation",
+            [
+                "data manager 根据任务难度、轨迹质量和 step entropy 决定哪些样本优先训练。困难任务会分配更多 rollout 或更长 horizon，高熵步骤会得到更高训练优先级。",
+                "旧策略轨迹和新策略之间有 mismatch，所以它使用 truncated importance sampling 之类机制减轻 off-policy 偏差。",
+            ],
+        ),
+        (
+            "为什么对 GUI RL 重要",
+            [
+                "在线 GUI RL 不是只要算法对就能跑起来。没有异步 rollout、轨迹筛选和 worker 同步，大量时间会浪费在等待环境。",
+                "DART-GUI 的价值是把 GUI RL 从小规模实验推进到可持续采样的训练架构。",
+            ],
+        ),
+    ],
+    "Mano": [
+        (
+            "三阶段训练管线",
+            [
+                "Mano 把 GUI agent 训练拆成 SFT、offline RL、online RL。SFT 先让模型学动作格式和基本界面语义；offline RL 用已有轨迹和偏好/价值信号学习好坏动作；online RL 再进入环境闭环修正。",
+                "这种顺序对应真实部署需求：先可控，再稳定利用已有经验，最后用真实反馈补齐离线覆盖不到的状态。",
+            ],
+        ),
+        (
+            "高保真模拟和验证模块",
+            [
+                "Mano 强调高保真模拟环境，用来产生更接近真实 GUI 的状态变化。verification module 检查动作后状态是否真的前进，避免只看模型输出格式。",
+                "reward 不是单一终局信号，而是结合任务完成、动作合理性、状态进展和错误恢复能力。",
+            ],
+        ),
+        (
+            "方法位置",
+            [
+                "它更像一个完整系统报告：模型、数据、模拟、验证和 RL pipeline 都是方法组成部分。",
+                "读 Mano 时不要只找某个公式，要看三阶段管线如何把离线经验和在线反馈接起来。",
+            ],
+        ),
+    ],
+    "GELab": [
+        (
+            "先做可控 GUI 环境，再谈 RL",
+            [
+                "GELab-Zero / GUI Exploration Lab 的重点是环境引擎。它允许定义 screen、icon、navigation graph 和完整环境状态，使 GUI 导航任务可重置、可验证、可探索。",
+                "这解决了真实软件闭源、状态不可控、任务难复现的问题。",
+            ],
+        ),
+        (
+            "比较 SFT、single-turn RL、multi-turn RL",
+            [
+                "在这个环境里，SFT 负责记住基础导航知识，single-turn RL 强化未见场景下的单步泛化，multi-turn RL 让模型通过交互试错学习探索策略。",
+                "这种实验设计把不同训练方式的作用拆开，而不是只报告一个最终成功率。",
+            ],
+        ),
+        (
+            "为什么叫 Zero",
+            [
+                "它的目标是降低人工轨迹依赖：任务和反馈尽量由环境状态自动给出，模型通过探索积累成功/失败经验。",
+                "所以 GELab 更像 GUI RL 的平台论文，为后续 mobile/GUI self-evolution 提供可控场地。",
+            ],
+        ),
+    ],
+    "Step-GUI": [
+        (
+            "Calibrated Step Reward System",
+            [
+                "Step-GUI 认为只给终局 reward 太稀疏，长任务中很多正确动作短期看不到收益。它提出校准的 step-level reward，让每一步都能被判断是否推进任务。",
+                "step reward 由模型/规则自动标注当前步骤进展，和 final reward 结合，形成更密的训练信号。",
+            ],
+        ),
+        (
+            "Self-evolving training pipeline",
+            [
+                "模型生成轨迹后，系统把轨迹拆成步骤，标注每一步是否前进、停滞或倒退，再筛成新的训练数据。这样可以低成本扩大高质量 GUI 训练集。",
+                "这个过程把模型输出、自动 reward 和下一轮训练连成闭环。",
+            ],
+        ),
+        (
+            "GUI-MCP 部署接口",
+            [
+                "Step-GUI 还提出 GUI-MCP，把 GUI 自动化拆成低层原子操作和本地 specialist model 的高层任务委派。",
+                "这说明它不只做训练，也考虑真实部署中的接口标准化、隐私和设备侧执行。",
+            ],
+        ),
+    ],
+    "MAI-UI": [
+        (
+            "跨平台模型族和自演化数据管线",
+            [
+                "MAI-UI 面向真实部署，包含多尺寸模型族，训练数据从导航扩展到用户交互、MCP tool calls 和多设备任务。",
+                "数据管线让模型在 mobile/web/desktop 多环境产生轨迹，经过验证和筛选后进入下一轮训练。",
+            ],
+        ),
+        (
+            "Device-cloud collaboration",
+            [
+                "真实 GUI agent 不一定所有推理都在云端。MAI-UI 根据任务状态、隐私和模型能力在设备侧和云侧之间路由。",
+                "简单、隐私敏感或低延迟动作可以端侧执行；复杂推理或长任务交给云端模型。这是部署层面的关键方法。",
+            ],
+        ),
+        (
+            "Online RL 扩展变量",
+            [
+                "论文关注并行环境数量、step budget、长上下文和在线采样规模对性能的影响。它展示的是系统扩展规律，而不只是一个模型 checkpoint。",
+                "因此 MAI-UI 的方法要同时读模型、数据、环境并行和设备云协同。",
+            ],
+        ),
+    ],
+    "GUI-Eyes": [
+        (
+            "主动感知：先决定要不要重看",
+            [
+                "GUI-Eyes 认为很多 grounding 错误不是策略不会，而是全屏截图看不清小图标、小文字或密集控件。它让模型学会调用视觉工具，例如 crop、zoom、局部重看。",
+                "推理分两阶段：coarse exploration 找可能区域和是否需要工具，fine-grained grounding 在局部高分辨率区域输出坐标。",
+            ],
+        ),
+        (
+            "工具调用也由 RL 学",
+            [
+                "模型不仅要学点哪里，还要学什么时候放大、裁剪哪块区域、如何利用工具结果。这些选择同样有成本，所以 reward 需要同时看定位正确性和工具使用效率。",
+                "训练用 GRPO/RFT，把连续空间奖励和工具调用成功结合起来。",
+            ],
+        ),
+        (
+            "和纯 grounding 的区别",
+            [
+                "纯 grounding 只在给定图像上输出点；GUI-Eyes 把视觉输入本身变成可操作对象。",
+                "这条路线适合高分辨率专业软件和移动小控件，因为一次性整图推理很容易丢细节。",
+            ],
+        ),
+    ],
+    "DynaWeb": [
+        (
+            "Web world model：学网页动作后的状态变化",
+            [
+                "DynaWeb 的核心是训练一个网页世界模型：输入当前网页状态和 agent action，预测下一状态或下一观察。状态可以包含截图、DOM、文本表示或任务相关摘要。",
+                "真实网页 rollout 慢且风险高，world model 可以在本地快速生成 dream rollout。",
+            ],
+        ),
+        (
+            "真实轨迹和 dream rollout 交织训练",
+            [
+                "策略训练不是完全相信世界模型，而是把真实专家轨迹和 on-policy dream rollout 混合使用。真实数据提供校准，dream rollout 提供规模和探索。",
+                "高价值模拟轨迹再回到真实环境验证，避免模型学到只在模拟器里成立的路径。",
+            ],
+        ),
+        (
+            "风险：sim-to-real gap",
+            [
+                "如果世界模型预测错了页面跳转、表单结果或动态加载，策略会学到现实中不可执行的动作序列。",
+                "因此 DynaWeb 这类工作必须看真实 WebArena/WebVoyager 评测，而不能只看世界模型内部 reward。",
+            ],
+        ),
+    ],
+    "UltraCUA": [
+        (
+            "Hybrid action：GUI 和 API/tool call 统一",
+            [
+                "UltraCUA 不把 computer use 限定在鼠标键盘。能用 API 或工具稳定完成的步骤，就让模型调用结构化工具；没有 API 的长尾软件再回退到视觉 GUI 操作。",
+                "这减少了纯 GUI 长链条里的误点和级联失败，同时保留对闭源软件的覆盖。",
+            ],
+        ),
+        (
+            "自动抽取工具能力和合成任务",
+            [
+                "论文从软件文档和代码仓库中抽取工具/API 能力，再用 synthetic engine 生成可验证任务和混合动作轨迹。",
+                "训练数据里既有 GUI primitive，也有高层 API/tool call，因此模型要学会选择动作通道，而不是只学点击。",
+            ],
+        ),
+        (
+            "SFT + online RL 学路由",
+            [
+                "SFT 建立基础动作格式和工具调用语法，online RL 根据任务执行结果强化什么时候用 GUI、什么时候用 API。",
+                "这条路线和 UI-TARS-2 的 GUI-SDK 很接近，是实际 computer-use agent 的重要方向。",
+            ],
+        ),
+    ],
+    "ComputerRL": [
+        (
+            "大规模虚拟桌面 online RL",
+            [
+                "ComputerRL 把大量虚拟桌面环境接入训练，任务覆盖文件、Office、浏览器、终端等真实工作区。环境并行规模是方法核心之一。",
+                "每个 rollout worker 控制一台虚拟桌面，收集截图、动作、文件状态和任务结果，再交给 trainer 更新模型。",
+            ],
+        ),
+        (
+            "API-GUI paradigm",
+            [
+                "模型可以混用程序化 API 和视觉 GUI 动作。API 适合文件、系统和结构化操作；GUI 适合不可编程软件和视觉确认。",
+                "这种混合动作减少纯 GUI 的轨迹长度，也让桌面任务更接近真实办公场景。",
+            ],
+        ),
+        (
+            "Entropulse：防止长期 RL 熵塌缩",
+            [
+                "长期在线 RL 可能让策略过早变得确定，只会少数动作。ComputerRL 用 Entropulse 在 RL 和 SFT 之间交替或注入监督信号，缓解 entropy collapse。",
+                "因此它的贡献同时包含环境扩展、动作范式和长期训练稳定性。",
+            ],
+        ),
+    ],
+    "ZeroGUI": [
+        (
+            "零人工成本的任务生成和评测",
+            [
+                "ZeroGUI 的目标是不依赖人工写任务和标轨迹。VLM 根据当前 GUI 环境状态自动生成任务，再由 VLM 或环境检查器估计任务是否完成。",
+                "这让模型可以在在线环境中持续产生训练样本，但也带来 verifier 可信度问题。",
+            ],
+        ),
+        (
+            "两阶段在线 RL",
+            [
+                "第一阶段通常用于让模型在环境里获得基本可行轨迹，第二阶段用更严格的 reward/过滤继续提升。失败轨迹可用于反例、课程改写或下一轮任务生成。",
+                "它强调的是自举闭环：任务、执行、奖励和数据都尽量自动化。",
+            ],
+        ),
+        (
+            "主要风险",
+            [
+                "如果 VLM 同时生成任务又当 evaluator，容易出现自我欺骗或 reward hacking。ZeroGUI 因此需要保守过滤、多重验证和人工抽检。",
+                "读它时要特别看 evaluator 错误如何控制，而不只是看成功率提升。",
+            ],
+        ),
+    ],
+    "ProgRM": [
+        (
+            "从 outcome reward 到 progress reward",
+            [
+                "ProgRM 认为最终失败的轨迹里也可能有大量正确中间步骤。只用 ORM 会把这些中间努力全部视为失败，导致训练信号太粗。",
+                "Progress Reward Model 为每一步预测任务完成进度，判断状态是前进、停滞还是倒退。",
+            ],
+        ),
+        (
+            "LCS 自标注关键步骤",
+            [
+                "为了避免人工逐步标注进度，ProgRM 用 LCS 之类算法从成功/失败轨迹中自动发现关键步骤，并给每个 step 分配 progress label。",
+                "这些标签训练 PRM，让 reward 更密、更适合长任务 credit assignment。",
+            ],
+        ),
+        (
+            "如何用于训练 actor",
+            [
+                "训练策略时，progress reward 和 final reward 结合。模型不仅要最终成功，也要每一步减少任务差距。",
+                "这类 reward 可以接到 GRPO/PPO、轨迹筛选或 replay 优先级上，是 GUI 长任务常用组件。",
+            ],
+        ),
+    ],
+    "Co-EPG": [
+        (
+            "Planner 和 Grounder 互相训练",
+            [
+                "Co-EPG 把 GUI agent 拆成 planner 和 grounder。planner 产生高层步骤，grounder 把步骤落到具体 UI 元素。",
+                "如果只训练 planner，计划可能不可执行；只训练 grounder，模型可能点得准但全局方向错。Co-EPG 让两者共同进化。",
+            ],
+        ),
+        (
+            "Grounder 给 planner reward",
+            [
+                "更新后的 grounder 可以更准确判断 planner 计划里的步骤是否可落地，从而给 planner 更可靠的 GRPO reward。",
+                "planner 生成更多高质量、多样化任务步骤，又反过来训练 grounder 的泛化能力。",
+            ],
+        ),
+        (
+            "循环多轮自增强",
+            [
+                "论文强调多轮 co-evolution：每一轮 planner 更会规划，grounder 更会定位，下一轮 reward 也更准。",
+                "这是一种结构化自训练，不依赖单一模型同时学完计划和定位所有能力。",
+            ],
+        ),
+    ],
+    "AEBPO": [
+        (
+            "问题：agent RL 中的 entropy collapse 和分支爆炸",
+            [
+                "多轮网页/工具 agent 早期需要探索，后期需要稳定执行。普通 entropy bonus 要么让模型一直乱试，要么训练后期过早塌缩到少数动作。",
+                "AEBPO 关注的是如何平衡探索和收敛，尤其是长时序 tool-call / web agent 场景。",
+            ],
+        ),
+        (
+            "Dynamic entropy-balanced rollout",
+            [
+                "它先监测不同步骤的 entropy，把采样预算分给更需要探索的分支；对于连续高熵 tool-call step 加 branch penalty，避免分支数量爆炸。",
+                "这让 rollout 既覆盖不确定决策点，又不被无效探索拖垮。",
+            ],
+        ),
+        (
+            "Entropy-aware policy optimization",
+            [
+                "训练目标中加入 entropy-aware advantage 和高熵 clipping 设计，让模型重点学习高不确定但有价值的 token。",
+                "虽然它不是纯 GUI 论文，但对 Web/GUI agent 很重要，因为环境动作分支和工具调用都会放大探索问题。",
+            ],
+        ),
+    ],
+    "Nested Browser": [
+        (
+            "外层推理，内层浏览",
+            [
+                "NestBrowse 把信息检索任务拆成外层 agent 和内层 browser-use。外层负责问题分解、信息整合和决定要查什么；内层负责在真实网页里搜索、点击、翻页和抽取局部信息。",
+                "这样外层不用记住每个 DOM 细节，内层也不用承担全局推理。",
+            ],
+        ),
+        (
+            "Minimal and complete browser action framework",
+            [
+                "内层浏览动作保持最小但完备，避免 ReAct 工具越堆越复杂。它提供足够完成网页探索的基本操作，同时降低上下文和动作空间压力。",
+                "嵌套结构的关键是接口边界：内层返回可用证据，外层把证据拼成最终答案或下一步浏览目标。",
+            ],
+        ),
+        (
+            "对 RL 的启发",
+            [
+                "复杂网页任务不一定要一个 policy 承担所有动作。把任务分层后，每层的 reward 和状态都更短、更清楚。",
+                "它属于结构化探索路线，可和轨迹合成、RFT 或 online curriculum 结合。",
+            ],
+        ),
+    ],
+    "WebSynthesis": [
+        (
+            "世界模型 + MCTS 合成轨迹",
+            [
+                "WebSynthesis 先训练一个网页世界模型，再让 policy agent 在世界模型里用 MCTS 搜索。搜索树节点是虚拟网页状态，边是网页动作。",
+                "相比随机探索，MCTS 可以回溯并比较不同路径，优先保留通向成功的分支。",
+            ],
+        ),
+        (
+            "为什么不用真实网页直接搜",
+            [
+                "真实网页环境慢、不稳定且状态难重置。每条长轨迹可能需要大量 API/浏览器调用。世界模型把这些交互变成本地模拟，成本更低。",
+                "生成轨迹经过筛选后用于 SFT/RL，目标是用高质量 synthetic trajectories 替代部分真实交互。",
+            ],
+        ),
+        (
+            "与 Agent Q / DynaWeb 的关系",
+            [
+                "Agent Q 强调搜索和偏好学习，DynaWeb 强调世界模型；WebSynthesis 把两者结合，用世界模型提供可搜索环境。",
+                "核心风险仍是世界模型不准，因此需要真实环境验证合成轨迹。",
+            ],
+        ),
+    ],
+    "WebWorld": [
+        (
+            "大规模 open-web world model",
+            [
+                "WebWorld 试图学习开放网页交互的一般动力学，而不是某个固定站点模拟器。输入当前网页状态和动作，输出后续状态、可用元素或任务进展。",
+                "它训练于大量 open-web interactions，目标是让 agent 能在模型里预演网页操作。",
+            ],
+        ),
+        (
+            "训练和使用方式",
+            [
+                "下游可以用 WebWorld 合成轨迹训练策略，也可以在推理时做 lookahead search：先在模型里试几步，选择看起来更可能成功的真实动作。",
+                "WebWorld-Bench 用来评估世界模型本身的预测能力，而不仅是下游 agent 分数。",
+            ],
+        ),
+        (
+            "价值和风险",
+            [
+                "它绕过 live web 的延迟、rate limit 和安全风险，把采样速度提升到模型推理速度。",
+                "风险是 open-web 变化大，世界模型预测错误会误导策略，所以必须看真实网页任务校准结果。",
+            ],
+        ),
+    ],
+    "Code2World": [
+        (
+            "把下一屏预测变成可渲染代码生成",
+            [
+                "Code2World 不直接生成像素图，而是生成可渲染代码，例如 HTML/CSS/布局结构，再渲染成下一 UI。这样状态更可解释，也更容易检查和编辑。",
+                "它构造 AndroidCode，把 GUI 轨迹转换成高保真 HTML，并通过视觉反馈 revision 改善渲染质量。",
+            ],
+        ),
+        (
+            "Render-Aware RL",
+            [
+                "训练先用 SFT 学会格式和布局，再用 Render-Aware RL。reward 来自渲染后的视觉语义一致性、动作一致性和下一状态是否符合真实轨迹。",
+                "模型因此学的不只是页面长什么样，还要学动作会怎样改变界面。",
+            ],
+        ),
+        (
+            "为什么结构化世界模型有优势",
+            [
+                "代码状态可以被 diff、验证和复用，比黑箱图像生成更适合作为 agent 训练环境。",
+                "局限是 GUI 中很多动态效果、原生控件和复杂交互不容易用 HTML 完整复刻。",
+            ],
+        ),
+    ],
+    "AgentCPM": [
+        (
+            "小模型 deep exploration",
+            [
+                "AgentCPM-Explore 面向 4B 级边缘模型，目标是在有限参数下学会长任务工具使用和网页/GUI 决策，而不是完全依赖超大闭源模型。",
+                "训练强调 deep exploration：让模型在任务空间中寻找成功路径，再从成功/失败信号中更新。",
+            ],
+        ),
+        (
+            "三项稳定化设计",
+            [
+                "parameter-space model fusion 缓解 SFT 后的能力遗忘，把不同训练阶段的优势融合；reward signal denoising 降低环境反馈噪声；contextual information refinement 压缩冗余历史，减少长上下文干扰。",
+                "这些设计都是为了让小模型在 agent RL 中不被噪声、遗忘和上下文膨胀拖垮。",
+            ],
+        ),
+        (
+            "方法意义",
+            [
+                "它说明 GUI/Web agent 不一定只能靠巨大模型，小模型如果有好的探索、奖励清洗和上下文管理，也能获得竞争力。",
+                "对部署侧很重要，因为端侧/边缘模型更关心成本和延迟。",
+            ],
+        ),
+    ],
+    "ClawGUI": [
+        (
+            "训练、评测、部署三件事统一",
+            [
+                "ClawGUI 是全栈框架，不是单篇算法。ClawGUI-RL 负责训练，ClawGUI-Eval 负责标准化评测，ClawGUI-Agent 负责部署到真实设备和聊天入口。",
+                "它试图解决 GUI agent 研究中环境、benchmark、动作 schema 和部署接口不统一的问题。",
+            ],
+        ),
+        (
+            "ClawGUI-RL",
+            [
+                "训练端支持并行虚拟环境和真实物理设备，集成 GiGPO 与 Process Reward Model。环境 adapter 把不同设备和平台统一成可训练接口。",
+                "Process Reward Model 给中间步骤提供反馈，减少只靠终局成功率带来的稀疏奖励。",
+            ],
+        ),
+        (
+            "ClawGUI-Agent",
+            [
+                "部署端覆盖 Android、HarmonyOS、iOS、聊天平台和 hybrid CLI-GUI 控制，并支持个性化记忆。",
+                "这让它更接近可落地系统：不仅能训练模型，还能把模型接到真实用户工作流。",
+            ],
+        ),
+    ],
+    "AgentTrek": [
+        (
+            "从网页教程变成可执行轨迹",
+            [
+                "AgentTrek 认为网页教程天然包含目标、步骤和预期结果，是低成本轨迹来源。它先抓取 tutorial-like 文本，再转成结构化任务和步骤。",
+                "随后让 VLM agent 在真实网页环境中执行这些步骤，生成 HTML/function-call 或 screenshot/pixel-action 轨迹。",
+            ],
+        ),
+        (
+            "执行和验证",
+            [
+                "不是所有教程都可执行：页面可能变了、需要登录、步骤太模糊。因此 AgentTrek 用 evaluator 验证轨迹是否完成，并过滤不可复现样本。",
+                "保留下来的轨迹既有自然语言目标，也有逐步操作和视觉/HTML 状态，可以服务多种 agent 训练。",
+            ],
+        ),
+        (
+            "和 Explorer 的区别",
+            [
+                "Explorer 从环境探索出发，再反推任务；AgentTrek 从教程文本出发，再落到环境执行。",
+                "二者都是数据路线，区别在于任务语义来源不同。",
+            ],
+        ),
+    ],
+    "OS-Copilot": [
+        (
+            "FRIDAY 是操作系统级 agent 框架",
+            [
+                "OS-Copilot / FRIDAY 把 agent 放进真实操作系统，任务覆盖浏览器、文件、终端、多媒体、Office 和第三方应用。",
+                "它不是严格的 GUI RL 论文，但提供了 computer-use agent 的系统框架和自改进视角。",
+            ],
+        ),
+        (
+            "技能积累",
+            [
+                "FRIDAY 会把成功完成的任务抽象成可复用技能。下次遇到相似任务时，不必从零探索，而是调用已有程序或操作模式。",
+                "这类似长期记忆和技能库，和单 episode RL 不同。",
+            ],
+        ),
+        (
+            "对 GUI RL 的启发",
+            [
+                "真实数字居民式 agent 不能只靠一次性轨迹训练，还需要跨任务、跨时间积累技能。",
+                "未来 GUI RL 很可能把在线反馈、技能库和长期记忆结合，而不只是每个 benchmark 重新训练。",
+            ],
+        ),
+    ],
+}
+
+
 CATEGORY_RULES = [
-    ("Online RL", ["DigiRL", "WebRL", "MobileRL", "WebAgent-R1", "DART-GUI", "ComputerRL", "ZeroGUI", "AgentCPM"]),
-    ("Offline RL", ["Digi-Q", "Agent Q", "UI-R1", "GUI-R1", "UI-TARS", "ARPO", "AEBPO"]),
+    ("Online RL", ["DigiRL", "WebRL", "UI-TARS-2", "ARPO", "MobileRL", "WebAgent-R1", "DART-GUI", "ComputerRL", "ZeroGUI", "AgentCPM"]),
+    ("Offline RL", ["Digi-Q", "Agent Q", "UI-R1", "GUI-R1", "AEBPO"]),
     ("Grounding", ["GUI-G2", "SE-GUI", "InfiGUI-G1", "UI-AGILE", "GUI-Eyes", "InfiGUI-R1"]),
     ("Hybrid", ["UI-S1", "Hi-Agent", "UltraCUA", "Co-EPG", "Mano", "ClawGUI", "BacktrackAgent", "VSC-RL"]),
     ("World Model", ["DynaWeb", "WebSynthesis", "WebWorld", "Code2World"]),
@@ -377,10 +1359,15 @@ def extract_between(text: str, start: str, end: str | None = None) -> str:
     return text[start_idx:end_idx].strip()
 
 
+def title_matches(title: str, needle: str) -> bool:
+    pattern = rf"(?<![a-z0-9]){re.escape(needle.lower())}(?![a-z0-9])"
+    return re.search(pattern, title.lower()) is not None
+
+
 def tags_for(title: str) -> list[str]:
     tags: list[str] = []
     for tag, needles in CATEGORY_RULES:
-        if any(needle.lower() in title.lower() for needle in needles):
+        if any(title_matches(title, needle) for needle in needles):
             tags.append(tag)
     return tags or ["GUI RL"]
 
@@ -463,9 +1450,12 @@ def slug_for(paper: Paper) -> str:
 
 
 def detail_notes_for(paper: Paper) -> list[str]:
+    blocks = detailed_method_blocks_for(paper)
+    if blocks:
+        return [paragraphs[0] for _, paragraphs in blocks[:5]]
     for key in sorted(METHOD_NOTES, key=len, reverse=True):
         notes = METHOD_NOTES[key]
-        if key.lower() in paper.title.lower():
+        if title_matches(paper.title, key):
             return notes
     return [
         f"这篇论文的核心对象是 {paper.tags[0]} 场景下的 GUI agent，先把任务转成可观测状态、可执行动作和可验证反馈三部分。",
@@ -473,6 +1463,13 @@ def detail_notes_for(paper: Paper) -> list[str]:
         "如果它属于数据或系统论文，重点就不是单个 reward 公式，而是如何让轨迹采样、筛选、验证和训练形成闭环。",
         "读这篇时应重点关注它的 observation/action/reward 三元组，以及它如何处理长时序、稀疏奖励和环境 I/O 成本。",
     ]
+
+
+def detailed_method_blocks_for(paper: Paper) -> list[tuple[str, list[str]]]:
+    for key in sorted(DETAILED_METHOD_BLOCKS, key=len, reverse=True):
+        if title_matches(paper.title, key):
+            return DETAILED_METHOD_BLOCKS[key]
+    return []
 
 
 def task_form_for(paper: Paper) -> list[tuple[str, str]]:
@@ -828,23 +1825,27 @@ def benchmark_table_rows(paper: Paper) -> list[tuple[str, str, str, str]]:
 
 
 def method_blocks_for(paper: Paper) -> str:
+    detailed = detailed_method_blocks_for(paper)
+    if detailed:
+        blocks = []
+        for idx, (title, paragraphs) in enumerate(detailed, start=1):
+            paragraph_html = "\n".join(f"<p>{inline_md(paragraph)}</p>" for paragraph in paragraphs)
+            blocks.append(
+                f"""<div class="method-block deep-method-block">
+              <h3>5.{idx} {inline_md(title)}</h3>
+              {paragraph_html}
+            </div>"""
+            )
+        return "\n".join(blocks)
+
     blocks = []
     for idx, note in enumerate(detail_notes_for(paper), start=1):
         first_clause = re.split(r"[：:。；;]", note, maxsplit=1)[0]
         title = first_clause if 4 <= len(first_clause) <= 34 else f"关键步骤 {idx}"
-        if idx == 1:
-            extra = "这一层通常对应论文的核心设定：先把原本散乱的 GUI 交互整理成模型可以学习的输入/输出契约。读者需要问清楚：状态从哪里来，动作怎样被编码，哪些输出会被判为非法。"
-        elif idx == 2:
-            extra = "这一层对应实际运行路径：策略不是在抽象 benchmark 上打分，而是要进入浏览器、Android emulator、桌面 VM 或世界模型中执行。执行后产生的新状态会决定下一步 observation，也决定 reward 能不能被正确计算。"
-        elif idx == 3:
-            extra = "这一层是学习信号来源。GUI RL 的难点在于很多任务只有最终成功/失败；论文若能把环境状态、坐标误差、过程进展或候选轨迹质量转成稳定 reward，就能显著改善 credit assignment。"
-        else:
-            extra = "这一层通常是稳定性或效率设计：课程学习、replay、过滤、重采样、异步 rollout、上下文压缩、工具调用或层级拆分，目的都是减少无效探索和系统等待。"
         blocks.append(
             f"""<div class="method-block">
               <h3>5.{idx} {inline_md(title)}</h3>
               <p>{inline_md(note)}</p>
-              <p>{inline_md(extra)}</p>
             </div>"""
         )
     return "\n".join(blocks)

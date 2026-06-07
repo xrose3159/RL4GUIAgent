@@ -108,34 +108,28 @@
         </section>
         <section id="method">
           <h2>5. 方法与架构怎么跑</h2>
-          <div class="method-summary"><ol><li>WebRL 的关键在自演化课程：模型先做当前任务，失败后系统分析失败类型，再生成更适合当前能力的新任务，而不是固定训练集反复刷。</li>
-<li>Outcome-supervised reward model 只判断最终网页状态是否完成，不需要人工给每一步标注正确动作；这使得网页任务可以规模化在线采样。</li>
-<li>训练时维护 replay/filtering：过旧、过简单、明显错误的轨迹被过滤，近期成功和接近成功的轨迹保留，用来稳定策略更新。</li>
-<li>它解决的不是单个网页导航技巧，而是开放 LLM 在 WebArena 这类长任务中从低成功率逐步爬升的问题。</li></ol></div>
-          <div class="method-block">
-              <h3>5.1 WebRL 的关键在自演化课程</h3>
-              <p>WebRL 的关键在自演化课程：模型先做当前任务，失败后系统分析失败类型，再生成更适合当前能力的新任务，而不是固定训练集反复刷。</p>
-              <p>这一层通常对应论文的核心设定：先把原本散乱的 GUI 交互整理成模型可以学习的输入/输出契约。读者需要问清楚：状态从哪里来，动作怎样被编码，哪些输出会被判为非法。</p>
+          <div class="method-summary"><ol><li>WebRL 面向开放网页任务。它不是固定刷一批人工任务，而是让当前模型执行任务，收集失败模式，再根据失败生成更适合当前能力的新任务。这个过程叫 self-evolving online curriculum。</li>
+<li>WebRL 训练 Outcome-Supervised Reward Model，只判断最终网页状态是否满足任务目标，而不是给每一步人工标注。网页任务的终局可以由页面状态、URL、DOM、数据库或 reward model 判断。</li>
+<li>在线网页训练容易产生大量失败轨迹。WebRL 会过滤明显无效、过旧或重复轨迹，保留近期成功和接近成功样本，避免新一轮训练被低质量 rollout 淹没。</li></ol></div>
+          <div class="method-block deep-method-block">
+              <h3>5.1 核心循环：失败驱动的在线课程</h3>
+              <p>WebRL 面向开放网页任务。它不是固定刷一批人工任务，而是让当前模型执行任务，收集失败模式，再根据失败生成更适合当前能力的新任务。这个过程叫 self-evolving online curriculum。</p>
+<p>例如模型经常在表单提交前找不到确认按钮，系统就会生成更多包含相似确认流程但难度略低的任务，让模型先学会可迁移的网页操作子技能。</p>
             </div>
-<div class="method-block">
-              <h3>5.2 关键步骤 2</h3>
-              <p>Outcome-supervised reward model 只判断最终网页状态是否完成，不需要人工给每一步标注正确动作；这使得网页任务可以规模化在线采样。</p>
-              <p>这一层对应实际运行路径：策略不是在抽象 benchmark 上打分，而是要进入浏览器、Android emulator、桌面 VM 或世界模型中执行。执行后产生的新状态会决定下一步 observation，也决定 reward 能不能被正确计算。</p>
+<div class="method-block deep-method-block">
+              <h3>5.2 Reward：只看最终 outcome，减少逐步标注</h3>
+              <p>WebRL 训练 Outcome-Supervised Reward Model，只判断最终网页状态是否满足任务目标，而不是给每一步人工标注。网页任务的终局可以由页面状态、URL、DOM、数据库或 reward model 判断。</p>
+<p>这种 reward 稀疏但可扩展。它适合 WebArena 这类环境，因为很多任务最终状态是可检查的，比如购物车内容、论坛帖子、GitLab issue 状态。</p>
             </div>
-<div class="method-block">
-              <h3>5.3 训练时维护 replay/filtering</h3>
-              <p>训练时维护 replay/filtering：过旧、过简单、明显错误的轨迹被过滤，近期成功和接近成功的轨迹保留，用来稳定策略更新。</p>
-              <p>这一层是学习信号来源。GUI RL 的难点在于很多任务只有最终成功/失败；论文若能把环境状态、坐标误差、过程进展或候选轨迹质量转成稳定 reward，就能显著改善 credit assignment。</p>
-            </div>
-<div class="method-block">
-              <h3>5.4 关键步骤 4</h3>
-              <p>它解决的不是单个网页导航技巧，而是开放 LLM 在 WebArena 这类长任务中从低成功率逐步爬升的问题。</p>
-              <p>这一层通常是稳定性或效率设计：课程学习、replay、过滤、重采样、异步 rollout、上下文压缩、工具调用或层级拆分，目的都是减少无效探索和系统等待。</p>
+<div class="method-block deep-method-block">
+              <h3>5.3 Replay 和 filtering 控制策略漂移</h3>
+              <p>在线网页训练容易产生大量失败轨迹。WebRL 会过滤明显无效、过旧或重复轨迹，保留近期成功和接近成功样本，避免新一轮训练被低质量 rollout 淹没。</p>
+<p>它的实质是把 curriculum、reward model 和 replay buffer 合在一起：课程负责给任务，reward model 负责验收，replay 负责稳定学习。</p>
             </div>
           <p>因此，这篇论文不是简单地“让大模型点屏幕”，而是围绕 observation-action-reward 契约重写训练闭环：先让动作可执行，再让反馈可验证，最后让策略能从成功和失败中更新。</p>
-          <h3>5.5 关键中间变量</h3>
+          <h3>5.4 关键中间变量</h3>
           <p>读方法时要特别盯住中间变量：轨迹是按 step 存、按 episode 存，还是按候选动作组存？奖励是只在终局出现，还是每一步都有 progress？模型更新时用的是整条轨迹的相对优势、单步坐标误差、偏好对，还是 value/Q head？这些细节决定了论文能否处理长任务和稀疏奖励。</p>
-          <h3>5.6 为什么这种设计能解决原问题</h3>
+          <h3>5.5 为什么这种设计能解决原问题</h3>
           <p>核心逻辑是把原本不可微、不可直接监督的 GUI 成功条件拆成更接近训练信号的形式：要么用规则/verifier 把成功自动判出来，要么用 reward model 学过程进展，要么用世界模型/搜索生成更多成功轨迹，要么用层级结构把几十步任务拆成几个短子目标。</p>
         </section>
         <section id="training">
